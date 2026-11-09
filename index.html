@@ -1,0 +1,13 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>自然科任 FunDesk｜七班教學工作台</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="shell">
+ <aside class="sidebar"><div class="brand"><span class="brandmark">✦</span><div><b>自然科任 FunDesk</b><small>五年級科任教學工作台</small></div></div>
+ <label class="fieldlabel" for="classSelect">目前班級</label><select id="classSelect" class="classSelect"></select>
+ <div class="mini">115學年度 · 第一學期<br>課程：神祕的天空／燃燒與生鏽</div>
+ <nav id="nav"><button data-view="seats" class="active">▦　座位表總覽</button><button data-view="attention">▤　待追蹤清單 <i id="sidebarPending"></i></button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試</button><button data-view="schedule">▣　七班教學進度</button><button data-view="points">★　獎懲積點</button><button data-view="students">♙　學生名單</button><button data-view="tools">◴　課堂小工具</button><button data-view="settings">⚙　資料管理</button></nav>
+ <div class="sidebarFoot">單機資料儲存在這台瀏覽器<br><strong>請定期匯出備份</strong><br><span>非方方老師官方產品</span></div>
+ </aside>
+ <main class="main"><header class="topbar"><div><div class="eyebrow">SCIENCE CLASSROOM · 115-1</div><h1 id="pageTitle">座位表總覽</h1><p id="pageSub">點選座位即可查看學生紀錄並進行課堂操作</p></div><div class="topActions"><label>紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" class="btn outline">↓ 備份</button></div></header>
+ <div id="stats" class="stats"></div><div id="content"></div></main>
+</div>
+<div id="modal" class="modal hidden"><div class="shade" data-close="true"></div><section class="dialog"><button class="close" data-close="true">×</button><div id="modalContent"></div></section></div>
+<input hidden type="file" id="csvImport" accept=".csv,text/csv"><input hidden type="file" id="jsonImport" accept=".json,application/json"><script src="schedule.js"></script><script src="app.js"></script></body></html>
