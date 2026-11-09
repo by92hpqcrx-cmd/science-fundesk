@@ -247,12 +247,24 @@ function parseOptions(v,r){
  return ['option_a','option_b','option_c','option_d'].map((x,i)=>field(r,x,['a','b','c','d'][i],['choice_a','choice_b','choice_c','choice_d'][i])).filter(x=>x!==null).map(String);
 }
 function normalizeQuestion(r,i){
- const text=field(r,'question','question_text','title','content','stem','text');
+ // Compatible with quiz_questions schemas: the source may call the question 'prompt' or 'question_content'.
+ let text=field(r,'question','question_text','question_content','question_title','prompt','question_body','question_stem','questionText','questionContent','questionTitle','title','content','stem','text','body','q','題目','題幹');
+ if(text===null){
+  const name=Object.keys(r||{}).find(k=>/question|prompt|stem|題目|題幹/i.test(k)&&typeof r[k]==='string'&&r[k].trim());
+  if(name)text=r[name];
+ }
+ if(text===null){
+  // Only infer a question from an unambiguous longer text field; never mistake an explanation for the stem.
+  const excluded=/^(id|uuid|options|choices|answers|option_list|answer|correct.*|explanation|explain|analysis|solution|reason|description|unit.*|chapter.*|category|topic|subject|lesson|domain|created.*|updated.*|difficulty|image.*|source.*|tags?|type|order.*)$/i;
+  const possible=Object.entries(r||{}).filter(([k,v])=>!excluded.test(k)&&typeof v==='string'&&v.trim().length>=12);
+  if(possible.length===1)text=possible[0][1];
+ }
  const options=parseOptions(field(r,'options','choices','answers','option_list'),r);
  let ans=field(r,'correct_answer','correct_option','correct','answer','answer_index','correct_index','correctOptionId','correctAnswer');
  if(Array.isArray(ans)&&ans.length===1)ans=ans[0];
  if(typeof ans==='string'&&ans.trim().startsWith('[')){try{const a=JSON.parse(ans);if(a.length===1)ans=a[0]}catch(_){}}
  let answerIndex=-1;
+ // A numeric answer is a zero-based option index: 0=A, 1=B, 2=C, 3=D.
  if(typeof ans==='number') answerIndex=ans>=0&&ans<options.length?ans:(ans===options.length?ans-1:-1);
  else if(typeof ans==='string'){
   const t=ans.trim();
@@ -260,7 +272,7 @@ function normalizeQuestion(r,i){
   else if(/^\d+$/.test(t)){const n=Number(t);answerIndex=n>=0&&n<options.length?n:(n===options.length?n-1:-1)}
   else answerIndex=options.findIndex(x=>x.trim()===t);
  }
- const unit=String(field(r,'unit','unit_name','chapter','chapter_name','category','topic','subject','lesson','domain')??'未分類');
+ const unit=String(field(r,'unit','unit_name','unit_title','unit_id','chapter','chapter_name','chapter_id','category','category_name','topic','topic_name','subject','lesson','domain')??'未分類');
  const explanation=String(field(r,'explanation','explain','analysis','solution','reason','answer_explanation','description')??'原題庫未提供詳解。');
  if(!text||options.length<2||answerIndex<0||answerIndex>=options.length)return null;
  return {id:String(field(r,'id','question_id','qid')??i),text:String(text),options,answerIndex,unit,explanation};
@@ -288,7 +300,7 @@ function answerNativeQuestion(index){const q=currentQuestion,record=quizList.at(
 async function loadQuestionBank(){
  if(bankBusy)return;const ver=++bankRequestVersion;bankBusy=true;bankMessage='正在從自然科學王資料庫讀取題目…';const status=$('quizBankStatus');if(status)status.innerHTML=bankStatusMarkup();
  try{const url=questionBankConfig.url.trim().replace(/\/+$/,''),key=questionBankConfig.anonKey.trim(),table=questionBankConfig.table.trim();if(!/^https:\/\/[a-zA-Z0-9.-]+\.supabase\.co$/.test(url))throw Error('Supabase 網址格式不正確');if(!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(table))throw Error('資料表名稱只能使用英文、數字和底線');if(!key||/service_role|sb_secret_/i.test(key))throw Error('不可使用 service_role 或 secret key，請使用公開 anon／publishable key');let rows=[];for(let from=0;from<5000;from+=1000){const resp=await fetch(url+'/rest/v1/'+encodeURIComponent(table)+'?select=*',{headers:{apikey:key,...(key.startsWith('eyJ')?{Authorization:'Bearer '+key}:{}),Range:`${from}-${from+999}`}});if(!resp.ok){const msg=await resp.text();throw Error('HTTP '+resp.status+'：'+msg.slice(0,220))}const part=await resp.json();if(!Array.isArray(part))throw Error('題庫回傳格式不是陣列');rows.push(...part);if(part.length<1000)break}if(ver!==bankRequestVersion)return;
- questionBank=rows.map(normalizeQuestion).filter(Boolean);if(!questionBank.length)throw Error(`資料表回傳 ${rows.length} 筆，但找不到可用的選擇題（需題目、至少兩個選項、正確答案）`);if(!bankUnits().includes(gameUnit))gameUnit=bankUnits()[0];bankMessage='成功讀取自然科學王原題庫';currentQuestion=null;gameAnswered=false;refreshGameOnly();
+ questionBank=rows.map(normalizeQuestion).filter(Boolean);if(!questionBank.length){const keys=rows[0]?Object.keys(rows[0]).join('、'):'（無資料）';throw Error(`資料表回傳 ${rows.length} 筆，但無法辨識題型。第一筆資料的欄位：${keys}。請提供欄位名稱以完成對應。`)}if(!bankUnits().includes(gameUnit))gameUnit=bankUnits()[0];bankMessage='成功讀取自然科學王原題庫';currentQuestion=null;gameAnswered=false;refreshGameOnly();
  }catch(e){questionBank=[];bankMessage='錯誤：'+e.message;refreshGameOnly()}finally{bankBusy=false}
 }
 function hookNativeQuiz(){
