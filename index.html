@@ -219,7 +219,7 @@ function bindNewFeatures(){
   document.querySelectorAll('[data-exam-remove]').forEach(b=>b.onclick=()=>{if(!confirm('確定刪除這筆考程？'))return;cls().examSchedule=cls().examSchedule.filter(x=>x.id!==b.dataset.examRemove);save();render()});
  }
 }
-function renderStudents(){return `<section class="panel"><div class="panelHead"><h2>學生名單 · ${cl} 班</h2><div class="row"><button class="btn small outline" id="importCsvBtn">匯入 CSV 名單</button><button class="btn small outline" data-csv="students">匯出 CSV</button><button class="btn small soft" id="addStudent">＋ 新增學生</button></div></div><p class="hint">目前示範資料不是真實學生；可按「匯入 CSV 名單」替換。格式：座號,姓名（例如 1,王小明）。匯入時保留同座號原紀錄，請先備份並確認姓名。</p><div class="tablewrap"><table><thead><tr><th>座號</th><th>姓名</th><th>待追蹤</th><th>點數</th><th>操作</th></tr></thead><tbody>${[...students()].sort((a,b)=>a.no-b.no).map(s=>`<tr><td>${s.no}</td><td>${esc(s.name)}</td><td>${pending(s.id).length}</td><td>${ptotal(s.id)}</td><td><button class="btn small outline" data-open="${s.id}">個人紀錄</button></td></tr>`).join('')}</tbody></table></div></section>`}
+function renderStudents(){return `<section class="panel"><div class="panelHead"><h2>學生名單 · ${cl} 班</h2><div class="row"><button class="btn small outline" id="importCsvBtn">匯入 CSV 名單</button><button class="btn small outline" data-csv="students">匯出 CSV</button><button class="btn small soft" id="addStudent">＋ 新增學生</button></div></div><p class="hint">目前示範資料不是真實學生；可按「匯入 CSV 名單」替換。格式：座號,姓名（例如 1,王小明）。支援 Excel 常見的 UTF-8、Big5／ANSI、UTF-16 CSV；匯入前會預覽中文姓名。請先備份，只有同座號且同姓名才保留原紀錄。</p><div class="tablewrap"><table><thead><tr><th>座號</th><th>姓名</th><th>待追蹤</th><th>點數</th><th>操作</th></tr></thead><tbody>${[...students()].sort((a,b)=>a.no-b.no).map(s=>`<tr><td>${s.no}</td><td>${esc(s.name)}</td><td>${pending(s.id).length}</td><td>${ptotal(s.id)}</td><td><button class="btn small outline" data-open="${s.id}">個人紀錄</button></td></tr>`).join('')}</tbody></table></div></section>`}
 function renderTools(){return `${renderExamClock()}<div class="twoCols"><section class="panel"><h2>◴ 倒數計時</h2><p class="hint">實驗操作、習作書寫與考試都可使用</p><div id="timerShow" class="toolDisplay">${toMMSS(timerSeconds)}</div><div class="actions"><button class="btn small outline" data-time="300">5 分鐘</button><button class="btn small outline" data-time="600">10 分鐘</button><button class="btn small outline" data-time="1200">20 分鐘</button><button class="btn small" id="timerStart">開始／暫停</button><button class="btn small outline" id="timerReset">重設</button></div></section><section class="panel"><h2>♙ 隨機抽學生</h2><p class="hint">從目前 ${cl} 班名單中隨機選取</p><div class="toolDisplay" id="randomShow">？</div><div class="actions"><button class="btn" id="pickStudent">抽一位學生</button></div></section></div><section class="panel"><h2>本節課操作建議</h2><p class="hint">實驗結束 → 當堂書寫習作 → 將還沒寫完的學生記為「未完成」 → 下次補完改成「已補交」；單元考請針對請假者標「缺考／待補考」，補考後再改「補考完成」。</p></section>`}
 function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">單機版 · 不雲端同步</span></div><div class="notice">這個初版只儲存在目前瀏覽器的 localStorage。換電腦、清除瀏覽資料、使用無痕模式，都可能造成資料遺失。此版本沒有教師登入、權限控管或雲端加密，請勿在共用電腦中存放真實學生姓名與敏感紀錄。</div><div class="actions"><button class="btn" id="exportJson">下載七班資料備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前總共 ${count} 筆學生名單（含示範資料）；如需正式跨裝置共同使用，下一階段需接上受學校核准的登入及資料庫。</p></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${cl} 班全部資料</button></div></section>`}
 function hookView(){if(view==='seats'){$('editQuickLinks').onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings)}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='seats'){
@@ -247,8 +247,43 @@ function backup(){download('自然科任七班備份_'+today()+'.json',JSON.stri
 const csvEscape=x=>'"'+String(x??'').replace(/"/g,'""')+'"';
 function exportCsv(kind){let rows=kind==='students'?[['座號','姓名','備註'],...students().map(s=>[s.no,s.name,s.notes])]:[['班級','座號','姓名','項目日期','類型','項目','狀態','備註'],...cls().results.filter(r=>['未繳交','待訂正','未完成','未交','缺考','待補考','補考未完成'].includes(r.status)).map(r=>{let s=student(r.sid),t=cls().tasks.find(t=>t.id===r.taskId);return [cl,s?.no,s?.name,t?.date,t?.type,t?.title,r.status,r.note]})];download(`${cl}_${kind==='students'?'學生名單':'待追蹤清單'}.csv`,'\uFEFF'+rows.map(row=>row.map(csvEscape).join(',')).join('\r\n'),'text/csv;charset=utf-8')}
 function parseCSV(text){text=text.replace(/^\uFEFF/,'');let out=[],row=[],v='',q=false;for(let i=0;i<text.length;i++){let c=text[i];if(c==='"'){if(q&&text[i+1]==='"'){v+='"';i++}else q=!q}else if(c===','&&!q){row.push(v);v=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&text[i+1]==='\n')i++;row.push(v);if(row.some(x=>x.trim()))out.push(row);row=[];v=''}else v+=c}if(v||row.length){row.push(v);out.push(row)}return out}
-$('csvImport').onchange=async e=>{let f=e.target.files[0];if(!f)return;let rows=parseCSV(await f.text());let n=0,skipped=0;let first=rows[0]?.map(x=>x.trim())||[];let noCol=first.findIndex(x=>x==='座號'),nameCol=first.findIndex(x=>x==='姓名');let body=rows;if(noCol>=0&&nameCol>=0)body=rows.slice(1);else {noCol=0;nameCol=1}let found=[];body.forEach(row=>{let no=Number((row[noCol]||'').trim()),name=(row[nameCol]||'').trim();if(Number.isInteger(no)&&no>0&&name&&!found.some(x=>x.no===no))found.push({no,name});else skipped++});if(!found.length){alert('無有效資料。CSV 必須包含「座號,姓名」兩欄。');return}if(!confirm(`將匯入 ${found.length} 位學生至 ${cl} 班。只有座號與姓名都相同才保留原紀錄；其餘視為新學生，避免混用前一位學生資料。確定嗎？\n請先備份資料。`))return;
-let old=students(),newS=found.map(r=>{let prev=old.find(x=>x.no===r.no&&x.name===r.name);return prev?{...prev}:{id:uid(),no:r.no,name:r.name,notes:''}});let allowed=new Set(newS.map(x=>x.id));cls().students=newS;cls().seats.normal=[];cls().seats.lab=[];cls().attendance=cls().attendance.filter(x=>allowed.has(x.sid));cls().results=cls().results.filter(x=>allowed.has(x.sid));cls().points=cls().points.filter(x=>allowed.has(x.sid));save();render();alert(`已匯入 ${newS.length} 位學生，略過 ${skipped} 列。`);e.target.value=''};
+async function decodeStudentCSV(file){
+ const bytes=new Uint8Array(await file.arrayBuffer());
+ if(!bytes.length)throw Error('CSV 檔案是空的');
+ let encoding='UTF-8',text='';
+ const decode=(enc,fatal=true)=>new TextDecoder(enc,{fatal}).decode(bytes);
+ if(bytes[0]===0xFF&&bytes[1]===0xFE){encoding='UTF-16 LE';text=decode('utf-16le')}
+ else if(bytes[0]===0xFE&&bytes[1]===0xFF){encoding='UTF-16 BE';text=decode('utf-16be')}
+ else if(bytes.length>4&&bytes[1]===0&&bytes[3]===0){encoding='UTF-16 LE';text=decode('utf-16le')}
+ else{try{text=decode('utf-8')}catch(_){encoding='Big5／ANSI';text=decode('big5')}}
+ text=text.replace(/^\uFEFF/,'');
+ if(text.includes('\uFFFD'))throw Error('偵測到無法辨識的文字，已停止匯入，以免將學生姓名變成亂碼。請在 Excel 另存成「CSV UTF-8（逗號分隔）」後再試。');
+ return {text,encoding};
+}
+$('csvImport').onchange=async e=>{
+ const f=e.target.files[0];if(!f)return;
+ try{
+  const {text,encoding}=await decodeStudentCSV(f);
+  const rows=parseCSV(text);let skipped=0;
+  const first=rows[0]?.map(x=>x.trim().replace(/^\uFEFF/,''))||[];
+  let noCol=first.findIndex(x=>x==='座號'),nameCol=first.findIndex(x=>x==='姓名');
+  let body=rows;
+  if(noCol>=0&&nameCol>=0)body=rows.slice(1);else {noCol=0;nameCol=1}
+  const found=[];
+  body.forEach(row=>{let no=Number((row[noCol]||'').trim()),name=(row[nameCol]||'').trim();if(Number.isInteger(no)&&no>0&&name&&!name.includes('\uFFFD')&&!found.some(x=>x.no===no))found.push({no,name});else skipped++});
+  if(!found.length){alert('無有效資料。CSV 必須包含「座號,姓名」兩欄，或前兩欄依序為座號、姓名。');return}
+  const preview=found.slice(0,12).map(x=>`${x.no} 號 ${x.name}`).join('\n');
+  const more=found.length>12?`\n……另外 ${found.length-12} 位`:'';
+  if(!confirm(`CSV 解碼方式：${encoding}\n匯入班級：${cl} 班\n有效學生：${found.length} 位（略過 ${skipped} 列）\n\n【姓名預覽】\n${preview}${more}\n\n請先確認中文姓名正確，並備份原資料。確定匯入？\n\n提醒：只有「座號和姓名都相同」的原紀錄會保留；不同者會視為新學生。`))return;
+  const old=students(),newS=found.map(r=>{let prev=old.find(x=>x.no===r.no&&x.name===r.name);return prev?{...prev}:{id:uid(),no:r.no,name:r.name,notes:''}});
+  const allowed=new Set(newS.map(x=>x.id));
+  cls().students=newS;cls().seats.normal=[];cls().seats.lab=[];
+  cls().attendance=cls().attendance.filter(x=>allowed.has(x.sid));
+  cls().results=cls().results.filter(x=>allowed.has(x.sid));
+  cls().points=cls().points.filter(x=>allowed.has(x.sid));
+  save();render();alert(`已匯入 ${newS.length} 位學生，略過 ${skipped} 列。中文編碼：${encoding}。`);
+ }catch(err){alert('學生名單匯入失敗：'+(err?.message||String(err)))}finally{e.target.value=''}
+};
 $('jsonImport').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let o=JSON.parse(await f.text());if(!o.classes||!CLASSES.every(c=>Array.isArray(o.classes[c]?.students)))throw Error('備份格式不符');if(!confirm('還原會覆蓋目前七班的所有紀錄。確定要繼續？'))return;db=o;save();render();alert('已還原七班資料')}catch(err){alert('無法還原：'+err.message)}e.target.value=''};
 $('classSelect').innerHTML=CLASSES.map(x=>`<option value="${x}">${x} 班</option>`).join('');$('classSelect').onchange=e=>changeClass(e.target.value);$('sessionDate').value=today()<'2026-11-16'?'2026-11-16':today();$('sessionDate').onchange=()=>render();$('backupTop').onclick=backup;document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{view=b.dataset.view;if(timerTick){clearInterval(timerTick);timerTick=null}render()});document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>$('modal').classList.add('hidden'));
 render();
