@@ -299,7 +299,7 @@ function quizGameMarkup(){
  const gradeFilter=grades.length>0?`<label>年級<select id="quizGrade"><option value="">全部年級</option>${grades.map(x=>`<option value="${esc(x)}" ${gameGrade===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`:'';
  const semesterFilter=semesters.length>0?`<label>學期<select id="quizSemester"><option value="">全部學期</option>${semesters.map(x=>`<option value="${esc(x)}" ${gameSemester===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`:'';
  const unitOptions=units.map(unit=>`<option value="${esc(unit)}" ${unit===gameUnit?'selected':''}>${esc(unit)}（${filtered.filter(q=>q.unit===unit).length} 題）</option>`).join('');
- const unitTiles=units.map(unit=>`<button type="button" class="unitSelectCard ${unit===gameUnit?'selected':''}" data-select-unit="${esc(unit)}" aria-pressed="${unit===gameUnit?'true':'false'}"><b>${esc(unit)}</b><small>${filtered.filter(q=>q.unit===unit).length} 題</small></button>`).join('');
+ const unitTiles=units.map(unit=>`<button type="button" class="unitSelectCard ${unit===gameUnit?'selected':''}" data-select-unit="${esc(unit)}" aria-pressed="${unit===gameUnit?'true':'false'}"><b>${esc(unit)}</b></button>`).join('');
  let content='';
  if(!questionBank.length)content=`<div class="quizGameEmpty"><b>題庫尚未載入</b><p>${esc(bankMessage)}，請重新整理網站。</p></div>`;
  else if(!currentQuestion)content='<div class="quizGameEmpty"><b>準備好了！</b><p>選好單元與答題學生後，點選「隨機出一題」。</p></div>';
