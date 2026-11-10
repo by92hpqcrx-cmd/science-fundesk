@@ -486,7 +486,7 @@ $('classSelect').innerHTML=CLASSES.map(x=>`<option value="${x}">${x} 班</option
 
 // --- Cloud login + seven-class secure sync (no student data in localStorage) ---
 const CLOUD_CONFIG_KEY='fundesk_cloud_public_config_v1';
-let cloudConfig={url:'https://ayvwsexnxvjjcrbtyoof.supabase.co',key:''};
+let cloudConfig={url:'https://ayvwsexnxvjjcrbtyoof.supabase.co',key:'sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L'};
 try{cloudConfig={...cloudConfig,...JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY)||'{}')}}catch(_){}
 let cloudSession=null,cloudReady=false,cloudBlocked=false,cloudQueue=Promise.resolve(),cloudOutstanding=0;
 let cloudRevisions={},cloudSnapshots={};
