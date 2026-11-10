@@ -290,7 +290,7 @@ function normalizeQuestion(r,i){
 function quizFilteredQuestions(){return questionBank.filter(q=>(!gameGrade||q.grade===gameGrade)&&(!gameSemester||q.semester===gameSemester))}
 function bankUnits(){return [...new Set(quizFilteredQuestions().map(q=>q.unit))].sort((a,b)=>a.localeCompare(b,'zh-Hant',{numeric:true}))}
 function quizDistinct(fieldName){return [...new Set(questionBank.map(q=>q[fieldName]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant',{numeric:true}))}
-function bankStatusMarkup(){return `<span class="sourceStatus ${bankMessage.startsWith('錯誤')?'sourceError':''}">${esc(bankMessage)} · ${questionBank.length} 題可使用</span>`}
+function bankStatusMarkup(){return `<span class="sourceStatus ${bankMessage.startsWith('錯誤')?'sourceError':''}">${esc(bankMessage)} </span>`}
 function renderBankConfig(){return `<p class="hint">📚 題目直接來自原「自然科學王」questions.js 題庫，已整合進本頁。不需要 Supabase 設定。題庫原本未附詳解的題目會明確標示「原題庫未提供詳解」。</p>`}
 function quizLogRows(){return quizList.length?quizList.slice().reverse().map(q=>`<div class="quizRow"><strong>${esc(q.label)}</strong><span>${esc(q.status)} · ${esc(q.source||'抽籤')}${q.questionText?' · '+esc(q.questionText.slice(0,42)):''}</span></div>`).join(''):'<div class="emptymsg">尚未開始本輪作答</div>'}
 function quizGameMarkup(){
