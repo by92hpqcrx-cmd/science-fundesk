@@ -83,7 +83,7 @@
 .unitSelectGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin:12px 0}
 .unitSelectCard{border:2px solid #c9d7ea;background:white;border-radius:12px;padding:13px 10px;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:7px;color:#24354b;min-height:72px;font:inherit}
 .unitSelectCard.selected{border-color:#315cbd;background:#eaf0ff;box-shadow:0 0 0 2px #315cbd20}.unitSelectCard small{color:#60748a}.unitSelectCard:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}
-</style>
+.sidebar{overflow-y:auto;overscroll-behavior:contain}.sidebar nav{flex-shrink:0}.sidebarFoot{flex-shrink:0}.fastClasses{flex-shrink:0}@media(max-width:730px){.sidebar{overflow:visible}} </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 .cloudGate{position:fixed;inset:0;z-index:10050;background:linear-gradient(125deg,#172744,#2e5a90);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
@@ -112,11 +112,11 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 <div class="shell">
  <aside class="sidebar"><div class="brand"><span class="brandmark">✦</span><div><b>自然科任 FunDesk</b><small>五年級科任教學工作台</small></div></div>
  <label class="fieldlabel" for="classSelect">目前班級</label><select id="classSelect" class="classSelect"></select>
- <div class="fastClasses" id="fastClasses"><b>七班快速入口</b><div id="fastClassLinks"></div></div>
+ <div class="fastClasses" id="fastClasses"><b>班級快速入口</b><div id="fastClassLinks"></div></div>
  <button type="button" id="cloudLogout" class="sidebarCloudLogout">🔒 登出雲端</button>
  <div class="mini">115學年度 · 第一學期<br>課程：神祕的天空／燃燒與生鏽</div>
- <nav id="nav"><button data-view="seats" class="active">▦　座位表總覽</button><button data-view="attention">▤　待追蹤清單 <i id="sidebarPending"></i></button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試</button><button data-view="schedule">▣　七班教學進度</button><button data-view="points">★　全班加減分</button><button data-view="correction">☑　作業訂正</button><button data-view="board">▣　作業播放表</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="tools">◴　課堂小工具</button><button data-view="settings">⚙　資料管理</button></nav>
- <div class="sidebarFoot">單機資料儲存在這台瀏覽器<br><strong>請定期匯出備份</strong><br></div>
+ <nav id="nav"><button data-view="seats" class="active">▦　座位表總覽</button><button data-view="attention">▤　待追蹤清單 <i id="sidebarPending"></i></button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試</button><button data-view="schedule">▣　七班教學進度</button><button data-view="points">★　全班加減分</button><button data-view="correction">☑　作業訂正</button><button data-view="board">▣　作業播放表</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="tools">◴　課堂小工具</button><button data-view="classes">🏫　我的班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
+ <div class="sidebarFoot">教師登入後存取雲端學生紀錄<br><strong>使用公用電腦後請登出</strong><br></div>
  </aside>
  <main class="main"><header class="topbar"><div><div class="eyebrow">SCIENCE CLASSROOM · 115-1</div><h1 id="pageTitle">座位表總覽</h1><p id="pageSub">點選座位即可查看學生紀錄並進行課堂操作</p></div><div class="topActions"><label>紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" class="btn outline">↓ 備份</button></div></header>
  <div id="stats" class="stats"></div><div id="content"></div></main>
@@ -145,13 +145,21 @@ function openLinkSettings(){
 // 五組實驗桌：顯示方向為黑板在上；靠黑板第一至第三組，後方第四、第五組。
 const DEFAULT_LAB_TEMPLATE=[[14,29,19,9,4,24],[15,30,20,10,5,25],[11,26,16,6,1,21],[12,27,17,7,2,22],[13,28,18,8,3,23]];
 const taskTypes=['習作','實驗','考試'];
-const CLASSES=['501','502','503','504','505','506','507'];const time={1:'08:50–09:30',2:'09:40–10:20',3:'10:35–11:15',4:'11:25–12:05',5:'13:20–14:00',6:'14:10–14:50',7:'15:00–15:40'};
-const titles={seats:'座位表總覽',attention:'待追蹤清單',attendance:'出勤紀錄',tasks:'習作／實驗／考試',schedule:'七班教學進度',points:'獎懲積點',correction:'作業訂正',board:'作業播放表',quiz:'抽籤問答',students:'學生名單',tools:'課堂小工具',settings:'資料管理'};
+let CLASSES=['501','502','503','504','505','506','507'];
+const DEFAULT_CLASSES=[...CLASSES];
+const freshClass=()=>({students:[],seats:{normal:[],lab:[]},attendance:[],tasks:[],results:[],points:[]});
+const className=c=>String(db?.classMeta?.[c]?.name||c);
+const activeCodes=()=>CLASSES.filter(c=>db?.classMeta?.[c]?.active!==false);
+const classDisplay=c=>className(c).endsWith('班')?className(c):className(c)+' 班';
+const classOptions=()=>activeCodes().map(c=>`<option value="${esc(c)}">${esc(classDisplay(c))}</option>`).join('');
+const syncClassOptions=()=>{const sel=$('classSelect');sel.innerHTML=classOptions();if(activeCodes().includes(cl))sel.value=cl};
+const time={1:'08:50–09:30',2:'09:40–10:20',3:'10:35–11:15',4:'11:25–12:05',5:'13:20–14:00',6:'14:10–14:50',7:'15:00–15:40'};
+const titles={seats:'座位表總覽',attention:'待追蹤清單',attendance:'出勤紀錄',tasks:'習作／實驗／考試',schedule:'七班教學進度',points:'獎懲積點',correction:'作業訂正',board:'作業播放表',quiz:'抽籤問答',students:'學生名單',tools:'課堂小工具',classes:'我的班級管理',settings:'資料管理'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>{let parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());let v=Object.fromEntries(parts.map(x=>[x.type,x.value]));return `${v.year}-${v.month}-${v.day}`};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const parseWeek=d=>{const start=new Date('2026-11-16T12:00:00');const current=new Date(d+'T12:00:00');const n=Math.floor((current-start)/86400000/7);return Math.max(12,Math.min(20,12+n))};
-const makeState=()=>({version:1,classes:Object.fromEntries(CLASSES.map(cl=>[cl,{students:Array.from({length:30},(_,i)=>({id:uid(),no:i+1,name:`示範學生${String(i+1).padStart(2,'0')}`,notes:''})),seats:{normal:[],lab:[]},attendance:[],tasks:[],results:[],points:[]}]))});
+const makeState=()=>({version:2,classMeta:Object.fromEntries(CLASSES.map(c=>[c,{name:c,active:true}])),classes:Object.fromEntries(CLASSES.map(cl=>[cl,{students:Array.from({length:30},(_,i)=>({id:uid(),no:i+1,name:`示範學生${String(i+1).padStart(2,'0')}`,notes:''})),seats:{normal:[],lab:[]},attendance:[],tasks:[],results:[],points:[]}]))});
 let legacyDb=null;try{legacyDb=JSON.parse(localStorage.getItem(KEY))}catch{}let db=makeState();
 if(!Array.isArray(db.labTemplate)||db.labTemplate.length!==5)db.labTemplate=DEFAULT_LAB_TEMPLATE.map(g=>[...g]);
 let cl='501',view='seats',layout='normal',studentId=null,selectedTask='',editSeats=false,editLabTemplate=false,templatePicked=null,toolTimer=null,timerSeconds=300,timerTick=null,timerDeadline=null,classEndTime="",timerNotified=false;
@@ -215,9 +223,9 @@ function swapTemplateCell(index){
 }
 function resetLabTemplate(){if(!confirm('恢復 PDF 原始座號位置？會清除七班已另行調整的實驗座位排列，但不會刪除學生與課堂紀錄。'))return;db.labTemplate=DEFAULT_LAB_TEMPLATE.map(g=>[...g]);CLASSES.forEach(code=>db.classes[code].seats.lab=[]);templatePicked=null;save();render()}
 function setSeat(kind,arr){cls().seats[kind]=arr;save()}
-function changeClass(c){if(!CLASSES.includes(c))return; const u=new URL(location.href);u.searchParams.set('class',c);history.replaceState({},'',u.href);pointSelection.clear();quizList=[];quizPicked.clear();currentQuestion=null;gameAnswered=false;correctionTaskId='';cl=c;editSeats=false;editLabTemplate=false;templatePicked=null;studentId=null;selectedTask='';$('modal').classList.add('hidden');render()}
+function changeClass(c){if(!activeCodes().includes(c))return; const u=new URL(location.href);u.searchParams.set('class',c);history.replaceState({},'',u.href);pointSelection.clear();quizList=[];quizPicked.clear();currentQuestion=null;gameAnswered=false;correctionTaskId='';cl=c;editSeats=false;editLabTemplate=false;templatePicked=null;studentId=null;selectedTask='';$('modal').classList.add('hidden');render()}
 function statCards(){let n=tally();$('stats').innerHTML=[['學生人數',students().length,'目前班級'],['待補習作',n.missing,'實驗／習作未完成'],['待補考',n.exam,'缺考或補考未完成'],['缺席紀錄',n.absent,'累計缺席次數']].map(([a,b,c])=>`<div class="stat"><span>${a}</span><strong>${b}</strong><small>${c}</small></div>`).join('');$('sidebarPending').textContent=n.missing+n.exam||''}
-function render(){if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} $('classSelect').value=cl;cloudRenderQuickClasses();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='schedule'?'已載入 11/15 起第三、第四單元七班教學安排':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');root.innerHTML=({seats:renderSeats,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,points:renderPoints,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,tools:renderTools,settings:renderSettings}[view])();hookView()}
+function render(){if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();cloudRenderQuickClasses();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='schedule'?'已載入 11/15 起第三、第四單元七班教學安排':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');root.innerHTML=({seats:renderSeats,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,points:renderPoints,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,tools:renderTools,classes:renderClassManager,settings:renderSettings}[view])();hookView()}
 function renderSeats(){
  const arr=layoutMap(layout),date=$('sessionDate').value;
  const cells=arr.map((sid,i)=>{const s=student(sid);if(!s)return `<button class="seat empty" data-seat="${i}" data-sid=""><small>空位</small></button>`;
@@ -416,7 +424,50 @@ function bindNewFeatures(){
 }
 function renderStudents(){return `<section class="panel"><div class="panelHead"><h2>學生名單 · ${cl} 班</h2><div class="row"><button class="btn small outline" id="importCsvBtn">匯入 CSV 名單</button><button class="btn small outline" data-csv="students">匯出 CSV</button><button class="btn small soft" id="addStudent">＋ 新增學生</button></div></div><p class="hint">目前示範資料不是真實學生；可按「匯入 CSV 名單」替換。格式：座號,姓名（例如 1,王小明）。支援 Excel 常見的 UTF-8、Big5／ANSI、UTF-16 CSV；匯入前會預覽中文姓名。請先備份，只有同座號且同姓名才保留原紀錄。</p><div class="tablewrap"><table><thead><tr><th>座號</th><th>姓名</th><th>待追蹤</th><th>點數</th><th>操作</th></tr></thead><tbody>${[...students()].sort((a,b)=>a.no-b.no).map(s=>`<tr><td>${s.no}</td><td>${esc(s.name)}</td><td>${pending(s.id).length}</td><td>${ptotal(s.id)}</td><td><button class="btn small outline" data-open="${s.id}">個人紀錄</button></td></tr>`).join('')}</tbody></table></div></section>`}
 function renderTools(){return `${renderExamClock()}<div class="twoCols"><section class="panel"><h2>◴ 倒數計時</h2><p class="hint">實驗操作、習作書寫與考試都可使用；切換功能頁仍繼續計時。</p><div id="timerShow" class="toolDisplay">${toMMSS(timerSeconds)}</div><div class="actions"><button class="btn small outline" data-time="300">5 分鐘</button><button class="btn small outline" data-time="600">10 分鐘</button><button class="btn small outline" data-time="1200">20 分鐘</button><button class="btn small" id="timerStart">開始／暫停</button><button class="btn small outline" id="timerReset">重設</button></div></section><section class="panel"><h2>♙ 隨機抽學生</h2><p class="hint">從目前 ${cl} 班名單中隨機選取</p><div class="toolDisplay" id="randomShow">？</div><div class="actions"><button class="btn" id="pickStudent">抽一位學生</button></div></section></div><section class="panel"><h2>本節課操作建議</h2><p class="hint">實驗結束 → 當堂書寫習作 → 將還沒寫完的學生記為「未完成」 → 下次補完改成「已補交」；單元考請針對請假者標「缺考／待補考」，補考後再改「補考完成」。</p></section>`}
-function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載七班資料備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前總共 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${cl} 班全部資料</button></div></section>`}
+function renderClassManager(){
+ const active=activeCodes();
+ const rows=CLASSES.map(code=>{
+  const info=db.classMeta[code]||{name:code,active:true};
+  const count=db.classes[code]?.students?.length||0;
+  return `<tr><td><b>${esc(info.name)}</b><div class="hint">內部代碼：${esc(code)}</div></td><td>${count} 人</td><td>${info.active===false?'<span class="pill warn">已停用（資料保留）</span>':'<span class="pill green">使用中</span>'}</td><td><div class="actions" style="margin:0"><button class="btn small outline" data-class-rename="${esc(code)}">改名</button><button class="btn small ${info.active===false?'soft':'danger'}" data-class-toggle="${esc(code)}">${info.active===false?'重新啟用':'停用'}</button>${info.active===false?'':`<button class="btn small outline" data-class-open="${esc(code)}">切換</button>`}</div></td></tr>`
+ }).join('');
+ return `<section class="panel"><div class="panelHead"><h2>🏫 我的班級管理</h2><span class="pill">共 ${active.length} 個使用中班級</span></div>
+ <p class="hint">每位教師帳號獨立設定班級。原本 501～507 保留；更改班名不會改變雲端資料代碼、名單或獎懲紀錄。停用只隱藏班級，資料會保留，可再次啟用。</p>
+ <form id="addClassForm" class="row" style="margin:14px 0 20px"><label for="newClassName"><b>新增班級名稱：</b></label><input id="newClassName" name="name" placeholder="例如 701、六甲、科學社" maxlength="35" required><button class="btn" type="submit">＋ 新增班級</button></form>
+ <div class="tablewrap"><table><thead><tr><th>班級名稱</th><th>學生數</th><th>狀態</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table></div></section>
+ <section class="panel"><h2>班級學生名單與座位</h2><p class="hint">新增或切換班級後，請進入「學生名單」新增／CSV 匯入學生；進入「座位表總覽」可調整一般座位與實驗座位。全站共用五組實驗桌模板；各班可以自行交換學生座位。新班級從空名單開始。</p><div class="actions"><button class="btn outline" type="button" id="manageStudents">管理目前班級學生</button><button class="btn outline" type="button" id="manageSeats">管理目前班級座位</button></div></section>`;
+}
+function hookClassManager(){
+ $('addClassForm').onsubmit=e=>{
+  e.preventDefault();if(!cloudReady||cloudBlocked)return alert('目前未完成雲端連線，不能新增班級');
+  const name=String(new FormData(e.target).get('name')||'').trim();
+  if(!name||name.length>35)return alert('請輸入 1～35 字的班級名稱');
+  if(CLASSES.some(c=>className(c)===name))return alert('已存在同名班級');
+  if(CLASSES.length>=60)return alert('為避免載入過慢，單一教師帳號最多建立 60 個班級');
+  const code='c_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8);
+  CLASSES.push(code);db.classes[code]=freshClass();db.classMeta[code]={name,active:true};
+  cl=code;save();view='classes';render();
+ };
+ document.querySelectorAll('[data-class-rename]').forEach(b=>b.onclick=()=>{
+  const code=b.dataset.classRename;
+  const name=prompt('新班級名稱（不影響學生資料）',className(code));if(name===null)return;
+  const trimmed=name.trim();if(!trimmed||trimmed.length>35)return alert('名稱必須介於 1～35 字');
+  if(CLASSES.some(c=>c!==code&&className(c)===trimmed))return alert('已存在同名班級');
+  db.classMeta[code].name=trimmed;save();render();
+ });
+ document.querySelectorAll('[data-class-toggle]').forEach(b=>b.onclick=()=>{
+  const code=b.dataset.classToggle,active=db.classMeta[code].active!==false;
+  if(active&&activeCodes().length<=1)return alert('至少需要保留一個使用中的班級');
+  if(!confirm(active?`確定停用「${className(code)}」嗎？學生紀錄仍會保留在雲端，之後可重新啟用。`:`確定重新啟用「${className(code)}」嗎？`))return;
+  db.classMeta[code].active=!active;
+  if(active&&cl===code){cl=activeCodes()[0];const u=new URL(location.href);u.searchParams.set('class',cl);history.replaceState({},'',u.href)}
+  save();render();
+ });
+ document.querySelectorAll('[data-class-open]').forEach(b=>b.onclick=()=>changeClass(b.dataset.classOpen));
+ $('manageStudents').onclick=()=>{view='students';render()};
+ $('manageSeats').onclick=()=>{view='seats';render()};
+}
+function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${cl} 班全部資料</button></div></section>`}
 function hookView(){if(view==='seats'){$('editQuickLinks').onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings)}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='seats'){
  document.querySelectorAll('[data-layout]').forEach(b=>b.onclick=()=>{layout=b.dataset.layout;editSeats=false;editLabTemplate=false;templatePicked=null;render()});$('seatEdit').onclick=()=>{editSeats=!editSeats;render()};
  if(layout==='lab'){$('templateEdit').onclick=()=>{if(!editLabTemplate){if(!confirm('進入七班共用模板編輯？交換座號會同步套用七班，並清除各班個別實驗座位排列；所有學生紀錄保留。'))return;editSeats=false;}editLabTemplate=!editLabTemplate;templatePicked=null;render()};if(editLabTemplate){$('templateReset').onclick=resetLabTemplate;document.querySelectorAll('[data-template-index]').forEach(b=>b.onclick=()=>swapTemplateCell(Number(b.dataset.templateIndex)));}}
@@ -424,8 +475,9 @@ function hookView(){if(view==='seats'){$('editQuickLinks').onclick=openLinkSetti
 }if(view==='attendance')document.querySelectorAll('[data-att]').forEach(el=>el.onclick=()=>{const sid=el.dataset.att,date=$('sessionDate').value;recordAttendance(sid,date,att(sid,date)!=='缺席');render()});
 if(view==='tasks'){$('newTask').onsubmit=e=>{e.preventDefault();let o=Object.fromEntries(new FormData(e.target));cls().tasks.push({id:uid(),type:o.type,date:o.date,title:o.title.trim(),note:o.note||''});save();render()};document.querySelectorAll('[data-task]').forEach(b=>b.onclick=()=>taskDetails(b.dataset.task))}
 if(view==='schedule'){document.querySelectorAll('[data-week]').forEach(b=>b.onclick=()=>{document.body.dataset.week=b.dataset.week;render()});document.querySelectorAll('[data-prefill]').forEach(b=>b.onclick=()=>{const title=b.dataset.prefill,date=b.dataset.date;view='tasks';render();const f=$('newTask');f.elements.date.value=date;f.elements.type.value=title.includes('單元考')?'考試':'習作';f.elements.title.value=(title.includes('單元考')?'':'實驗後習作：')+title.replace(/（整節）/g,'');f.scrollIntoView({behavior:'smooth',block:'center'})})}
+if(view==='classes')hookClassManager();
 if(view==='students'){$('importCsvBtn').onclick=()=>$('csvImport').click();$('addStudent').onclick=()=>openAddStudent()}
-if(view==='settings'){$('exportJson').onclick=backup;$('importJson').onclick=()=>$('jsonImport').click();$('resetClass').onclick=()=>{if(prompt(`要重設 ${cl} 班所有學生、出勤、習作、考試、點數，請輸入班級數字 ${cl}`)===cl){db.classes[cl]=makeState().classes[cl];save();render()}}}
+if(view==='settings'){$('exportJson').onclick=backup;$('importJson').onclick=()=>$('jsonImport').click();$('resetClass').onclick=()=>{if(prompt(`要重設 ${cl} 班所有學生、出勤、習作、考試、點數，請輸入班級數字 ${cl}`)===cl){db.classes[cl]=freshClass();save();render()}}}
 if(view==='tools'){document.querySelectorAll('[data-time]').forEach(b=>b.onclick=()=>setTimer(Number(b.dataset.time)));$('timerStart').onclick=toggleTimer;$('timerReset').onclick=()=>setTimer(300);$('pickStudent').onclick=()=>{if(!students().length)return;let s=students()[Math.floor(Math.random()*students().length)];$('randomShow').textContent=s.no+'號 '+s.name};updateCountdown()}
 bindNewFeatures();
 }
@@ -440,7 +492,7 @@ function openStudent(id){studentId=id;let s=student(id);if(!s)return;let abs=cls
  $('saveStudentNote').onclick=()=>{s.notes=$('studentNote').value;save();alert('備註已儲存')};}
 function openAddStudent(){let no=prompt('新增學生的座號',String(students().length+1));if(no===null)return;no=Number(no);if(!Number.isInteger(no)||no<1||students().some(s=>s.no===no))return alert('請輸入尚未使用的正整數座號');let name=prompt('學生姓名');if(!name||!name.trim())return;students().push({id:uid(),no,name:name.trim(),notes:''});save();render()}
 function download(name,text,type='text/plain;charset=utf-8'){let blob=new Blob([text],{type}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},800)}
-function backup(){download('自然科任七班備份_'+today()+'.json',JSON.stringify(db,null,2),'application/json')}
+function backup(){download('FunDesk_所有班級備份_'+today()+'.json',JSON.stringify(db,null,2),'application/json')}
 const csvEscape=x=>'"'+String(x??'').replace(/"/g,'""')+'"';
 function exportCsv(kind){let rows=kind==='students'?[['座號','姓名','備註'],...students().map(s=>[s.no,s.name,s.notes])]:[['班級','座號','姓名','項目日期','類型','項目','狀態','備註'],...cls().results.filter(r=>['未繳交','待訂正','未完成','未交','缺考','待補考','補考未完成'].includes(r.status)).map(r=>{let s=student(r.sid),t=cls().tasks.find(t=>t.id===r.taskId);return [cl,s?.no,s?.name,t?.date,t?.type,t?.title,r.status,r.note]})];download(`${cl}_${kind==='students'?'學生名單':'待追蹤清單'}.csv`,'\uFEFF'+rows.map(row=>row.map(csvEscape).join(',')).join('\r\n'),'text/csv;charset=utf-8')}
 function parseCSV(text){text=text.replace(/^\uFEFF/,'');let out=[],row=[],v='',q=false;for(let i=0;i<text.length;i++){let c=text[i];if(c==='"'){if(q&&text[i+1]==='"'){v+='"';i++}else q=!q}else if(c===','&&!q){row.push(v);v=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&text[i+1]==='\n')i++;row.push(v);if(row.some(x=>x.trim()))out.push(row);row=[];v=''}else v+=c}if(v||row.length){row.push(v);out.push(row)}return out}
@@ -481,16 +533,23 @@ $('csvImport').onchange=async e=>{
   save();render();alert(`已匯入 ${newS.length} 位學生，略過 ${skipped} 列。中文編碼：${encoding}。`);
  }catch(err){alert('學生名單匯入失敗：'+(err?.message||String(err)))}finally{e.target.value=''}
 };
-$('jsonImport').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let o=JSON.parse(await f.text());if(!o.classes||!CLASSES.every(c=>Array.isArray(o.classes[c]?.students)))throw Error('備份格式不符');if(!confirm('還原會覆蓋目前七班的所有紀錄。確定要繼續？'))return;db=o;save();render();alert('已還原七班資料')}catch(err){alert('無法還原：'+err.message)}e.target.value=''};
-$('classSelect').innerHTML=CLASSES.map(x=>`<option value="${x}">${x} 班</option>`).join('');$('classSelect').onchange=e=>changeClass(e.target.value);$('sessionDate').value=today()<'2026-11-16'?'2026-11-16':today();$('sessionDate').onchange=()=>render();$('backupTop').onclick=backup;document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>$('modal').classList.add('hidden'));
+$('jsonImport').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let o=JSON.parse(await f.text());if(!o.classes||typeof o.classes!=='object')throw Error('備份格式不符');
+  const names=Object.keys(o.classes).filter(c=>/^[A-Za-z0-9_-]{1,40}$/.test(c)&&Array.isArray(o.classes[c]?.students));
+  if(!names.length)throw Error('找不到有效班級');
+  if(!confirm('此備份包含 '+names.length+' 班。還原會覆蓋同名班級，並可能新增班級；請先確認已另存現有雲端 JSON 備份。確定繼續？'))return;
+  for(const code of names){if(!CLASSES.includes(code))CLASSES.push(code);db.classes[code]=o.classes[code];db.classMeta[code]={name:String(o.classMeta?.[code]?.name||code).slice(0,35),active:o.classMeta?.[code]?.active!==false}}
+  if(Array.isArray(o.labTemplate)&&o.labTemplate.length===5)db.labTemplate=o.labTemplate;
+  if(!activeCodes().length)db.classMeta[CLASSES[0]].active=true;
+  if(!activeCodes().includes(cl))cl=activeCodes()[0];save();render();alert('已套用備份；請確認右上角顯示「已同步」')}catch(err){alert('無法還原：'+err.message)}e.target.value=''};
+syncClassOptions();$('classSelect').onchange=e=>changeClass(e.target.value);$('sessionDate').value=today()<'2026-11-16'?'2026-11-16':today();$('sessionDate').onchange=()=>render();$('backupTop').onclick=backup;document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>$('modal').classList.add('hidden'));
 
 // --- Cloud login + seven-class secure sync (no student data in localStorage) ---
 const CLOUD_CONFIG_KEY='fundesk_cloud_public_config_v1';
-let cloudConfig={url:'https://ayvwsexnxvjjcrbtyoof.supabase.co',key:'sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L'};
+let cloudConfig={url:'https://ayvwsexnxvjjcrbtyoof.supabase.co',key:''};
 try{cloudConfig={...cloudConfig,...JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY)||'{}')}}catch(_){}
 let cloudSession=null,cloudReady=false,cloudBlocked=false,cloudQueue=Promise.resolve(),cloudOutstanding=0;
 let cloudRevisions={},cloudSnapshots={};
-const cloudIds=[...CLASSES,'shared'];
+const cloudIds=()=>[...CLASSES,'shared'];
 function cloudGateMessage(html){$('cloudGateBody').innerHTML=html}
 function cloudStatus(message,isError=false){const el=$('cloudStatus');el.textContent=message;el.classList.toggle('error',isError)}
 function cloudErr(e){return String(e?.message||e||'連線失敗').replace(/</g,'&lt;')}
@@ -524,8 +583,8 @@ async function cloudRefresh(){
 function cloudLoginForm(error=''){
  document.body.classList.add('cloud-locked');$('cloudGate').hidden=false;
  const showError=error?`<div class="cloudError">${esc(error)}</div>`:'';
- cloudGateMessage(`<div class="cloudNote">每班固定網址可直接跳到 501～507 班，登入後才會讀取學生紀錄。<b>先在 Supabase 執行隨檔附上的 cloud_setup.sql。</b></div>${showError}
- <form id="cloudLoginForm"><label>教師電子郵件</label><input id="cloudEmail" type="email" autocomplete="username" required placeholder="teacher@example.edu.tw"><label>教師密碼</label><input id="cloudPassword" type="password" autocomplete="current-password" required placeholder="Supabase Auth 帳號密碼"><button type="submit">登入並同步七班</button></form>
+ cloudGateMessage(`<div class="cloudNote">每班專屬網址可直接跳到教師設定的班級，登入後才會讀取學生紀錄。<b>先在 Supabase 執行隨檔附上的 cloud_setup.sql。</b></div>${showError}
+ <form id="cloudLoginForm"><label>教師電子郵件</label><input id="cloudEmail" type="email" autocomplete="username" required placeholder="teacher@example.edu.tw"><label>教師密碼</label><input id="cloudPassword" type="password" autocomplete="current-password" required placeholder="Supabase Auth 帳號密碼"><button type="submit">登入並同步我的班級</button></form>
  <details style="margin-top:13px"><summary>初次使用：設定 Supabase 網址和公開金鑰</summary><form id="cloudConfigForm" style="padding-top:12px"><label>Project URL</label><input name="url" required value="${esc(cloudConfig.url)}"><label>anon / publishable 公開金鑰（不要貼 secret）</label><input name="key" type="password" required value="${esc(cloudConfig.key)}"><button type="submit" class="secondary">儲存連線設定</button></form></details>
  <p class="cloudNote">注意：使用同一個教師帳號登入不同班級電腦才能同步。公用電腦用完請登出、關閉瀏覽器。首次登入不會自動上傳舊本機名單。</p>`);
  $('cloudLoginForm').onsubmit=async e=>{e.preventDefault();const email=$('cloudEmail').value.trim(),password=$('cloudPassword').value;const b=e.target.querySelector('button');b.disabled=true;b.textContent='登入中…';try{
@@ -536,23 +595,32 @@ function cloudLoginForm(error=''){
 }
 function cloudRenderQuickClasses(){
  const root=$('fastClassLinks');if(!root)return;
- const url=new URL(location.href);root.innerHTML=CLASSES.map(c=>{const u=new URL(url.href);u.searchParams.set('class',c);return `<a href="${esc(u.href)}" class="${cl===c?'selected':''}" title="${c} 班專屬網址">${c}</a>`}).join('');
+ const url=new URL(location.href);root.innerHTML=activeCodes().map(c=>{const u=new URL(url.href);u.searchParams.set('class',c);return `<a href="${esc(u.href)}" class="${cl===c?'selected':''}" title="${c} 班專屬網址">${esc(className(c))}</a>`}).join('');
  root.querySelectorAll('a').forEach(a=>{a.onclick=e=>{e.preventDefault();const code=new URL(a.href).searchParams.get('class');changeClass(code)}});
 }
-function cloudPayload(code){return code==='shared'?{labTemplate:db.labTemplate}:db.classes[code]}
+function cloudPayload(code){return code==='shared'?{labTemplate:db.labTemplate,classCodes:[...CLASSES],classMeta:db.classMeta}:db.classes[code]}
 async function cloudGetAll(){return await cloudFetch('/rest/v1/fundesk_teacher_data?select=class_code,payload,revision&order=class_code.asc')}
 async function cloudLoad(){
  cloudStatus('正在下載七班雲端紀錄…');
  const rows=await cloudGetAll();
  if(!Array.isArray(rows))throw Error('雲端回傳格式不符');
  if(!rows.length){cloudInitWizard();return}
- const fresh=makeState();cloudSnapshots={};cloudRevisions={};
+ // 先從雲端共用設定還原班級清單；舊版尚未有 metadata 時保留 501～507。
+ const shared=rows.find(r=>r.class_code==='shared')?.payload;
+ const stored=Array.isArray(shared?.classCodes)?shared.classCodes.filter(c=>typeof c==='string'&&/^[A-Za-z0-9_-]{1,40}$/.test(c)):null;
+ const rowCodes=rows.filter(r=>r.class_code!=='shared'&&/^[A-Za-z0-9_-]{1,40}$/.test(r.class_code)).map(r=>r.class_code);
+ CLASSES=[...new Set([...(stored?.length?stored:DEFAULT_CLASSES),...rowCodes])];
+ const fresh=makeState();
+ if(shared?.classMeta&&typeof shared.classMeta==='object'){
+  for(const code of CLASSES){const item=shared.classMeta[code];if(item&&typeof item.name==='string'&&item.name.trim())fresh.classMeta[code]={name:item.name.slice(0,35),active:item.active!==false}}
+ }
+ cloudSnapshots={};cloudRevisions={};
  for(const row of rows){if(row.class_code==='shared'){
  if(Array.isArray(row.payload?.labTemplate)&&row.payload.labTemplate.length===5)fresh.labTemplate=row.payload.labTemplate;
  }else if(CLASSES.includes(row.class_code)&&Array.isArray(row.payload?.students))fresh.classes[row.class_code]=row.payload;
  cloudSnapshots[row.class_code]=JSON.stringify(row.payload);cloudRevisions[row.class_code]=Number(row.revision||0);
  }
- db=fresh;if(!db.labTemplate)db.labTemplate=DEFAULT_LAB_TEMPLATE.map(g=>[...g]);
+ db=fresh;if(!activeCodes().length){db.classMeta[CLASSES[0]].active=true}if(!activeCodes().includes(cl))cl=activeCodes()[0];if(!db.labTemplate)db.labTemplate=DEFAULT_LAB_TEMPLATE.map(g=>[...g]);
  cloudBlocked=false;cloudReady=true;cloudUnlock();
 }
 function cloudInitWizard(){
@@ -584,7 +652,7 @@ function cloudQueueSave(){
  cloudStatus('⏳ 儲存到雲端中…');
  cloudQueue=cloudQueue.then(async()=>{
   if(cloudBlocked)return;
-  for(const code of cloudIds){
+  for(const code of cloudIds()){
    const payload=cloudPayload(code),serialized=JSON.stringify(payload);
    if(cloudSnapshots[code]===serialized)continue;
    // RPC performs optimistic revision check: rejects simultaneous overwrites from another computer.
@@ -600,7 +668,7 @@ function cloudQueueSave(){
  return cloudQueue;
 }
 async function cloudBoot(){
- const requested=new URL(location.href).searchParams.get('class');if(CLASSES.includes(requested))cl=requested;
+ const requested=new URL(location.href).searchParams.get('class');if(requested&&/^[A-Za-z0-9_-]{1,40}$/.test(requested))cl=requested;
  cloudRenderQuickClasses();
  $('cloudLogout').onclick=cloudLogout;
  const sess=sessionStorage.getItem('fundesk_cloud_session');
