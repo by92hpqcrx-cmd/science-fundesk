@@ -156,7 +156,7 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
  <aside class="sidebar"><div class="brand"><span class="brandmark">✦</span><div><b>自然科任 FunDesk</b><small>五年級科任教學工作台</small></div></div>
  <label class="fieldlabel" for="classSelect">目前班級</label><select id="classSelect" class="classSelect"></select>
  <div class="fastClasses" id="fastClasses"><b>班級快速入口</b><div id="fastClassLinks"></div></div>
- <button type="button" id="cloudLogout" class="sidebarCloudLogout">🔒 登出雲端</button>
+ <button type="button" id="cloudLockNow" class="sidebarCloudLogout" style="background:#dbeafe;color:#173d69;border-color:#9fc3f4">🔒 離開教室・立即上鎖</button><button type="button" id="cloudLogout" class="sidebarCloudLogout">🚪 登出雲端</button>
  <div class="mini">115學年度 · 第一學期<br>課程：神祕的天空／燃燒與生鏽</div>
  <nav id="nav"><button data-view="seats" class="active">▦　座位表總覽</button><button data-view="attention">▤　待追蹤清單 <i id="sidebarPending"></i></button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試</button><button data-view="schedule">▣　我的教學進度</button><button data-view="points">★　全班加減分</button><button data-view="correction">☑　作業訂正</button><button data-view="board">▣　作業播放表</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　我的班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
  <div class="sidebarFoot">教師登入後存取雲端學生紀錄<br><strong>使用公用電腦後請登出</strong><br></div>
@@ -763,7 +763,7 @@ async function cloudRefresh(){
 function cloudLoginForm(error=''){
  document.body.classList.add('cloud-locked');$('cloudGate').hidden=false;
  const showError=error?`<div class="cloudError">${esc(error)}</div>`:'';
- cloudGateMessage(`<div class="cloudNote">使用教師帳號登入後，才能讀取及同步學生紀錄。</div>${showError}
+ cloudGateMessage(`<div class="cloudNote">本裝置已啟用教師安全鎖：離開請按「立即上鎖」，閒置 3 分鐘自動上鎖；重新開啟需輸入教師帳號密碼。</div>${showError}
  <form id="cloudLoginForm"><label>教師電子郵件</label><input id="cloudEmail" type="email" autocomplete="username" required placeholder="teacher@example.edu.tw"><label>教師密碼</label><input id="cloudPassword" type="password" autocomplete="current-password" required placeholder="Supabase Auth 帳號密碼"><button type="submit">登入並同步我的班級</button></form>
  `);
  $('cloudLoginForm').onsubmit=async e=>{e.preventDefault();const email=$('cloudEmail').value.trim(),password=$('cloudPassword').value;const b=e.target.querySelector('button');b.disabled=true;b.textContent='登入中…';try{
@@ -821,6 +821,7 @@ async function cloudInitialize(useLocal){
  cloudUnlock();
 }
 function cloudUnlock(){
+ lockLastActivity=Date.now();
  $('cloudGate').hidden=true;document.body.classList.remove('cloud-locked');
  cloudStatus('✅ 雲端已同步');
  render();
@@ -850,16 +851,48 @@ async function cloudBoot(){
  const requested=new URL(location.href).searchParams.get('class');if(requested&&/^[A-Za-z0-9_-]{1,40}$/.test(requested))cl=requested;
  cloudRenderQuickClasses();
  $('cloudLogout').onclick=cloudLogout;
+ $('cloudLockNow').onclick=()=>teacherLockNow('手動上鎖');
  const sess=sessionStorage.getItem('fundesk_cloud_session');
  if(sess){try{cloudSession=JSON.parse(sess);await cloudLoad();return}catch(err){cloudSession=null;sessionStorage.removeItem('fundesk_cloud_session');cloudLoginForm(cloudErr(err));return}}
  cloudLoginForm();
 }
-function cloudLogout(){
- if(cloudOutstanding||cloudBlocked){alert('有未同步的資料，請先下載 JSON 備份並確認同步，不可直接登出。');return}
- if(!confirm('登出後本機不再顯示學生紀錄；公用電腦請關閉瀏覽器。確定登出？'))return;
+// Teacher workstation protection: lock closes the client authentication session.
+// A lock overlay is displayed immediately, even while cloud writes finish.
+let lockLastActivity=Date.now(),lockInProgress=false;
+const LOCK_IDLE_MS=3*60*1000;
+async function teacherLockNow(reason='手動上鎖'){
+ if(lockInProgress||!cloudReady)return;
+ lockInProgress=true;
+ document.body.classList.add('cloud-locked');
+ $('cloudGate').hidden=false;
+ cloudGateMessage('<h2>🔒 正在保護教師資料</h2><p>請勿操作，正在確認雲端資料是否已同步。</p>');
+ if(cloudOutstanding>0){try{await cloudQueue}catch{}}
+ if(cloudBlocked||cloudOutstanding>0){
+  cloudGateMessage('<h2>⚠️ 資料尚未同步，畫面已鎖住</h2><p>為避免遺失尚未儲存的資料，請先下載 JSON 備份；在完成備份之前不會清除目前記憶體資料。</p><button type="button" id="lockBackup">下載緊急 JSON 備份</button><button type="button" class="secondary" id="lockRetry">重新嘗試同步</button>');
+  const exportBtn=$('lockBackup');if(exportBtn)exportBtn.onclick=()=>backup();
+  const retryBtn=$('lockRetry');if(retryBtn)retryBtn.onclick=async()=>{
+    cloudBlocked=false;lockInProgress=false;
+    try{await cloudQueueSave();if(!cloudBlocked)return teacherLockNow('同步完成後上鎖');}catch{}
+    teacherLockNow('同步失敗');
+  };
+  lockInProgress=false;return;
+ }
  cloudSession=null;cloudReady=false;db=makeState();cloudSnapshots={};cloudRevisions={};
- sessionStorage.removeItem('fundesk_cloud_session');cloudStatus('已登出');cloudLoginForm();
+ sessionStorage.removeItem('fundesk_cloud_session');
+ document.querySelectorAll('#content, #stats, #modalContent').forEach(el=>el.replaceChildren());
+ $('modal').classList.add('hidden');
+ cloudStatus('🔒 已上鎖');
+ cloudLoginForm();
+ const body=$('cloudGateBody');if(body){body.insertAdjacentHTML('afterbegin','<div class="cloudNote" style="font-size:15px;color:#174775;font-weight:800;margin:0 0 12px">🔒 '+(reason==='閒置自動上鎖'?'閒置 3 分鐘，FunDesk 已自動上鎖。':'FunDesk 已上鎖。')+'請重新登入教師帳號。</div>');}
+ lockInProgress=false;
 }
+function cloudLogout(){
+ if(!confirm('確定離開這台電腦並鎖住 FunDesk？重新開啟必須輸入教師帳號及密碼。'))return;
+ teacherLockNow('手動上鎖');
+}
+// Keep activity detection lightweight and do not save authentication secrets in localStorage.
+['pointerdown','keydown','touchstart'].forEach(eventType=>document.addEventListener(eventType,()=>{if(cloudReady&&!lockInProgress)lockLastActivity=Date.now()},{passive:true}));
+setInterval(()=>{if(cloudReady&&!lockInProgress&&Date.now()-lockLastActivity>=LOCK_IDLE_MS)teacherLockNow('閒置自動上鎖');},5000);
 window.addEventListener('beforeunload',e=>{if(cloudOutstanding>0||cloudBlocked){e.preventDefault();e.returnValue='雲端可能尚未儲存，請先備份';}});
 
 loadQuestionBank();
