@@ -544,9 +544,9 @@ $('jsonImport').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let 
 syncClassOptions();$('classSelect').onchange=e=>changeClass(e.target.value);$('sessionDate').value=today()<'2026-11-16'?'2026-11-16':today();$('sessionDate').onchange=()=>render();$('backupTop').onclick=backup;document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>$('modal').classList.add('hidden'));
 
 // --- Cloud login + seven-class secure sync (no student data in localStorage) ---
+// 全站使用內建的 Supabase 專案連線設定；不再讓舊瀏覽器設定覆蓋。
 const CLOUD_CONFIG_KEY='fundesk_cloud_public_config_v1';
-let cloudConfig={url:'https://ayvwsexnxvjjcrbtyoof.supabase.co',key:''};
-try{cloudConfig={...cloudConfig,...JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY)||'{}')}}catch(_){}
+const cloudConfig={url:'https://ayvwsexnxvjjcrbtyoof.supabase.co',key:'sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L'};
 let cloudSession=null,cloudReady=false,cloudBlocked=false,cloudQueue=Promise.resolve(),cloudOutstanding=0;
 let cloudRevisions={},cloudSnapshots={};
 const cloudIds=()=>[...CLASSES,'shared'];
@@ -557,7 +557,8 @@ function cloudValidatedConfig(){
  const url=String(cloudConfig.url||'').trim().replace(/\/+$/,'');
  if(!/^https:\/\/[a-zA-Z0-9-]+\.supabase\.co$/.test(url))throw Error('Supabase URL 請填 https://專案ID.supabase.co（不要加 /rest/v1/）');
  const key=String(cloudConfig.key||'').trim();
- if(!key||key.startsWith('sb_secret_'))throw Error('請輸入公開 anon／publishable key，禁止使用 secret key');
+ if(!key)throw Error('此瀏覽器尚未儲存 Supabase 公開金鑰，無法登入雲端。請由網站管理者先完成連線設定。');
+ if(key.startsWith('sb_secret_'))throw Error('禁止使用 secret key');
  if(key.split('.').length===3){try{const p=JSON.parse(atob(key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));if(p.role==='service_role')throw Error('禁止使用 service_role 金鑰')}catch(e){if(String(e.message).includes('service_role'))throw e}}
  return {url,key};
 }
@@ -583,15 +584,14 @@ async function cloudRefresh(){
 function cloudLoginForm(error=''){
  document.body.classList.add('cloud-locked');$('cloudGate').hidden=false;
  const showError=error?`<div class="cloudError">${esc(error)}</div>`:'';
- cloudGateMessage(`<div class="cloudNote">每班專屬網址可直接跳到教師設定的班級，登入後才會讀取學生紀錄。<b>先在 Supabase 執行隨檔附上的 cloud_setup.sql。</b></div>${showError}
+ cloudGateMessage(`<div class="cloudNote">使用教師帳號登入後，才能讀取及同步學生紀錄。</div>${showError}
  <form id="cloudLoginForm"><label>教師電子郵件</label><input id="cloudEmail" type="email" autocomplete="username" required placeholder="teacher@example.edu.tw"><label>教師密碼</label><input id="cloudPassword" type="password" autocomplete="current-password" required placeholder="Supabase Auth 帳號密碼"><button type="submit">登入並同步我的班級</button></form>
- <details style="margin-top:13px"><summary>連線設定</summary><form id="cloudConfigForm" style="padding-top:12px"><label>Project URL</label><input name="url" required value="${esc(cloudConfig.url)}"><label>anon / publishable 公開金鑰（不要貼 secret）</label><input name="key" type="password" required value="${esc(cloudConfig.key)}"><button type="submit" class="secondary">儲存連線設定</button></form></details>
  `);
  $('cloudLoginForm').onsubmit=async e=>{e.preventDefault();const email=$('cloudEmail').value.trim(),password=$('cloudPassword').value;const b=e.target.querySelector('button');b.disabled=true;b.textContent='登入中…';try{
   const sess=await cloudFetch('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})},true);
   cloudSession=sess;sessionStorage.setItem('fundesk_cloud_session',JSON.stringify(sess));await cloudLoad();
  }catch(err){cloudSession=null;sessionStorage.removeItem('fundesk_cloud_session');cloudLoginForm(cloudErr(err))}}
- const form=$('cloudConfigForm');form.onsubmit=e=>{e.preventDefault();const d=new FormData(form);cloudConfig={url:String(d.get('url')).trim().replace(/\/+$/,''),key:String(d.get('key')).trim()};try{cloudValidatedConfig();localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(cloudConfig));cloudLoginForm('連線設定已保存。請登入教師帳號。')}catch(err){cloudLoginForm(cloudErr(err))}};
+
 }
 function cloudRenderQuickClasses(){
  const root=$('fastClassLinks');if(!root)return;
