@@ -585,8 +585,8 @@ function cloudLoginForm(error=''){
  const showError=error?`<div class="cloudError">${esc(error)}</div>`:'';
  cloudGateMessage(`<div class="cloudNote">每班專屬網址可直接跳到教師設定的班級，登入後才會讀取學生紀錄。<b>先在 Supabase 執行隨檔附上的 cloud_setup.sql。</b></div>${showError}
  <form id="cloudLoginForm"><label>教師電子郵件</label><input id="cloudEmail" type="email" autocomplete="username" required placeholder="teacher@example.edu.tw"><label>教師密碼</label><input id="cloudPassword" type="password" autocomplete="current-password" required placeholder="Supabase Auth 帳號密碼"><button type="submit">登入並同步我的班級</button></form>
- <details style="margin-top:13px"><summary>初次使用：設定 Supabase 網址和公開金鑰</summary><form id="cloudConfigForm" style="padding-top:12px"><label>Project URL</label><input name="url" required value="${esc(cloudConfig.url)}"><label>anon / publishable 公開金鑰（不要貼 secret）</label><input name="key" type="password" required value="${esc(cloudConfig.key)}"><button type="submit" class="secondary">儲存連線設定</button></form></details>
- <p class="cloudNote">注意：使用同一個教師帳號登入不同班級電腦才能同步。公用電腦用完請登出、關閉瀏覽器。首次登入不會自動上傳舊本機名單。</p>`);
+ <details style="margin-top:13px"><summary>連線設定</summary><form id="cloudConfigForm" style="padding-top:12px"><label>Project URL</label><input name="url" required value="${esc(cloudConfig.url)}"><label>anon / publishable 公開金鑰（不要貼 secret）</label><input name="key" type="password" required value="${esc(cloudConfig.key)}"><button type="submit" class="secondary">儲存連線設定</button></form></details>
+ `);
  $('cloudLoginForm').onsubmit=async e=>{e.preventDefault();const email=$('cloudEmail').value.trim(),password=$('cloudPassword').value;const b=e.target.querySelector('button');b.disabled=true;b.textContent='登入中…';try{
   const sess=await cloudFetch('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})},true);
   cloudSession=sess;sessionStorage.setItem('fundesk_cloud_session',JSON.stringify(sess));await cloudLoad();
