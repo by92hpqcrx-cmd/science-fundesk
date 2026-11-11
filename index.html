@@ -851,7 +851,8 @@ function contactPointBind(){
   save();
   $('contactPointReason').value='';
   contactPointHistory();
-  contactStatus('✅ 已記錄加扣點，正在同步教師雲端；不會公開到學生聯絡簿');
+  contactPointPreview();
+  contactStatus('✅ 已記錄加扣點，正在同步教師雲端；請再次發布聯絡簿才會更新閱讀頁');
  };
 }
 function contactBind(){
