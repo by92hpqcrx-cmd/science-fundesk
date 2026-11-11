@@ -185,6 +185,12 @@ const parseWeek=d=>{const start=new Date('2026-11-16T12:00:00');const current=ne
 const makeState=()=>({version:2,classMeta:Object.fromEntries(CLASSES.map(c=>[c,{name:c,active:true}])),classes:Object.fromEntries(CLASSES.map(cl=>[cl,{students:Array.from({length:30},(_,i)=>({id:uid(),no:i+1,name:`示範學生${String(i+1).padStart(2,'0')}`,notes:''})),seats:{normal:[],lab:[]},attendance:[],tasks:[],results:[],points:[]}]))});
 let legacyDb=null;try{legacyDb=JSON.parse(localStorage.getItem(KEY))}catch{}let db=makeState();
 if(!Array.isArray(db.labTemplate)||db.labTemplate.length!==5)db.labTemplate=DEFAULT_LAB_TEMPLATE.map(g=>[...g]);
+// 本頁互動狀態：避免切換班級、積點、訂正與抽籤時發生 ReferenceError。
+let pointSelection = new Set();
+let quizList = [];
+let quizPicked = new Set();
+let quizScore = 10;
+let correctionTaskId = '';
 let workClockInterval=null;
 let scheduleAnchor='';
 let cl='501',view='seats',layout='normal',studentId=null,selectedTask='',editSeats=false,editLabTemplate=false,templatePicked=null,toolTimer=null,timerSeconds=300,timerTick=null,timerDeadline=null,classEndTime="",timerNotified=false;
