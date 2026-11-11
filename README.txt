@@ -1,5 +1,9 @@
-FunDesk 第三四單元診斷版
-1. 上傳 index.html 至 GitHub Pages 覆蓋原檔。
-2. 進入「隨機抽籤答題」，查看每個雲端題庫來源的讀取筆數與錯誤。
-3. 若仍是 0 題，於 Supabase SQL Editor 執行 diagnose_readonly.sql（唯讀）。
-4. 複製 TABLE TOTAL ROWS 等輸出（不包含學生資料），即可判斷是資料表、欄位、RLS 或題目缺漏。
+FunDesk 每位老師獨立教學進度版
+1. 備份舊版 index.html。
+2. 將本版 index.html 上傳 GitHub Pages。
+3. 老師登入 → 我的教學進度 → 選班級 → 新增、編輯、刪除、勾選已完成。
+4. 七班課表預設不匯入。若要使用範本，請在對應班級按「匯入七班示範課表」。
+5. 可 CSV 匯出和匯入，欄位 date,period,type,unit,activity,topic,rush,note,done。
+6. 使用原有教師帳號雲端班級資料，不需新增 SQL 資料表。
+7. 修復 workClockInterval 未宣告問題。
+8. 先在一班新增一節課，重新整理檢查雲端保存。
