@@ -83,7 +83,13 @@
 .unitSelectGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin:12px 0}
 .unitSelectCard{border:2px solid #c9d7ea;background:white;border-radius:12px;padding:13px 10px;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:7px;color:#24354b;min-height:72px;font:inherit}
 .unitSelectCard.selected{border-color:#315cbd;background:#eaf0ff;box-shadow:0 0 0 2px #315cbd20}.unitSelectCard small{color:#60748a}.unitSelectCard:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}
-.sidebar{overflow-y:auto;overscroll-behavior:contain}.sidebar nav{flex-shrink:0}.sidebarFoot{flex-shrink:0}.fastClasses{flex-shrink:0}@media(max-width:730px){.sidebar{overflow:visible}} </style>
+.sidebar{overflow-y:auto;overscroll-behavior:contain}.sidebar nav{flex-shrink:0}.sidebarFoot{flex-shrink:0}.fastClasses{flex-shrink:0}@media(max-width:730px){.sidebar{overflow:visible}} 
+/* 單元一至四、十二活動抽籤篩選器 */
+.quizFilterRow{display:flex;flex-wrap:wrap;align-items:end;gap:10px}
+.quizFilterRow label{flex:1 1 150px;min-width:145px}
+.quizFilterRow #quizActivity{min-width:150px}
+.unitSelectCard small{display:block;font-size:12px;margin-top:5px;opacity:.8}
+</style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 .cloudGate{position:fixed;inset:0;z-index:10050;background:linear-gradient(125deg,#172744,#2e5a90);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
@@ -276,96 +282,150 @@ function incompleteEntries(tid){const t=cls().tasks.find(x=>x.id===tid);if(!t)re
 function incompleteText(tid,publicOnly=false){let a=incompleteEntries(tid);let t=cls().tasks.find(x=>x.id===tid);return `${classDisplay(cl)}｜${t?.title||'作業'}｜${t?.date||''}\n`+(a.length?a.map(x=>`${x.s.no}號${publicOnly?'':' '+x.s.name}－${x.st}`).join('\n'):'目前沒有未完成名單')}
 function renderBoard(){let ts=correctionTasks();if(!ts.some(t=>t.id===correctionTaskId))correctionTaskId=ts.at(-1)?.id||'';const list=incompleteEntries(correctionTaskId);return `<section class="panel boardPanel"><div class="panelHead"><h2>📺 作業播放表 · ${esc(classDisplay(cl))}</h2><div class="actions"><select id="boardTask">${ts.map(t=>`<option value="${t.id}" ${t.id===correctionTaskId?'selected':''}>${esc(t.title)}</option>`).join('')}</select><button class="btn small outline" id="boardFullscreen">全螢幕</button><button class="btn small outline" data-goto="correction">返回訂正工具</button></div></div><p class="hint">投影版僅顯示座號與狀態，避免公開學生的個別資料。學生可提出完成申請，由老師確認後才會更新。</p><h3>待處理 ${list.length} 人</h3><div class="boardGrid">${list.map(x=>`<button class="boardPerson" data-board-person="${x.s.id}"><strong>${x.s.no} 號</strong><span>${x.st}</span></button>`).join('')||'<div class="emptymsg">太棒了！目前沒有待繳交或待訂正的座號。</div>'}</div><p class="hint">點座號 → 老師確認 → 更新為「已完成」。</p><div class="actions"><button class="btn outline" id="boardCopy">複製待處理座號</button><button class="btn outline" id="boardExport">下載報告 CSV</button></div></section>`}
 // 直接讀取「自然科學王」Supabase REST 的公開可讀題庫，不使用 iframe。
+// FunDesk 教師抽籤題庫：第 1～4 單元，各 3 活動。
+// 1、2 單元是原始 questions.js 內建資料；3、4 單元讀取公開 Supabase quiz_questions。
 const SCIENCE_BANK_KEY='science_fundesk_question_bank_config_v1';
-let questionBankConfig={url:'',anonKey:'',table:'quiz_questions'};
-try{questionBankConfig={...questionBankConfig,...JSON.parse(localStorage.getItem(SCIENCE_BANK_KEY)||'{}')}}catch(_){}
-let questionBank=[],bankBusy=false,bankMessage='已內建第一、第二單元原始題庫',gameUnit='',gameGrade='',gameSemester='',currentQuestion=null,gameAnswered=false,lastQuestionIds={},bankRequestVersion=0;
+const SCIENCE_QUIZ_UNITS=[
+ {no:'01',name:'第一單元｜動物世界'},
+ {no:'02',name:'第二單元｜探索聲光世界'},
+ {no:'03',name:'第三單元'},
+ {no:'04',name:'第四單元｜燃燒與生鏽'}
+];
+let questionBank=[],bankBusy=false,bankMessage='已內建第一、第二單元，正在讀取第三、第四單元',bankCloudNotice='',gameUnit='',gameActivity='',gameGrade='',gameSemester='',currentQuestion=null,gameAnswered=false,lastQuestionIds={},bankRequestVersion=0;
 const field=(r,...keys)=>{for(const k of keys){const v=r?.[k];if(v!==undefined&&v!==null&&String(v)!=='')return v}return null};
 function parseOptions(v,r){
- if(Array.isArray(v)){return v.map(x=>typeof x==='object'&&x!==null?String(field(x,'text','label','value','option')??''):String(x))}
+ if(Array.isArray(v))return v.map(x=>typeof x==='object'&&x!==null?String(field(x,'text','label','value','option')??''):String(x));
  if(typeof v==='string'){
-  try{const x=JSON.parse(v);if(Array.isArray(x))return parseOptions(x,r);if(x&&typeof x==='object')return Object.values(x).map(String)}catch(_){}
-  if(v.includes('|'))return v.split('|').map(x=>x.trim());
+   try{const x=JSON.parse(v);if(Array.isArray(x))return parseOptions(x,r);if(x&&typeof x==='object')return Object.values(x).map(String)}catch(_){}
+   if(v.includes('|'))return v.split('|').map(x=>x.trim());
  }
  return ['option_a','option_b','option_c','option_d'].map((x,i)=>field(r,x,['a','b','c','d'][i],['choice_a','choice_b','choice_c','choice_d'][i])).filter(x=>x!==null).map(String);
 }
+function decodeUnitActivity(r){
+ const parts=[field(r,'unit','unit_name','unit_title','unit_id','chapter','chapter_name','chapter_id','category','category_name','subject','lesson','domain'),field(r,'subunit','sub_unit','unit_code','activity','activity_code','activity_no','activity_id','section','section_code','lesson_code','topic')].filter(x=>x!==null).map(String);
+ let no='',activity='';
+ const text=parts.join(' | ');
+ for(const p of parts){
+   const m=p.match(/(?:^|[^0-9])0?([1-4])\s*[-_.／/]\s*0?([1-3])(?:[^0-9]|$)/);
+   if(m){no=m[1].padStart(2,'0');activity=m[2].padStart(2,'0');break}
+ }
+ if(!no){
+   const m=text.match(/第?\s*([一二三四1-4])\s*(?:單元|單元活動|章)/) || text.match(/(?:^|[^0-9])0?([1-4])(?:[^0-9]|$)/);
+   if(m){const lut={一:1,二:2,三:3,四:4};no=String(lut[m[1]]||m[1]).padStart(2,'0')}
+ }
+ if(!no){if(/天空|星座|天文|太陽|月亮/.test(text))no='03';else if(/燃燒|生鏽|氧氣|防鏽/.test(text))no='04'}
+ if(!activity){
+   const separate=String(field(r,'activity','activity_code','activity_no','activity_id','subunit','sub_unit','section','section_code')??'');
+   const m=separate.match(/(?:活動|activity|section|^)[\s:：_#-]*0?([1-3])(?:\D|$)/i)||text.match(/活動\s*([一二三1-3])/);
+   if(m){const lut={一:1,二:2,三:3};activity=String(lut[m[1]]||m[1]).padStart(2,'0')}
+ }
+ return {no,activity};
+}
 function normalizeQuestion(r,i){
- // Compatible with quiz_questions schemas: the source may call the question 'prompt' or 'question_content'.
  let text=field(r,'question','question_text','question_content','question_title','prompt','question_body','question_stem','questionText','questionContent','questionTitle','title','content','stem','text','body','q','題目','題幹');
- if(text===null){
-  const name=Object.keys(r||{}).find(k=>/question|prompt|stem|題目|題幹/i.test(k)&&typeof r[k]==='string'&&r[k].trim());
-  if(name)text=r[name];
- }
- if(text===null){
-  // Only infer a question from an unambiguous longer text field; never mistake an explanation for the stem.
-  const excluded=/^(id|uuid|options|choices|answers|option_list|answer|correct.*|explanation|explain|analysis|solution|reason|description|unit.*|chapter.*|category|topic|subject|lesson|domain|created.*|updated.*|difficulty|image.*|source.*|tags?|type|order.*)$/i;
-  const possible=Object.entries(r||{}).filter(([k,v])=>!excluded.test(k)&&typeof v==='string'&&v.trim().length>=12);
-  if(possible.length===1)text=possible[0][1];
- }
+ if(text===null){const name=Object.keys(r||{}).find(k=>/question|prompt|stem|題目|題幹/i.test(k)&&typeof r[k]==='string'&&r[k].trim());if(name)text=r[name]}
+ if(text===null){const excluded=/^(id|uuid|options|choices|answers|option_list|answer|correct.*|explanation|explain|analysis|solution|reason|description|unit.*|chapter.*|category|topic|subject|lesson|domain|created.*|updated.*|difficulty|image.*|source.*|tags?|type|order.*)$/i;const possible=Object.entries(r||{}).filter(([k,v])=>!excluded.test(k)&&typeof v==='string'&&v.trim().length>=12);if(possible.length===1)text=possible[0][1]}
  const options=parseOptions(field(r,'options','choices','answers','option_list'),r);
  let ans=field(r,'correct_answer','correct_option','correct','answer','answer_index','correct_index','correctOptionId','correctAnswer');
  if(Array.isArray(ans)&&ans.length===1)ans=ans[0];
  if(typeof ans==='string'&&ans.trim().startsWith('[')){try{const a=JSON.parse(ans);if(a.length===1)ans=a[0]}catch(_){}}
  let answerIndex=-1;
- // A numeric answer is a zero-based option index: 0=A, 1=B, 2=C, 3=D.
- if(typeof ans==='number') answerIndex=ans>=0&&ans<options.length?ans:(ans===options.length?ans-1:-1);
- else if(typeof ans==='string'){
-  const t=ans.trim();
-  if(/^[A-Da-d]$/.test(t))answerIndex=t.toUpperCase().charCodeAt(0)-65;
-  else if(/^\d+$/.test(t)){const n=Number(t);answerIndex=n>=0&&n<options.length?n:(n===options.length?n-1:-1)}
-  else answerIndex=options.findIndex(x=>x.trim()===t);
- }
- const rawUnit=String(field(r,'unit','unit_name','unit_title','unit_id','chapter','chapter_name','chapter_id','category','category_name','topic','topic_name','subject','lesson','domain')??'未分類').trim();
- const unit=rawUnit.startsWith('01')?'第一單元｜動物世界':rawUnit.startsWith('02')?'第二單元｜探索聲光世界':rawUnit;
+ if(typeof ans==='number')answerIndex=ans>=0&&ans<options.length?ans:(ans===options.length?ans-1:-1);
+ else if(typeof ans==='string'){const t=ans.trim();if(/^[A-Da-d]$/.test(t))answerIndex=t.toUpperCase().charCodeAt(0)-65;else if(/^\d+$/.test(t)){const n=Number(t);answerIndex=n>=0&&n<options.length?n:(n===options.length?n-1:-1)}else answerIndex=options.findIndex(x=>x.trim()===t)}
+ const code=decodeUnitActivity(r);
+ const found=SCIENCE_QUIZ_UNITS.find(x=>x.no===code.no);
+ if(!found||!text||options.length<2||answerIndex<0||answerIndex>=options.length)return null;
  const grade=String(field(r,'grade','grade_level','year_level','school_grade','年級')??'').trim();
  const semester=String(field(r,'semester','term','school_term','學期')??'').trim();
  const explanation=String(field(r,'explanation','explain','analysis','solution','reason','answer_explanation','description')??'原題庫未提供詳解。');
- if(!text||options.length<2||answerIndex<0||answerIndex>=options.length)return null;
- return {id:String(field(r,'id','question_id','qid')??i),text:String(text),options,answerIndex,unit,subunit:rawUnit,grade,semester,explanation};
+ return {id:String(field(r,'id','question_id','qid')??i),text:String(text),options,answerIndex,unit:found.name,unitNo:code.no,activity:code.activity,grade,semester,explanation};
 }
 function quizFilteredQuestions(){return questionBank.filter(q=>(!gameGrade||q.grade===gameGrade)&&(!gameSemester||q.semester===gameSemester))}
-function bankUnits(){return [...new Set(quizFilteredQuestions().map(q=>q.unit))].sort((a,b)=>a.localeCompare(b,'zh-Hant',{numeric:true}))}
+function bankUnits(){return SCIENCE_QUIZ_UNITS.map(x=>x.name)}
 function quizDistinct(fieldName){return [...new Set(questionBank.map(q=>q[fieldName]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant',{numeric:true}))}
-function bankStatusMarkup(){return `<span class="sourceStatus ${bankMessage.startsWith('錯誤')?'sourceError':''}">${esc(bankMessage)} · ${questionBank.length} 題可使用</span>`}
-function renderBankConfig(){return `<p class="hint">📚 題目直接來自原「自然科學王」questions.js 題庫，已整合進本頁。不需要 Supabase 設定。題庫原本未附詳解的題目會明確標示「原題庫未提供詳解」。</p>`}
+function activityPool(unit,activity=''){return quizFilteredQuestions().filter(q=>q.unit===unit&&(!activity||q.activity===activity))}
+function bankStatusMarkup(){const cloud=bankCloudNotice?`<span class="hint">${esc(bankCloudNotice)}</span>`:'';return `<span class="sourceStatus ${bankMessage.startsWith('錯誤')?'sourceError':''}">${esc(bankMessage)} · ${questionBank.length} 題可使用</span>${cloud}`}
+function renderBankConfig(){return '<p class="hint">📚 第一、第二單元使用原始內建題庫；第三、第四單元從 Supabase quiz_questions 讀取。依「單元 → 活動一／二／三」抽問；選「整單元」則可混合該單元三個活動。題庫沒有活動標記的題目會顯示於整單元，不會被擅自歸入某個活動。</p>'}
 function quizLogRows(){return quizList.length?quizList.slice().reverse().map(q=>`<div class="quizRow"><strong>${esc(q.label)}</strong><span>${esc(q.status)} · ${esc(q.source||'抽籤')}${q.questionText?' · '+esc(q.questionText.slice(0,42)):''}</span></div>`).join(''):'<div class="emptymsg">尚未開始本輪作答</div>'}
 function quizGameMarkup(){
- const units=bankUnits(),filtered=quizFilteredQuestions();
- const grades=quizDistinct('grade'),semesters=quizDistinct('semester');
- const gradeFilter=grades.length>0?`<label>年級<select id="quizGrade"><option value="">全部年級</option>${grades.map(x=>`<option value="${esc(x)}" ${gameGrade===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`:'';
- const semesterFilter=semesters.length>0?`<label>學期<select id="quizSemester"><option value="">全部學期</option>${semesters.map(x=>`<option value="${esc(x)}" ${gameSemester===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`:'';
- const unitOptions=units.map(unit=>`<option value="${esc(unit)}" ${unit===gameUnit?'selected':''}>${esc(unit)}</option>`).join('');
- const unitTiles=units.map(unit=>`<button type="button" class="unitSelectCard ${unit===gameUnit?'selected':''}" data-select-unit="${esc(unit)}" aria-pressed="${unit===gameUnit?'true':'false'}"><b>${esc(unit)}</b></button>`).join('');
+ const units=bankUnits(),grades=quizDistinct('grade'),semesters=quizDistinct('semester');
+ const gradeFilter=grades.length?`<label>年級<select id="quizGrade"><option value="">全部年級</option>${grades.map(x=>`<option value="${esc(x)}" ${gameGrade===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`:'';
+ const semesterFilter=semesters.length?`<label>學期<select id="quizSemester"><option value="">全部學期</option>${semesters.map(x=>`<option value="${esc(x)}" ${gameSemester===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`:'';
+ const unitOptions=units.map(unit=>`<option value="${esc(unit)}" ${unit===gameUnit?'selected':''}>${esc(unit)}（${activityPool(unit).length} 題）</option>`).join('');
+ const unitTiles=units.map(unit=>`<button type="button" class="unitSelectCard ${unit===gameUnit?'selected':''}" data-select-unit="${esc(unit)}" aria-pressed="${unit===gameUnit?'true':'false'}"><b>${esc(unit)}</b><small>${activityPool(unit).length} 題</small></button>`).join('');
+ const actOptions=['01','02','03'].map((code,i)=>`<option value="${code}" ${gameActivity===code?'selected':''}>活動${'一二三'[i]}（${activityPool(gameUnit,code).length} 題）</option>`).join('');
+ const selectedPool=gameUnit?activityPool(gameUnit,gameActivity):[];
  let content='';
- if(!questionBank.length)content=`<div class="quizGameEmpty"><b>題庫尚未載入</b><p>${esc(bankMessage)}，請重新整理網站。</p></div>`;
- else if(!currentQuestion)content='<div class="quizGameEmpty"><b>準備好了！</b><p>選好單元與答題學生後，點選「隨機出一題」。</p></div>';
- else {const q=currentQuestion;content=`<div class="questionCard"><div class="gameStatus">${esc(q.unit)} · 單題挑戰 · ${esc(quizList.at(-1)?.label||'尚未選擇學生')}</div><div class="qstem">${esc(q.text)}</div><div class="answerChoices">${q.options.map((opt,i)=>`<button type="button" class="answerChoice" data-game-option="${i}" ${gameAnswered?'disabled':''}><span>${String.fromCharCode(65+i)}</span>${esc(opt)}</button>`).join('')}</div></div><div id="nativeQuizFeedback"></div>`}
- return `<div class="nativeQuiz"><div class="quizUnitSelector"><div class="quizFilterRow">${gradeFilter}${semesterFilter}<label>選擇單元<select id="quizUnit"><option value="">請選擇單元</option>${unitOptions}</select></label></div><div class="unitSelectGrid">${unitTiles||'<div class="hint">目前篩選條件沒有可用單元</div>'}</div><p class="hint">已選單元：<b>${esc(gameUnit||'尚未選擇')}</b>；僅從該單元隨機出題，不混入其他單元。</p></div><div id="quizBankStatus">${bankStatusMarkup()}</div>${content}<div class="actions"><button class="btn" id="quizNextQuestion" ${!questionBank.length||!gameUnit?'disabled':''}>🎲 隨機出一題</button></div>${renderBankConfig()}</div>`;
+ if(!questionBank.length)content=`<div class="quizGameEmpty"><b>題庫尚未載入</b><p>${esc(bankMessage)}</p></div>`;
+ else if(!currentQuestion)content=`<div class="quizGameEmpty"><b>${selectedPool.length?'準備好了！':'目前沒有可抽的題目'}</b><p>${selectedPool.length?'選好單元、活動與答題學生後，點選「隨機出一題」。':'請選擇有題數的活動，或確認第三、第四單元雲端題庫是否可讀取。'}</p></div>`;
+ else {const q=currentQuestion;content=`<div class="questionCard"><div class="gameStatus">${esc(q.unit)} · ${esc(q.activity?'活動'+Number(q.activity):'活動未分類')} · ${esc(quizList.at(-1)?.label||'尚未選擇學生')}</div><div class="qstem">${esc(q.text)}</div><div class="answerChoices">${q.options.map((opt,i)=>`<button type="button" class="answerChoice" data-game-option="${i}" ${gameAnswered?'disabled':''}><span>${String.fromCharCode(65+i)}</span>${esc(opt)}</button>`).join('')}</div></div><div id="nativeQuizFeedback"></div>`}
+ return `<div class="nativeQuiz"><div class="quizUnitSelector"><div class="quizFilterRow">${gradeFilter}${semesterFilter}<label>選擇單元<select id="quizUnit"><option value="">請選擇單元</option>${unitOptions}</select></label><label>選擇活動<select id="quizActivity" ${!gameUnit?'disabled':''}><option value="" ${!gameActivity?'selected':''}>整個單元（${selectedPool.length||activityPool(gameUnit).length} 題）</option>${actOptions}</select></label></div><div class="unitSelectGrid">${unitTiles}</div><p class="hint">目前範圍：<b>${esc(gameUnit||'尚未選擇單元')}</b> ／ <b>${esc(gameActivity?'活動'+Number(gameActivity):'整個單元')}</b>；目前可抽 <b>${selectedPool.length}</b> 題。選擇活動不會混入其他活動的題目。</p></div><div id="quizBankStatus">${bankStatusMarkup()}</div>${content}<div class="actions"><button class="btn" id="quizNextQuestion" ${!selectedPool.length?'disabled':''}>🎲 隨機出一題</button></div>${renderBankConfig()}</div>`;
 }
 function renderQuiz(){let unanswered=quizList.filter(x=>x.status==='待回答').length,correct=quizList.filter(x=>x.status==='答對').length;let current=quizList.length?quizList.at(-1).label:'尚未選擇學生';return `<div class="quizStudio"><section class="panel quizPickPanel"><div class="panelHead"><h2>🎯 選擇作答學生 · ${esc(classDisplay(cl))}</h2></div><label>答對加分 <input type="number" min="0" max="100" id="quizScore" value="${quizScore}" style="width:86px"></label><div class="toolDisplay" id="quizCandidate">${esc(current)}</div><div class="actions"><button class="btn" id="quizPick">🎲 隨機抽籤</button></div><hr><label class="quizStudentLabel" for="quizStudentSelect">老師指定學生</label><select id="quizStudentSelect"><option value="">請選擇座號與姓名</option>${students().map(st=>`<option value="${esc(st.id)}">${esc(st.no)} 號　${esc(st.name)}</option>`).join('')}</select><div class="actions"><button class="btn outline" id="quizAssign">指定這位學生作答</button></div><p class="hint">先抽籤或指定學生，再讓學生點選題目選項；答對自動加分一次，答錯只記錄結果。</p></section><section class="panel quizGamePanel"><div class="panelHead"><h2>🎮 自然科學王 · 單題問答</h2></div><div id="quizGameSlot">${quizGameMarkup()}</div><p class="quizGameHint">直接在本頁選答案，立即顯示「恭喜答對／再加油」、正確答案與原題庫詳解；無 iframe、無外連。</p></section><section class="panel quizAnswerPanel"><div class="panelHead"><h2>📝 回答與加分紀錄</h2></div><div class="quizStats" id="quizStats">待回答 <b>${unanswered}</b> 人 · 已答對 <b>${correct}</b> 人</div><div id="quizHistory" class="quizHistory">${quizLogRows()}</div><div class="actions"><button class="btn small danger" id="quizClear">清空本次名單</button></div><p class="hint">答對加分會保存在目前班級的獎懲紀錄；清空本輪不會撤銷已發出的分數。</p></section></div>`}
 function refreshQuizOnly(){const c=$('quizCandidate'),h=$('quizHistory'),s=$('quizStats');if(!c||!h||!s)return;c.textContent=quizList.length?quizList.at(-1).label:'尚未選擇學生';s.innerHTML=`待回答 <b>${quizList.filter(q=>q.status==='待回答').length}</b> 人 · 已答對 <b>${quizList.filter(q=>q.status==='答對').length}</b> 人`;h.innerHTML=quizLogRows()}
 function addQuizStudent(st,source){if(!st)return;if(currentQuestion&&!gameAnswered){alert('請先完成目前題目，再更換作答學生。');return}if(quizPicked.has(st.id)){alert('這位學生本輪已選過；請先清空本輪名單。');return}quizPicked.add(st.id);quizScore=Math.max(0,Math.min(100,Number($('quizScore').value)||0));quizList.push({id:uid(),sid:st.id,label:`${st.no} 號 ${st.name}`,score:quizScore,status:'待回答',source});currentQuestion=null;gameAnswered=false;refreshQuizOnly();refreshGameOnly()}
 function refreshGameOnly(){const slot=$('quizGameSlot');if(!slot)return;slot.innerHTML=quizGameMarkup();hookNativeQuiz()}
-function nextNativeQuestion(){if(!gameUnit)return alert('請先選擇單元');if(!quizList.length)return alert('請先抽籤或指定一位學生');if(quizList.at(-1).status!=='待回答')return alert('目前學生已作答，請先抽籤或指定下一位學生');const pool=quizFilteredQuestions().filter(q=>q.unit===gameUnit);if(!pool.length)return alert('此單元沒有可使用的題目');const eligible=pool.filter(q=>q.id!==lastQuestionIds[gameUnit]);currentQuestion= (eligible.length?eligible:pool)[Math.floor(Math.random()*(eligible.length||pool.length))];lastQuestionIds[gameUnit]=currentQuestion.id;gameAnswered=false;refreshGameOnly()}
+function nextNativeQuestion(){
+ if(!gameUnit)return alert('請先選擇單元');
+ if(!quizList.length)return alert('請先抽籤或指定一位學生');
+ if(quizList.at(-1).status!=='待回答')return alert('目前學生已作答，請先抽籤或指定下一位學生');
+ const pool=activityPool(gameUnit,gameActivity);
+ if(!pool.length)return alert('此活動尚無可用題目，請選擇其他活動或確認雲端題庫');
+ const filterKey=gameUnit+'|'+gameActivity;
+ const eligible=pool.filter(q=>q.id!==lastQuestionIds[filterKey]);
+ currentQuestion=(eligible.length?eligible:pool)[Math.floor(Math.random()*(eligible.length||pool.length))];
+ lastQuestionIds[filterKey]=currentQuestion.id;
+ gameAnswered=false;refreshGameOnly();
+}
 function answerNativeQuestion(index){const q=currentQuestion,record=quizList.at(-1);if(!q||!record||gameAnswered||record.status!=='待回答')return;gameAnswered=true;record.questionText=q.text;record.unit=q.unit;record.status=index===q.answerIndex?'答對':'答錯';if(index===q.answerIndex&&record.score>0){cls().points.push({sid:record.sid,date:$('sessionDate').value,delta:record.score,reason:'自然科學王 '+q.unit+' 單題答對（'+record.source+'）'});save()}
  document.querySelectorAll('[data-game-option]').forEach(b=>{b.disabled=true;const i=Number(b.dataset.gameOption);if(i===q.answerIndex)b.classList.add('correct');else if(i===index)b.classList.add('wrong')});const fb=$('nativeQuizFeedback');if(fb){fb.className='gameFeedback '+(index===q.answerIndex?'win':'lose');fb.innerHTML=`<strong>${index===q.answerIndex?'🎉 恭喜答對！太棒了！':'💪 再加油！下次一定會更好！'}</strong><p><b>正確答案：</b>${esc(String.fromCharCode(65+q.answerIndex))}．${esc(q.options[q.answerIndex])}</p><p><b>詳解：</b>${esc(q.explanation)}</p><p class="hint">${index===q.answerIndex?'已自動記錄加分 '+record.score+' 點。':'本題不加分，已記錄答錯。'}請選下一位學生並隨機出題。</p>`}refreshQuizOnly()}
 function loadQuestionBank(){
  const raw=Array.isArray(window.NATURE_QUESTIONS)?window.NATURE_QUESTIONS:[];
- questionBank=raw.filter(r=>String(r.unit||'').startsWith('01')||String(r.unit||'').startsWith('02')).map(normalizeQuestion).filter(Boolean);
- bankMessage=questionBank.length?'已載入自然科學王第一、第二單元原題庫':'錯誤：無法載入第一、第二單元題庫';
+ questionBank=raw.map((r,i)=>normalizeQuestion(r,i)).filter(q=>q&&['01','02'].includes(q.unitNo));
+ bankMessage=questionBank.length?'已內建第一、第二單元題庫，正在載入第三、第四單元':'錯誤：第一、第二單元原始題庫沒有載入';
  if(!bankUnits().includes(gameUnit))gameUnit='';
- currentQuestion=null;gameAnswered=false;
- refreshGameOnly();
+ currentQuestion=null;gameAnswered=false;refreshGameOnly();
+ loadCloudQuizUnits();
+}
+async function loadCloudQuizUnits(){
+ const version=++bankRequestVersion;
+ bankBusy=true;
+ const url='https://ayvwsexnxvjjcrbtyoof.supabase.co';
+ const key='sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L';
+ const rows=[];
+ try{
+   for(let offset=0;offset<5000;offset+=500){
+     const res=await fetch(`${url}/rest/v1/quiz_questions?select=*&limit=500&offset=${offset}`,{headers:{apikey:key,Accept:'application/json'},cache:'no-store'});
+     if(!res.ok)throw Error('HTTP '+res.status+(res.status===401||res.status===403?'：請檢查 quiz_questions SELECT 權限與 RLS':'：請確認表格及欄位名稱'));
+     const page=await res.json();
+     if(!Array.isArray(page))throw Error('題庫回傳格式不是陣列');
+     rows.push(...page);
+     if(page.length<500)break;
+   }
+   if(version!==bankRequestVersion)return;
+   const cloud=rows.map((r,i)=>normalizeQuestion(r,'cloud-'+i)).filter(q=>q&&['03','04'].includes(q.unitNo));
+   const ids=new Set(questionBank.map(q=>q.unitNo+':'+q.id));
+   cloud.forEach(q=>{const id=q.unitNo+':'+q.id;if(!ids.has(id)){ids.add(id);questionBank.push(q)}});
+   const n3=questionBank.filter(q=>q.unitNo==='03').length,n4=questionBank.filter(q=>q.unitNo==='04').length;
+   bankMessage=`第一、第二單元內建＋雲端第三單元 ${n3} 題、第四單元 ${n4} 題`;
+   const unknown=cloud.filter(q=>!q.activity).length;
+   bankCloudNotice=unknown?`雲端有 ${unknown} 題未標示三個活動之一，僅能在「整個單元」抽到；請到原題庫補上活動代碼。`:'';
+   if(!n3||!n4)bankCloudNotice+=' 第三或第四單元題數為 0，請確認 Supabase 題庫資料、unit 活動代碼與 RLS。';
+ }catch(err){
+   if(version!==bankRequestVersion)return;
+   bankMessage=`第一、第二單元可用；第三、第四單元雲端載入失敗`;
+   bankCloudNotice='錯誤：'+String(err?.message||err)+'。請確認網路、Supabase 公開讀取權限及 quiz_questions 題庫。';
+ }finally{if(version===bankRequestVersion){bankBusy=false;refreshGameOnly()}}
 }
 function hookNativeQuiz(){
- const chooseUnit=value=>{gameUnit=value;currentQuestion=null;gameAnswered=false;refreshGameOnly()};
+ const chooseUnit=value=>{gameUnit=value;gameActivity='';currentQuestion=null;gameAnswered=false;refreshGameOnly()};
  const select=$('quizUnit');if(select)select.onchange=e=>chooseUnit(e.target.value);
  document.querySelectorAll('[data-select-unit]').forEach(b=>b.onclick=()=>chooseUnit(b.dataset.selectUnit));
- const gradeSelect=$('quizGrade');if(gradeSelect)gradeSelect.onchange=e=>{gameGrade=e.target.value;if(!bankUnits().includes(gameUnit))gameUnit='';currentQuestion=null;gameAnswered=false;refreshGameOnly()};
- const semesterSelect=$('quizSemester');if(semesterSelect)semesterSelect.onchange=e=>{gameSemester=e.target.value;if(!bankUnits().includes(gameUnit))gameUnit='';currentQuestion=null;gameAnswered=false;refreshGameOnly()};
+ const activitySelect=$('quizActivity');if(activitySelect)activitySelect.onchange=e=>{gameActivity=e.target.value;currentQuestion=null;gameAnswered=false;refreshGameOnly()};
+ const gradeSelect=$('quizGrade');if(gradeSelect)gradeSelect.onchange=e=>{gameGrade=e.target.value;currentQuestion=null;gameAnswered=false;refreshGameOnly()};
+ const semesterSelect=$('quizSemester');if(semesterSelect)semesterSelect.onchange=e=>{gameSemester=e.target.value;currentQuestion=null;gameAnswered=false;refreshGameOnly()};
  const next=$('quizNextQuestion');if(next)next.onclick=nextNativeQuestion;
  document.querySelectorAll('[data-game-option]').forEach(b=>b.onclick=()=>answerNativeQuestion(Number(b.dataset.gameOption)));
-
 }
 function taipeiNowParts(){const p=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(new Date());return Object.fromEntries(p.map(x=>[x.type,x.value]));}
 function nowTaipeiMs(){const p=taipeiNowParts();return Date.UTC(+p.year,+p.month-1,+p.day,+p.hour%24,+p.minute,+p.second);}
