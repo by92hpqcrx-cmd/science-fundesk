@@ -740,7 +740,18 @@ function renderContact(){
  <p class="contactStatus" id="contactStatus" role="status">載入中…</p></section>
  <aside><section class="panel contactShare"><h2>🔗 ${esc(classDisplay(code))}專屬閱讀網址</h2><p class="contactMuted">每班都有不同連結。學生免登入，只能看此連結對應班級的聯絡簿，不能修改。</p>
  <input type="text" readonly id="contactLink" aria-label="班級聯絡簿網址" value="讀取中…"><div class="actions"><button type="button" class="btn outline" id="contactCopy" disabled>複製網址</button><button type="button" class="btn outline" id="contactOpen" disabled>學生畫面 ↗</button></div><p class="contactMuted">連結請只提供該班學生與家長。取得網址的人都能閱讀該班聯絡簿，請勿放入姓名、成績等個資。</p></section>
- <section class="panel contactHistory"><h2>📅 已發布日期</h2><div id="contactList">讀取中…</div></section></aside></div>`;
+ <section class="panel contactHistory"><h2>📅 已發布日期</h2><div id="contactList">讀取中…</div></section>
+ <section class="panel"><h2>⭐ 學生加扣點紀錄／備註（僅教師可見）</h2>
+ <p class="contactMuted">以下紀錄只寫入教師端學生積點資料，不會顯示在學生公開聯絡簿。</p>
+ <form id="contactPointForm">
+ <label for="contactPointStudent">選擇學生</label>
+ <select id="contactPointStudent" required style="width:100%">
+ ${[...db.classes[code].students].sort((a,b)=>Number(a.no)-Number(b.no)).map(x=>`<option value="${esc(x.id)}">${esc(x.no)} 號 · ${esc(x.name)}</option>`).join("")}
+ </select>
+ <label for="contactPointDelta">加扣分</label><select id="contactPointDelta"><option value="1">＋1 分</option><option value="2">＋2 分</option><option value="-1">－1 分</option><option value="-2">－2 分</option></select>
+ <label for="contactPointReason">原因／備註</label><textarea id="contactPointReason" maxlength="300" required placeholder="例如：實驗操作認真、忘記帶習作"></textarea>
+ <div class="actions"><button type="submit" class="btn">⭐ 儲存加扣點</button></div></form>
+ <div id="contactPointHistory" aria-live="polite"></div></section></aside></div>`;
 }
 function contactStatus(message,err=false){const e=$('contactStatus');if(e){e.textContent=message;e.style.color=err?'#ffb5ae':'#c4eedc'}}
 function contactFields(){return {lesson:$('contactLesson')?.value||'',homework:$('contactHomework')?.value||'',reminders:$('contactReminder')?.value||''}}
@@ -774,10 +785,37 @@ async function contactSave(){if(contactBusy)return;if(!cloudReady){contactStatus
  try{await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({p_class_code:code,p_entry_date:date,p_lesson:fields.lesson,p_homework:fields.homework,p_reminders:fields.reminders})});
   if(view==='contact'&&cl===code){const refreshed=await contactLoad(code);if(view==='contact'&&cl===code&&refreshed)contactStatus('✅ '+classDisplay(code)+' 已發布到雲端！學生網頁約 20 秒內自動更新。')}}catch(e){contactStatus('❌ 儲存失敗：'+cloudErr(e),true)}finally{contactBusy=false;if($('contactSave'))$('contactSave').disabled=false}
 }
+function contactPointHistory(){
+ const root=$('contactPointHistory');if(!root)return;
+ const list=[...(cls().points||[])].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,30);
+ root.innerHTML='<h3>最近 30 筆加扣點</h3>'+(list.length?list.map(p=>{
+ const st=students().find(x=>x.id===p.sid),n=Number(p.delta)||0;
+ return `<div style="padding:9px 0;border-bottom:1px solid #e1e7f1"><b>${esc(p.date||'')} · ${esc(st?st.no+' 號 '+st.name:'已移除學生')} · ${n>0?'+':''}${esc(n)} 分</b><div class="contactMuted">${esc(p.reason||'（無備註）')}</div></div>`;
+ }).join(''):'<p class="contactMuted">目前沒有加扣點紀錄。</p>');
+}
+function contactPointBind(){
+ const form=$('contactPointForm');if(!form)return;
+ contactPointHistory();
+ form.onsubmit=e=>{
+  e.preventDefault();
+  if(!cloudReady||cloudBlocked)return alert('教師雲端未就緒，暫時不能儲存加扣點。');
+  const sid=$('contactPointStudent').value,delta=Number($('contactPointDelta').value),reason=$('contactPointReason').value.trim();
+  const date=contactSafeDate($('contactDate').value);
+  if(!student(sid))return alert('請選擇有效學生');
+  if(![1,2,-1,-2].includes(delta))return alert('分數格式有誤');
+  if(!reason)return alert('請填寫加扣點原因／備註');
+  cls().points.push({sid,date,delta,reason});
+  save();
+  $('contactPointReason').value='';
+  contactPointHistory();
+  contactStatus('✅ 已記錄加扣點，正在同步教師雲端；不會公開到學生聯絡簿');
+ };
+}
 function contactBind(){
  contactChosenDate=today();
  $('contactDate').onchange=e=>{const next=e.target.value;if(!contactSelect(next))e.target.value=contactChosenDate};
  $('contactSave').onclick=contactSave;
+ contactPointBind();
  $('contactReload').onclick=()=>{if(contactDirty()&&!confirm('重新讀取會捨棄未儲存的修改，是否繼續？'))return;contactLoad()};
  $('contactCopy').onclick=async()=>{const url=$('contactLink').value;try{await navigator.clipboard.writeText(url);contactStatus('✅ 已複製班級專屬網址')}catch{ $('contactLink').select();contactStatus('請按 Ctrl+C 複製網址')}};
  $('contactOpen').onclick=()=>window.open($('contactLink').value,'_blank','noopener,noreferrer');
