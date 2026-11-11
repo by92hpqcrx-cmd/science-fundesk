@@ -1,11 +1,11 @@
 <!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>班級聯絡簿 | FunDesk</title>
 <style>
 :root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f7ff;color:#243955;font-family:system-ui,-apple-system,'Noto Sans TC',sans-serif;line-height:1.7}header{background:linear-gradient(120deg,#477fcd,#6b9fdf);color:white;padding:24px 16px}header .wrap{max-width:860px;margin:auto}h1{font-size:clamp(25px,5vw,36px);margin:4px 0}header p{margin:4px 0;opacity:.96}main{max-width:860px;margin:20px auto;padding:0 14px 40px}.bar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:15px}.bar span{font-size:13px;color:#5a718c}.btn{border:1px solid #c0d4ef;background:white;padding:9px 15px;border-radius:10px;color:#255497;font-weight:750;cursor:pointer}.entry{padding:23px;background:white;border:1px solid #e1e9f5;box-shadow:0 4px 16px #385a8612;border-radius:16px;margin-bottom:15px}.entry h2{margin:0 0 7px;font-size:20px;color:#255a9a}.date{font-size:12px;color:#74849a;margin-bottom:18px}.entry section{border-top:1px solid #edf1f7;padding:12px 0}.entry h3{margin:2px 0 8px;font-size:16px}.content{font-size:17px;white-space:pre-wrap;overflow-wrap:anywhere}.empty{color:#8694a7}.notice{padding:18px;background:white;border-radius:14px;color:#637992}.historyTitle{margin:24px 0 10px;font-size:18px}.foot{font-size:12px;color:#70839e;text-align:center;margin-top:20px}.error{color:#aa3d3d;background:#fff0f0;padding:15px;border-radius:10px}details{background:white;border-radius:12px;border:1px solid #e0e9f4;margin-bottom:10px;padding:12px}summary{cursor:pointer;font-weight:700;color:#24568d}details .entry{box-shadow:none;border:none;margin:0;padding:9px}@media(max-width:480px){.entry{padding:16px}.bar{align-items:start;flex-direction:column}}
-</style></head><body><header><div class="wrap"><small>FunDesk · CLASS NOTEBOOK</small><h1 id="classTitle">📒 班級聯絡簿</h1><p>自然科課程紀錄 · 作業 · 重要提醒</p></div></header>
+</style><link rel="stylesheet" href="notebook.css?v=20261112"></head><body class="notebookViewer"><header><div class="wrap"><small>FUNDESK · 我們的班級小黑板</small><div class="chalkDoodle" aria-hidden="true">✧　 /\_/\<br>　( •ᴗ• )　☆<br>　 / づ♡</div><h1 id="classTitle">📒 班級聯絡簿</h1><p>自然科課程紀錄 · 作業 · 重要提醒</p></div></header>
 <main><div class="bar"><span id="status" role="status">正在連線…</span><button class="btn" id="refresh" type="button">↻ 立即更新</button></div><div id="latest"></div><h2 class="historyTitle">📅 過往聯絡簿</h2><div id="history"></div><p class="foot">僅公開老師發布的聯絡簿資訊，沒有學生個人資料。頁面約每 20 秒自動更新。</p></main>
 <script>
 (()=>{'use strict';
-const URL='https://ayvwsexnxvjjcrbtyoof.supabase.co';
+const API_URL='https://ayvwsexnxvjjcrbtyoof.supabase.co';
 const KEY='sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L';
 const token=new URL(location.href).searchParams.get('t')||'';
 const el=id=>document.getElementById(id);
@@ -17,7 +17,7 @@ let busy=false,lastSuccess=false;
 async function load(){if(busy)return;busy=true;el('refresh').disabled=true;
  if(!/^[0-9a-f]{64}$/.test(token)){el('latest').innerHTML='<div class="notice">沒有有效的班級專屬網址。請向老師索取完整連結。</div>';el('history').innerHTML='';el('status').textContent='無法讀取';busy=false;el('refresh').disabled=false;return}
  if(!lastSuccess)el('status').textContent='正在讀取雲端聯絡簿…';
- try{const response=await fetch(URL+'/rest/v1/rpc/fundesk_contact_public_read',{method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({p_token:token}),cache:'no-store'});
+ try{const response=await fetch(API_URL+'/rest/v1/rpc/fundesk_contact_public_read',{method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({p_token:token}),cache:'no-store'});
  if(!response.ok)throw Error('讀取失敗（HTTP '+response.status+'）');const data=await response.json();
  if(!data){el('latest').innerHTML='<div class="notice">查無聯絡簿，請確認網址是否正確。</div>';el('history').innerHTML='';el('status').textContent='無效連結';return}
  el('classTitle').textContent='📒 '+data.class_code+' 班聯絡簿';const entries=Array.isArray(data.entries)?data.entries:[];
