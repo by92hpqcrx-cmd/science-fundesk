@@ -720,7 +720,7 @@ $('jsonImport').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let 
   if(Array.isArray(o.labTemplate)&&o.labTemplate.length===5)db.labTemplate=o.labTemplate;
   if(!activeCodes().length)db.classMeta[CLASSES[0]].active=true;
   if(!activeCodes().includes(cl))cl=activeCodes()[0];save();render();alert('已套用備份；請確認右上角顯示「已同步」')}catch(err){alert('無法還原：'+err.message)}e.target.value=''};
-syncClassOptions();$('classSelect').onchange=e=>changeClass(e.target.value);$('sessionDate').value=today()<'2026-11-16'?'2026-11-16':today();$('sessionDate').onchange=()=>render();$('backupTop').onclick=backup;document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>$('modal').classList.add('hidden'));
+syncClassOptions();$('classSelect').onchange=e=>changeClass(e.target.value);$('sessionDate').value=today();$('sessionDate').onchange=()=>render();$('backupTop').onclick=backup;document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>$('modal').classList.add('hidden'));
 
 
 // 班級聯絡簿（獨立公開資料表；絕不把教師班級記錄直接公開）
@@ -769,7 +769,7 @@ function contactPointPreview(){
  const date=contactSafeDate($('contactDate').value),items=contactDailyPoints(date);
  const entry=(contactCache[cl]?.entries||[]).find(e=>e.entry_date===date);
  const approved=contactSplitPoints(entry?.reminders).published;
- preview.textContent='本日已有 '+items.length+' 筆加扣點紀錄 · '+(approved?'已開啟同步（閱讀頁預設隱藏）':'尚未發布，請按下方同步按鈕');
+ preview.textContent=date+' 有 '+items.length+' 筆加扣點紀錄 · '+(approved?'已開啟自動同步（閱讀頁預設隱藏）':'尚未公開同步；請先勾選並發布本日期的聯絡簿')+(($('sessionDate')?.value||'')!==date?'。注意：課堂表現目前選擇 '+$('sessionDate').value+'，日期不同的點數不會顯示在此頁。':'');
 }
 function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);return u.href}
 function renderContact(){
