@@ -936,8 +936,8 @@ function renderContact(){
  <aside><section class="panel contactShare"><h2>🔗 ${esc(classDisplay(code))}專屬閱讀網址</h2><p class="contactMuted">每班都有不同連結。學生免登入，只能看此連結對應班級的聯絡簿，不能修改。</p>
  <input type="text" readonly id="contactLink" aria-label="班級聯絡簿網址" value="讀取中…"><div class="actions"><button type="button" class="btn outline" id="contactCopy" disabled>複製網址</button><button type="button" class="btn outline" id="contactOpen" disabled>學生畫面 ↗</button></div><p class="contactMuted">連結請只提供該班學生與家長。取得網址的人都能閱讀該班聯絡簿，請勿放入姓名、成績等個資。</p></section>
  <section class="panel contactHistory"><h2>📅 已發布日期</h2><div id="contactList">讀取中…</div></section>
- <section class="panel contactShare"><h2>💬 導師回應</h2><p class="contactMuted">將專屬回應網址交給該班導師。此處會自動更新所選日期的回應。</p>
- <div class="actions"><button class="btn small outline" id="contactReplyCopy" type="button" disabled>複製導師回應網址</button><button class="btn small outline" id="contactReplyOpen" type="button" disabled>開啟回應頁 ↗</button></div>
+ <section class="panel contactShare"><h2>💬 導師回應</h2><p class="contactMuted">把回應碼交給該班導師，即可在原本的班級聯絡簿填寫。此處會自動更新所選日期的回應。</p>
+ <div class="actions"><button class="btn small outline" id="contactReplyCopy" type="button" disabled>複製導師回應碼</button><button class="btn small outline" id="contactReplyOpen" type="button" disabled>開啟聯絡簿 ↗</button></div>
  <p id="contactReplyStatus" class="contactMuted" role="status">讀取中…</p><div id="contactReplies"></div></section>
 </aside></div>`;
 }
@@ -996,7 +996,7 @@ async function contactSave(){if(contactBusy)return;if(!cloudReady){contactStatus
  try{await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({p_class_code:code,p_entry_date:date,p_lesson:fields.lesson,p_homework:fields.homework,p_reminders:contactPackClassName(fields.reminders,code)})});
   if(view==='contact'&&cl===code){const refreshed=await contactLoad(code);if(view==='contact'&&cl===code&&refreshed)contactStatus('✅ '+classDisplay(code)+' 已發布到雲端，學生網頁約 20 秒內自動更新。')}}catch(e){contactStatus('❌ 儲存失敗：'+cloudErr(e),true)}finally{contactBusy=false;if($('contactSave'))$('contactSave').disabled=false}
 }
-let contactReplyRequest=0,contactReplyUrl='';
+let contactReplyRequest=0,contactReplyUrl='',contactReplyCode='';
 async function contactRefreshReplies(){
  if(view!=='contact'||!cloudReady||!$('contactReplies'))return;
  const code=cl,date=contactChosenDate,request=++contactReplyRequest;
@@ -1009,7 +1009,7 @@ async function contactRefreshReplies(){
   if(data?.reply_token&&contactCache[code]?.token){
    const url=new URL(contactViewerUrl(contactCache[code].token));
    url.hash=new URLSearchParams({reply:data.reply_token}).toString();
-   contactReplyUrl=url.href;
+   contactReplyUrl=url.href;contactReplyCode=data.reply_token;
    $('contactReplyCopy').disabled=false;$('contactReplyOpen').disabled=false;
   }
   const items=Array.isArray(data?.replies)?data.replies:[];
@@ -1026,12 +1026,12 @@ async function contactRefreshReplies(){
 }
 setInterval(()=>{if(!document.hidden&&view==='contact')contactRefreshReplies()},20000);
 function contactBind(){
- contactReplyUrl='';
+ contactReplyUrl='';contactReplyCode='';
  $('contactReplyCopy').onclick=async()=>{
   try{
-   await navigator.clipboard.writeText(contactReplyUrl);
-   const status=$('contactReplyStatus');if(status){status.dataset.copied='yes';status.textContent='已複製導師專用網址。'}
-  }catch{window.prompt('請複製導師專用網址',contactReplyUrl);}
+   await navigator.clipboard.writeText(contactReplyCode);
+   const status=$('contactReplyStatus');if(status){status.dataset.copied='yes';status.textContent='已複製導師回應碼。'}
+  }catch{window.prompt('請複製導師回應碼',contactReplyCode);}
  };
  $('contactReplyOpen').onclick=()=>window.open(contactReplyUrl,'_blank','noopener,noreferrer');
  contactChosenDate=today();
