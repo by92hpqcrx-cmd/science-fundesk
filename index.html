@@ -922,7 +922,7 @@ function contactQueuePointsSync(code,date,fillMissingSeats=false){
   }catch(err){console.error('FunDesk 加扣點同步到聯絡簿失敗：',err);const msg=$('contactStatus');if(msg&&view==='contact'&&cl===code)contactStatus('⚠️ 加扣點同步失敗：'+cloudErr(err),true)}
  });
 }
-function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);return u.href}
+function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);u.searchParams.set('v','reply-direct-1');return u.href}
 function renderContact(){
  const date=contactChosenDate||today(),code=cl;
  return `<div class="contactShell"><section class="panel contactForm"><div class="panelHead"><div><small class="chalkEyebrow">FUNDESK · 我們的班級小黑板</small><h2>📒 ${esc(classDisplay(code))}聯絡簿</h2></div><span class="chalkCat" aria-hidden="true">/\\_/\\<br>( •ᴗ• ) ♡</span></div>
