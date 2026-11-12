@@ -7,21 +7,32 @@
 <style>
 :root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f7ff;color:#243955;font-family:system-ui,-apple-system,'Noto Sans TC',sans-serif;line-height:1.7}header{background:linear-gradient(120deg,#477fcd,#6b9fdf);color:white;padding:24px 16px}header .wrap{max-width:860px;margin:auto}h1{font-size:clamp(25px,5vw,36px);margin:4px 0}header p{margin:4px 0;opacity:.96}main{max-width:860px;margin:20px auto;padding:0 14px 40px}.bar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:15px}.bar span{font-size:13px;color:#5a718c}.btn{border:1px solid #c0d4ef;background:white;padding:9px 15px;border-radius:10px;color:#255497;font-weight:750;cursor:pointer}.entry{padding:23px;background:white;border:1px solid #e1e9f5;box-shadow:0 4px 16px #385a8612;border-radius:16px;margin-bottom:15px}.entry h2{margin:0 0 7px;font-size:20px;color:#255a9a}.date{font-size:12px;color:#74849a;margin-bottom:18px}.entry section{border-top:1px solid #edf1f7;padding:12px 0}.entry h3{margin:2px 0 8px;font-size:16px}.content{font-size:17px;white-space:pre-wrap;overflow-wrap:anywhere}.empty{color:#8694a7}.notice{padding:18px;background:white;border-radius:14px;color:#637992}.historyTitle{margin:24px 0 10px;font-size:18px}.foot{font-size:12px;color:#70839e;text-align:center;margin-top:20px}.error{color:#aa3d3d;background:#fff0f0;padding:15px;border-radius:10px}details{background:white;border-radius:12px;border:1px solid #e0e9f4;margin-bottom:10px;padding:12px}summary{cursor:pointer;font-weight:700;color:#24568d}details .entry{box-shadow:none;border:none;margin:0;padding:9px}.pointPanel{margin:14px 0;padding:14px;background:#fff8e9;border:1px solid #eddbac;border-radius:12px}.pointPanel h3{margin:0 0 7px}.pointRecord{border-top:1px solid #ecdfbe;padding:8px 0}.pointReason{font-size:14px;color:#6b6172}.pointNotice{font-size:12px;color:#786541;margin:8px 0}.pointToggle{background:#fff;border:1px solid #d7bb76;color:#684f19;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer}.pointHidden .pointDetails{display:none}.pointToolbar{margin:14px 0;padding:14px;border:1px solid #b5d8c8;border-radius:12px;background:#f0faf5}.pointToolbar .pointToggle{display:inline-flex;align-items:center;font-size:15px;padding:10px 16px;background:#fff;border:1px solid #85b79b;color:#175a3b}.pointToolbar p{font-size:12px;color:#527366;margin:8px 0 0}@media print{.pointPanel{display:none!important}}@media(max-width:480px){.entry{padding:16px}.bar{align-items:start;flex-direction:column}}
 </style><link rel="stylesheet" href="notebook.css?v=20261112"><style id="notebookScale">@media screen and (min-width:701px){body.notebookViewer{zoom:75%}}@media print{body.notebookViewer{zoom:100%}}</style><style>
-body.notebookViewer .pointPanel,
-body.notebookViewer .pointPanel h3,
-body.notebookViewer .pointPanel .pointRecord b,
-body.notebookViewer .pointPanel .pointReason,
-body.notebookViewer .pointPanel .pointNotice,
-body.notebookViewer .pointToolbar p,
-body.notebookViewer #pointScreenNote{color:#262127}
+body.notebookViewer .pointPanel,body.notebookViewer .pointToolbar,body.notebookViewer #pointScreenNote{background:#213c36;border-color:#59716a}
+body.notebookViewer .pointPanel,body.notebookViewer .pointPanel h3,body.notebookViewer .pointPanel .pointRecord b,
+body.notebookViewer .pointPanel .pointReason,body.notebookViewer .pointNotice,
+body.notebookViewer .pointToolbar p,body.notebookViewer #pointScreenNote{color:#edf5ed}
+body.notebookViewer .pointRecord{border-color:#617972}
 body.notebookViewer .pointToolbar .pointToggle{color:#143c2b}
+#replyPanel label{display:block;margin-top:10px;font-weight:700}
+#replyPanel input,#replyPanel select,#replyPanel textarea{box-sizing:border-box;width:100%;font:inherit;padding:8px;border:1px solid #7b9989;border-radius:8px;color:#18372d;background:#fff}
+#replyPanel textarea{min-height:95px;resize:vertical}
+#replyPanel .btn{margin-top:12px}
+@media print{#replyPanel{display:none!important}}
 </style></head><body class="notebookViewer"><header><div class="wrap"><small>FUNDESK · 我們的班級小黑板</small><div class="chalkDoodle" aria-hidden="true">✧　 /\_/\<br>　( •ᴗ• )　☆<br>　 / づ♡</div><h1 id="classTitle">📒 班級聯絡簿</h1><p>自然科課程紀錄 · 考試預告 · 重要記事</p></div></header>
-<main><div class="bar"><span id="status" role="status">正在連線…</span><button class="btn" id="refresh" type="button">↻ 立即更新</button></div><p class="notice" id="pointScreenNote">🔒 學生加扣點紀錄預設隱藏。給導師查看時可按「顯示」；投影到電腦大螢幕前請按「隱藏」。此按鈕不提供帳號權限保護。</p><div id="pointToolbar" class="pointToolbar"><button id="toggleAllPoints" class="pointToggle" type="button" aria-expanded="false" aria-controls="latest history">👁 顯示加扣點紀錄</button><p>預設隱藏，僅在此頁面按鈕展開；投影前請按「隱藏」。已發布的資料並非保密資料。</p><p id="pointEmpty" class="pointNotice" hidden>目前沒有已發布的加扣點紀錄。老師發布當日加扣點後，「課堂表現」新增的紀錄會自動同步。</p></div><div id="latest"></div><h2 class="historyTitle">📅 過往聯絡簿</h2><div id="history"></div><p class="foot">此連結可閱讀老師發布的內容，包括老師選擇公開的學生加扣點紀錄。加扣點預設隱藏，但網址持有人仍可取得資料。頁面約每 20 秒自動更新。</p></main>
+<main><div class="bar"><span id="status" role="status">正在連線…</span><button class="btn" id="refresh" type="button">↻ 立即更新</button></div><p class="notice" id="pointScreenNote">🔒 學生加扣點紀錄預設隱藏。給導師查看時可按「顯示」；投影到電腦大螢幕前請按「隱藏」。此按鈕不提供帳號權限保護。</p><div id="pointToolbar" class="pointToolbar"><button id="toggleAllPoints" class="pointToggle" type="button" aria-expanded="false" aria-controls="latest history">👁 顯示加扣點紀錄</button><p>預設隱藏，僅在此頁面按鈕展開；投影前請按「隱藏」。已發布的資料並非保密資料。</p><p id="pointEmpty" class="pointNotice" hidden>目前沒有已發布的加扣點紀錄。老師發布當日加扣點後，「課堂表現」新增的紀錄會自動同步。</p></div><section class="entry" id="replyPanel" hidden><h2>💬 導師回應</h2>
+ <form id="replyForm">
+ <label for="replyDate">聯絡簿日期</label><select id="replyDate" required></select>
+ <label for="replyAuthor">導師稱呼</label><input id="replyAuthor" maxlength="40" required>
+ <label for="replyText">回應內容</label><textarea id="replyText" maxlength="1000" required></textarea>
+ <button class="btn" id="replySend" type="submit">送出回應</button>
+ <p id="replyStatus" role="status"></p></form></section><div id="latest"></div><h2 class="historyTitle">📅 過往聯絡簿</h2><div id="history"></div><p class="foot">此連結可閱讀老師發布的內容，包括老師選擇公開的學生加扣點紀錄。加扣點預設隱藏，但網址持有人仍可取得資料。頁面約每 20 秒自動更新。</p></main>
 <script>
 (()=>{'use strict';
 const API_URL='https://ayvwsexnxvjjcrbtyoof.supabase.co';
 const KEY='sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L';
-const token=new URL(location.href).searchParams.get('t')||'';
+const pageUrl=new URL(location.href);
+const token=pageUrl.searchParams.get('t')||'';
+const replyToken=new URLSearchParams(pageUrl.hash.slice(1)).get('reply')||'';
 const el=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const stamp=t=>t?new Date(t).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false}):'';
@@ -57,6 +68,35 @@ function article(e){
  const parsed=splitPoints(e.reminders);
  return `<article class="entry"><h2>${esc(e.entry_date)}</h2><div class="date">最後更新：${esc(stamp(e.updated_at))}</div>${sections({...e,reminders:parsed.reminders})}${pointPanel(parsed.points,parsed.published)}</article>`;
 }
+let replyPending=null,replyBusy=false;
+function replySetDates(entries){
+ if(!/^[0-9a-f]{64}$/.test(replyToken))return;
+ const select=el('replyDate'),previous=select.value;
+ if(replyBusy)return;
+ select.replaceChildren(...entries.map(entry=>new Option(entry.entry_date,entry.entry_date)));
+ if(entries.some(entry=>entry.entry_date===previous))select.value=previous;
+ el('replyPanel').hidden=!entries.length;
+}
+el('replyForm').onsubmit=async event=>{
+ event.preventDefault();if(replyBusy)return;
+ const date=el('replyDate').value,author=el('replyAuthor').value.trim(),message=el('replyText').value.trim();
+ const status=el('replyStatus');
+ if(!date||!author||!message){status.textContent='請選擇日期並填寫導師稱呼及回應。';return}
+ const signature=JSON.stringify([date,author,message]);
+ if(replyPending?.signature!==signature)replyPending={signature,id:crypto.randomUUID()};
+ replyBusy=true;el('replySend').disabled=true;status.textContent='正在送出…';
+ try{
+  const response=await fetch(API_URL+'/rest/v1/rpc/fundesk_contact_reply_submit',{
+   method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},
+   body:JSON.stringify({p_token:token,p_reply_token:replyToken,p_entry_date:date,p_request_id:replyPending.id,p_author:author,p_message:message})
+  });
+  const result=await response.json();
+  if(!response.ok||result?.ok!==true)throw Error(result?.code==='PGRST202'?'導師回應尚未啟用。':result?.message||'送出失敗，請重試。');
+  if(el('replyText').value.trim()===message)el('replyText').value='';
+  replyPending=null;status.textContent='回應已送出，FunDesk 教師端會自動更新。';
+ }catch(error){status.textContent='未能確認送出：'+error.message;}
+ finally{replyBusy=false;el('replySend').disabled=false;}
+};
 el('toggleAllPoints').onclick=()=>{showPoints=!showPoints;updatePointsToggle()};
 let busy=false,lastSuccess=false;
 async function load(){if(busy)return;busy=true;showPoints=false;updatePointsToggle();el('refresh').disabled=true;
@@ -64,8 +104,9 @@ async function load(){if(busy)return;busy=true;showPoints=false;updatePointsTogg
  if(!lastSuccess)el('status').textContent='正在讀取雲端聯絡簿…';
  try{const response=await fetch(API_URL+'/rest/v1/rpc/fundesk_contact_public_read',{method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({p_token:token}),cache:'no-store'});
  if(!response.ok)throw Error('讀取失敗（HTTP '+response.status+'）');const data=await response.json();
- if(!data){el('latest').innerHTML='<div class="notice">查無聯絡簿，請確認網址是否正確。</div>';el('history').innerHTML='';el('status').textContent='無效連結';return}
+ if(!data){el('replyPanel').hidden=true;el('latest').innerHTML='<div class="notice">查無聯絡簿，請確認網址是否正確。</div>';el('history').innerHTML='';el('status').textContent='無效連結';return}
  const displayName=data.class_code==='c_mwc0lni8_le3us8'?'五年一班':(/^50[1-7]$/.test(String(data.class_code||''))?'五年'+['','一','二','三','四','五','六','七'][Number(data.class_code)-500]+'班':String(data.class_code||'班級'));const entries=Array.isArray(data.entries)?data.entries:[];const publishedName=entries.map(e=>extractClassLabel(e.reminders)).find(Boolean);el('classTitle').textContent='📒 '+(publishedName||(/^(?:c_[a-z0-9_]+)$/.test(displayName)?'班級':displayName))+'聯絡簿';
+ replySetDates(entries);
  el('latest').innerHTML=entries.length?article(entries[0]):'<div class="notice">老師尚未發布聯絡簿，請稍後再查看。</div>';
  el('history').innerHTML=entries.slice(1).map(e=>`<details><summary>${esc(e.entry_date)}　查看內容</summary>${article(e)}</details>`).join('')||'<p class="empty">目前沒有較早的聯絡簿。</p>';hasPublishedPoints=entries.some(e=>splitPoints(e.reminders).published);updatePointsToggle();
  lastSuccess=true;el('status').textContent='✅ 已更新 · '+new Date().toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei'});
