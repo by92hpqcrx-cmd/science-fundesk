@@ -23,3 +23,6 @@
 }
 @media(prefers-reduced-motion:reduce){.rpsFireworks{display:none}}
 @media(max-width:520px){.rpsArena{min-height:310px}.rpsSelects{grid-template-columns:1fr}}
+.rpsChoices{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.rpsChoices[hidden]{display:none}
+.rpsChoices .btn{font-size:clamp(16px,2.3vw,22px);min-height:46px}

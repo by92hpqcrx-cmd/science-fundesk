@@ -186,7 +186,7 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 #replyNoticeClose:hover{background:#edd8f2}
 #replyNoticeClose:focus-visible{outline:2px solid #654272;outline-offset:3px}
 @media print{#replyNotice{display:none!important}}
-</style><link rel="stylesheet" href="./fundesk-light.css?v=2"><link rel="stylesheet" href="./fundesk-rps.css?v=1"></head><body class="cloud-locked">
+</style><link rel="stylesheet" href="./fundesk-light.css?v=2"><link rel="stylesheet" href="./fundesk-rps.css?v=2"></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>七班快速入口 · 教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
  <div role="status" aria-live="polite"><h2 id="replyNoticeTitle">💬 收到導師回應</h2>
@@ -229,7 +229,7 @@ try{
 function safeLink(v){try{const u=new URL(v);return ['https:','http:'].includes(u.protocol)?u.href:''}catch{return ''}}
 function renderQuickLinks(){
  const cfg=[['personal','🎮','自然科學王・個人賽'],['sky','🌌','星空冒險島'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版']];
- return `<section class="panel quicklinks"><div class="panelHead"><h2>教學快捷入口</h2><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quicklinkGrid"><button type="button" class="quickLink" data-goto="rps"><span class="quickIcon">✊</span><strong>課間小遊戲・剪刀石頭布</strong><small>隨機抽選或老師指定</small></button>${cfg.map(([id,icon,title])=>{const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" href="${esc(link)}" target="_blank" rel="noopener noreferrer"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>開啟網站 ↗</small></a>`:`<button type="button" class="quickLink missing" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></section>`;
+ return `<section class="panel quicklinks"><div class="panelHead"><h2>教學快捷入口</h2><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quicklinkGrid"><button type="button" class="quickLink" data-goto="rps"><span class="quickIcon">✊</span><strong>課間小遊戲・剪刀石頭布</strong><small>選一位學生來挑戰老師</small></button>${cfg.map(([id,icon,title])=>{const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" href="${esc(link)}" target="_blank" rel="noopener noreferrer"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>開啟網站 ↗</small></a>`:`<button type="button" class="quickLink missing" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></section>`;
 }
 function openLinkSettings(){
  const cfg=[['personal','自然科學王・個人賽'],['sky','星空冒險島'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot! 互動測驗'],['monopoly','校園大富翁・單機版']];
@@ -351,7 +351,7 @@ const pageScenes={
  correction:'cat',board:'plants',quiz:'explore',students:'friends',
  tools:'cat',tabletRules:'friends',classes:'rabbit',settings:'plants'
 };
-function render(){if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();cloudRenderQuickClasses();$('pageTitle').textContent=titles[view];$('pageSticker').dataset.scene=pageScenes[view];$('pageSub').textContent=view==='rps'?'兩位學生出場，系統隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');root.innerHTML=({seats:renderSeats,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();hookView()}
+function render(){if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();cloudRenderQuickClasses();$('pageTitle').textContent=titles[view];$('pageSticker').dataset.scene=pageScenes[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');root.innerHTML=({seats:renderSeats,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();hookView()}
 const labGroupOrder=[2,3,4,0,1];
 const labRoleColumns=['組長','副組長','器材長 1／器材長','器材長 2','習作長','清潔長'];
 function labRoles(count){
@@ -485,73 +485,69 @@ function bindLabDuty(){
 
 const rpsMoves=[['✊','石頭'],['✋','布'],['✌️','剪刀']];
 const rpsResult=(left,right)=>(left-right+3)%3;
-function rpsPair(roster){
- const left=Math.floor(Math.random()*roster.length);
- const next=Math.floor(Math.random()*(roster.length-1));
- return [roster[left],roster[next>=left?next+1:next]];
-}
 function renderRps(){
  const roster=[...students()].sort((a,b)=>a.no-b.no);
  const options=roster.map(s=>`<option value="${esc(s.id)}">${esc(s.no)} 號　${esc(s.name)}</option>`).join('');
- return `<section class="panel rpsPanel"><div class="panelHead"><h2>✊ 剪刀石頭布</h2><button class="btn outline" type="button" data-goto="seats">回首頁</button></div>
- ${roster.length<2?'<p class="notice">班上至少需要兩位學生才能開始遊戲。</p>':`
+ return `<section class="panel rpsPanel"><div class="panelHead"><h2>✊ 和老師猜拳</h2><button class="btn outline" type="button" data-goto="seats">回首頁</button></div>
+ ${!roster.length?'<p class="notice">班上至少需要一位學生才能開始遊戲。</p>':`
  <form id="rpsForm">
- <fieldset class="rpsModes"><legend>選擇選手</legend>
- <label><input type="radio" name="rpsMode" value="random" checked> 隨機抽兩位</label>
- <label><input type="radio" name="rpsMode" value="teacher"> 老師指定兩位</label></fieldset>
- <div class="rpsSelects" id="rpsSelects" hidden><label>第一位<select id="rpsFirst">${options}</select></label><label>第二位<select id="rpsSecond">${options}</select></label></div>
- <div class="actions"><button type="submit" class="btn" id="rpsStart">開始比賽</button></div>
+ <fieldset class="rpsModes"><legend>選擇學生</legend>
+ <label><input type="radio" name="rpsMode" value="random" checked> 隨機抽一位</label>
+ <label><input type="radio" name="rpsMode" value="teacher"> 老師指定一位</label></fieldset>
+ <div class="rpsSelects" id="rpsSelects" hidden><label>參賽學生<select id="rpsStudent">${options}</select></label></div>
+ <div class="actions"><button type="submit" class="btn" id="rpsStart">選手出場</button></div>
  </form>
- <div class="rpsArena"><div class="rpsPlayers" id="rpsPlayers"></div><p id="rpsStatus" role="status" aria-live="polite">選好模式，開始比賽！</p></div>`}</section>`;
+ <div class="rpsArena"><div class="rpsPlayers" id="rpsPlayers"></div>
+ <p id="rpsStatus" role="status" aria-live="polite">選一位學生來挑戰老師！</p>
+ <div class="rpsChoices" id="rpsChoices" hidden>${rpsMoves.map(([icon,name],index)=>`<button class="btn" type="button" data-rps-hand="${index}">${icon} ${name}</button>`).join('')}</div>
+ </div>`}</section>`;
 }
 function bindRps(){
  const form=$('rpsForm');
  if(!form)return;
- const first=$('rpsFirst'),second=$('rpsSecond'),pickers=$('rpsSelects'),players=$('rpsPlayers'),status=$('rpsStatus'),start=$('rpsStart');
+ const picker=$('rpsStudent'),pickers=$('rpsSelects'),players=$('rpsPlayers'),status=$('rpsStatus'),start=$('rpsStart'),choices=$('rpsChoices');
  const mode=()=>form.elements.rpsMode.value;
- let running=false,lastPair=null;
- second.selectedIndex=1;
+ let contestant=null;
  form.onchange=()=>{
   pickers.hidden=mode()!=='teacher';
-  lastPair=null;
-  start.textContent='開始比賽';
+  contestant=null;
+  players.replaceChildren();
+  choices.hidden=true;
+  start.textContent='選手出場';
+  status.textContent='選一位學生來挑戰老師！';
  };
  form.onsubmit=event=>{
   event.preventDefault();
-  if(running)return;
   const roster=students();
-  if(roster.length<2){status.textContent='班上至少需要兩位學生。';return;}
-  const pair=lastPair?.every(s=>student(s.id))?lastPair:mode()==='teacher'?[student(first.value),student(second.value)]:rpsPair(roster);
-  if(!pair[0]||!pair[1]||pair[0].id===pair[1].id){
-   status.textContent='請選擇兩位不同的學生。';return;
-  }
-  running=true;start.disabled=true;
-  Array.from(form.elements).forEach(control=>control.disabled=true);
-  const hands=pair.map(()=>Math.floor(Math.random()*rpsMoves.length));
+  contestant=mode()==='teacher'?student(picker.value):roster[Math.floor(Math.random()*roster.length)];
+  if(!contestant){status.textContent='請先選擇一位學生。';return;}
+  players.innerHTML=`<article class="rpsPlayer">${avatarThumb(contestant)}
+   <span class="rpsName">${esc(contestant.name)}</span><small>${esc(contestant.no)} 號</small><div class="rpsHand">❔</div></article>
+   <article class="rpsPlayer"><img class="studentAvatarThumb" src="./fundesk-rps-teacher.webp" alt="">
+   <span class="rpsName">老師</span><small>隨機出拳</small><div class="rpsHand">❔</div></article>`;
+  choices.hidden=false;
+  status.textContent=`${contestant.name}，請選剪刀、石頭或布！`;
+  start.textContent=mode()==='random'?'重新抽選':'重新出場';
+ };
+ choices.onclick=event=>{
+  const button=event.target.closest('[data-rps-hand]');
+  if(!button||!contestant)return;
+  const hands=[Number(button.dataset.rpsHand),Math.floor(Math.random()*rpsMoves.length)];
   const outcome=rpsResult(...hands);
   const winner=outcome===0?-1:outcome===1?0:1;
-  players.innerHTML=pair.map(s=>`<article class="rpsPlayer">${avatarThumb(s)}
-   <span class="rpsName">${esc(s.name)}</span><small>${esc(s.no)} 號</small><div class="rpsHand">❔</div></article>`).join('');
-  status.textContent='剪刀、石頭、布！';
-  setTimeout(()=>{
-   if(!form.isConnected)return;
-   players.querySelectorAll('.rpsPlayer').forEach((card,i)=>{
-    const [icon,name]=rpsMoves[hands[i]];
-    card.querySelector('.rpsHand').textContent=icon+' '+name;
-    if(i===winner){
-     card.classList.add('rpsWinner');
-     const burst=document.createElement('div');
-     burst.className='rpsFireworks';burst.setAttribute('aria-hidden','true');
-     burst.innerHTML=Array.from({length:24},(_,j)=>`<i style="--angle:${j*15}deg;--spark:${j%5};--hue:${j*41%360}"></i>`).join('');
-     card.append(burst);
-    }
-   });
-   lastPair=winner<0?pair:null;
-   status.textContent=winner<0?'平手！可以讓同一組再比一次。':`🎉 ${pair[winner].name}獲勝！`;
-   running=false;
-   Array.from(form.elements).forEach(control=>control.disabled=false);
-   start.textContent=lastPair?'同一組再比一次':mode()==='random'?'重新抽選比賽':'再玩一次';
-  },650);
+  players.querySelectorAll('.rpsPlayer').forEach((card,i)=>{
+   card.classList.toggle('rpsWinner',i===winner);
+   card.querySelector('.rpsFireworks')?.remove();
+   const [icon,name]=rpsMoves[hands[i]];
+   card.querySelector('.rpsHand').textContent=icon+' '+name;
+   if(i===winner){
+    const burst=document.createElement('div');
+    burst.className='rpsFireworks';burst.setAttribute('aria-hidden','true');
+    burst.innerHTML=Array.from({length:24},(_,j)=>`<i style="--angle:${j*15}deg;--spark:${j%5};--hue:${j*41%360}"></i>`).join('');
+    card.append(burst);
+   }
+  });
+  status.textContent=winner<0?'平手！再選一次出拳。':`🎉 ${winner===0?contestant.name:'老師'}獲勝！再選一個手勢即可再玩。`;
  };
 }
 
