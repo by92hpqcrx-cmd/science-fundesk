@@ -127,7 +127,7 @@ async function threadCall(payload={}){
 function displayThread(data){
  const items=Array.isArray(data?.messages)?data.messages:[];
  const markup=items.map(item=>`<article style="padding:8px 0;border-bottom:1px solid #aac5b5">
-  <b>${item.author_role==='subject'?'科任老師':'導師'}</b> <small>${esc(stamp(item.created_at))}</small>
+  <b>${esc(item.display_name||(item.author_role==='subject'?'科任老師':'導師'))}</b> <small>${esc(stamp(item.created_at))}</small>
   <div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(item.message)}</div></article>`).join('')||'目前沒有留言。';
  if(el('threadMessages').innerHTML!==markup)el('threadMessages').innerHTML=markup;
  el('threadSend').disabled=threadBusy||!data.can_post;
