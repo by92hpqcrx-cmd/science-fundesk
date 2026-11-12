@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="可愛小狗頭像">
+
+<path d="M24 194Q26 147 74 143H126Q174 147 176 194Z" fill="#DFA36D" stroke="#9D6859" stroke-width="3"/>
+<path d="M78 146Q100 169 122 146Q134 168 139 194H61Q65 168 78 146Z" fill="#FFF2E3"/>
+<path d="M52 66Q15 39 11 87Q4 127 35 133Q52 131 67 89Z" fill="#DFA36D" stroke="#8F5E52" stroke-width="3"/><path d="M38 67Q13 75 25 111Q43 120 49 88Z" fill="#BC805C" opacity=".7"/><g transform="translate(200 0) scale(-1 1)"><path d="M52 66Q15 39 11 87Q4 127 35 133Q52 131 67 89Z" fill="#DFA36D" stroke="#8F5E52" stroke-width="3"/><path d="M38 67Q13 75 25 111Q43 120 49 88Z" fill="#BC805C" opacity=".7"/></g>
+<ellipse cx="100" cy="102" rx="65" ry="67" fill="#DFA36D" stroke="#8E6659" stroke-width="3"/>
+<path d="M78 48Q57 78 61 112Q76 120 85 95Q89 63 78 48Z" fill="#BD7C55" opacity=".6"/>
+<path d="M50 119Q72 108 100 120Q128 108 150 119Q146 151 100 157Q54 151 50 119Z" fill="#FFF2E3" opacity=".94"/>
+<ellipse cx="74" cy="96" rx="15" ry="19" fill="#FFF"/><ellipse cx="126" cy="96" rx="15" ry="19" fill="#FFF"/><ellipse cx="74" cy="98" rx="11.5" ry="15" fill="#4B2D28"/><ellipse cx="126" cy="98" rx="11.5" ry="15" fill="#4B2D28"/>
+<circle cx="78" cy="91" r="5" fill="#FFF"/><circle cx="130" cy="91" r="5" fill="#FFF"/>
+<path d="M59 73Q73 64 84 73M116 73Q128 64 141 73" stroke="#71514C" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+<ellipse cx="57" cy="122" rx="11" ry="7" fill="#F5A1AA" opacity=".68"/><ellipse cx="143" cy="122" rx="11" ry="7" fill="#F5A1AA" opacity=".68"/>
+<path d="M100 116l-8 4Q100 132 108 120Z" fill="#704B43" stroke="#B46E67" stroke-width="1.5"/><path d="M100 125v8m0 0Q89 147 80 134m20-1q11 14 20 1" stroke="#8C544A" stroke-width="3.3" stroke-linecap="round" fill="none"/>
+</svg>
