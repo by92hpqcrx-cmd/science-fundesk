@@ -1,7 +1,4 @@
-FunDesk 教師安全鎖版
+FunDesk 教師工作台
 
-1. 將 ZIP 所有檔案上傳 GitHub science-fundesk，覆蓋 index.html，並保留 tablet_photo_ 圖片。
-2. 左側「離開教室・立即上鎖」或「登出雲端」，可離開公用電腦。
-3. 閒置 3 分鐘會自動上鎖。解鎖須重新輸入原本教師電子郵件及密碼。
-4. 若有未同步資料，會先遮住畫面，提示下載備份。
-5. 此功能保護目前瀏覽器 UI 與登入狀態；資料庫 RLS 及裝置系統鎖仍應保留。
+1. 更新 GitHub science-fundesk 時，請保留 tablet_photo_ 圖片。
+2. 主程式與課堂表現遙控器都可手動登出教師帳號。
