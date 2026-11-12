@@ -13,20 +13,19 @@ body.notebookViewer .pointPanel .pointReason,body.notebookViewer .pointNotice,
 body.notebookViewer .pointToolbar p,body.notebookViewer #pointScreenNote{color:#edf5ed}
 body.notebookViewer .pointRecord{border-color:#617972}
 body.notebookViewer .pointToolbar .pointToggle{color:#143c2b}
-#replyPanel label{display:block;margin-top:10px;font-weight:700}
+#replyPanel{border-top:1px solid #92ad9e;margin-top:12px}#replyPanel label{display:block;margin-top:10px;font-weight:700}
 #replyPanel input,#replyPanel select,#replyPanel textarea{box-sizing:border-box;width:100%;font:inherit;padding:8px;border:1px solid #7b9989;border-radius:8px;color:#18372d;background:#fff}
 #replyPanel textarea{min-height:95px;resize:vertical}
 #replyPanel .btn{margin-top:12px}
 @media print{#replyPanel{display:none!important}}
 </style></head><body class="notebookViewer"><header><div class="wrap"><small>FUNDESK · 我們的班級小黑板</small><div class="chalkDoodle" aria-hidden="true">✧　 /\_/\<br>　( •ᴗ• )　☆<br>　 / づ♡</div><h1 id="classTitle">📒 班級聯絡簿</h1><p>自然科課程紀錄 · 考試預告 · 重要記事</p></div></header>
-<main><div class="bar"><span id="status" role="status">正在連線…</span><button class="btn" id="refresh" type="button">↻ 立即更新</button></div><p class="notice" id="pointScreenNote">🔒 學生加扣點紀錄預設隱藏。給導師查看時可按「顯示」；投影到電腦大螢幕前請按「隱藏」。此按鈕不提供帳號權限保護。</p><div id="pointToolbar" class="pointToolbar"><button id="toggleAllPoints" class="pointToggle" type="button" aria-expanded="false" aria-controls="latest history">👁 顯示加扣點紀錄</button><p>預設隱藏，僅在此頁面按鈕展開；投影前請按「隱藏」。已發布的資料並非保密資料。</p><p id="pointEmpty" class="pointNotice" hidden>目前沒有已發布的加扣點紀錄。老師發布當日加扣點後，「課堂表現」新增的紀錄會自動同步。</p></div><div id="latest"></div><section class="entry" id="replyPanel" hidden><details id="replyDetails"><summary>💬 導師回應</summary>
- <form id="replyForm">
- <label for="replyDate">聯絡簿日期</label><select id="replyDate" required></select>
- <div id="replyCodeField"><label for="replyCode">導師回應碼</label><input id="replyCode" type="password" maxlength="64" autocomplete="off" spellcheck="false" required><p>回應碼由科任老師提供。</p></div>
- <label for="replyAuthor">導師稱呼</label><input id="replyAuthor" maxlength="40" required>
- <label for="replyText">回應內容</label><textarea id="replyText" maxlength="1000" required></textarea>
+<main><div class="bar"><span id="status" role="status">正在連線…</span><button class="btn" id="refresh" type="button">↻ 立即更新</button></div><p class="notice" id="pointScreenNote">🔒 學生加扣點紀錄預設隱藏。給導師查看時可按「顯示」；投影到電腦大螢幕前請按「隱藏」。此按鈕不提供帳號權限保護。</p><div id="pointToolbar" class="pointToolbar"><button id="toggleAllPoints" class="pointToggle" type="button" aria-expanded="false" aria-controls="latest history">👁 顯示加扣點紀錄</button><p>預設隱藏，僅在此頁面按鈕展開；投影前請按「隱藏」。已發布的資料並非保密資料。</p><p id="pointEmpty" class="pointNotice" hidden>目前沒有已發布的加扣點紀錄。老師發布當日加扣點後，「課堂表現」新增的紀錄會自動同步。</p></div><article id="latestEntry" class="entry"><div id="latest"></div>
+ <form id="replyPanel" hidden>
+ <label for="replyText">💬 導師回應</label>
+ <textarea id="replyText" maxlength="1000" required placeholder="輸入給科任老師的回應"></textarea>
  <button class="btn" id="replySend" type="submit">送出回應</button>
- <p id="replyStatus" role="status"></p></form></details></section><h2 class="historyTitle">📅 過往聯絡簿</h2><div id="history"></div><p class="foot">此連結可閱讀老師發布的內容，包括老師選擇公開的學生加扣點紀錄。加扣點預設隱藏，但網址持有人仍可取得資料。頁面約每 20 秒自動更新。</p></main>
+ <span id="replyStatus" role="status"></span>
+ </form></article><h2 class="historyTitle">📅 過往聯絡簿</h2><div id="history"></div><p class="foot">此連結可閱讀老師發布的內容，包括老師選擇公開的學生加扣點紀錄。加扣點預設隱藏，但網址持有人仍可取得資料。頁面約每 20 秒自動更新。</p></main>
 <script>
 (()=>{'use strict';
 const API_URL='https://ayvwsexnxvjjcrbtyoof.supabase.co';
@@ -66,29 +65,22 @@ function pointPanel(points,published){
  }).join(''):'<p>本日無加扣點紀錄。</p>';
  return `<div class="pointPanel ${showPoints?'':'pointHidden'}"><h3>⭐ FunDesk 學生加扣點紀錄</h3><div class="pointDetails"><p class="pointNotice">含學生姓名與加扣分原因。持有聯絡簿網址的人可取得已發布資料，投影前請隱藏。</p>${detail}</div></div>`;
 }
-function article(e){
+function article(e,wrapped=true){
  const parsed=splitPoints(e.reminders);
- return `<article class="entry"><h2>${esc(e.entry_date)}</h2><div class="date">最後更新：${esc(stamp(e.updated_at))}</div>${sections({...e,reminders:parsed.reminders})}${pointPanel(parsed.points,parsed.published)}</article>`;
+ return `${wrapped?'<article class="entry">':''}<h2>${esc(e.entry_date)}</h2><div class="date">最後更新：${esc(stamp(e.updated_at))}</div>${sections({...e,reminders:parsed.reminders})}${pointPanel(parsed.points,parsed.published)}${wrapped?'</article>':''}`;
 }
-if(validReplyCode(initialReplyCode)){
- el('replyCode').value=initialReplyCode;
- el('replyCodeField').hidden=true;
- el('replyDetails').open=true;
-}
+let replyCode=validReplyCode(initialReplyCode)?initialReplyCode:'',replyDate='';
 let replyPending=null,replyBusy=false;
 function replySetDates(entries){
- const select=el('replyDate'),previous=select.value;
- if(replyBusy)return;
- select.replaceChildren(...entries.map(entry=>new Option(entry.entry_date,entry.entry_date)));
- if(entries.some(entry=>entry.entry_date===previous))select.value=previous;
+ if(!replyBusy&&!el('replyText').value.trim())replyDate=entries[0]?.entry_date||'';
  el('replyPanel').hidden=!entries.length;
 }
-el('replyForm').onsubmit=async event=>{
+el('replyPanel').onsubmit=async event=>{
  event.preventDefault();if(replyBusy)return;
- const date=el('replyDate').value,author=el('replyAuthor').value.trim(),message=el('replyText').value.trim();
+ const date=replyDate,author='導師',message=el('replyText').value.trim();
  const status=el('replyStatus');
- if(!date||!author||!message){status.textContent='請選擇日期並填寫導師稱呼及回應。';return}
- const replyCode=el('replyCode').value.trim();
+ if(!date||!message){status.textContent='請填寫回應。';return}
+ if(!validReplyCode(replyCode))replyCode=(window.prompt('請輸入科任老師提供的導師回應碼')||'').trim();
  if(!validReplyCode(replyCode)){status.textContent='請輸入科任老師提供的導師回應碼。';return}
  const signature=JSON.stringify([date,author,message,replyCode]);
  if(replyPending?.signature!==signature)replyPending={signature,id:crypto.randomUUID()};
@@ -102,7 +94,7 @@ el('replyForm').onsubmit=async event=>{
   if(!response.ok||result?.ok!==true)throw Error(result?.code==='PGRST202'?'導師回應尚未啟用。':result?.message||'送出失敗，請重試。');
   if(el('replyText').value.trim()===message)el('replyText').value='';
   replyPending=null;status.textContent='回應已送出，FunDesk 教師端會自動更新。';
- }catch(error){status.textContent='未能確認送出：'+error.message;}
+ }catch(error){if(/無效/.test(error.message))replyCode='';status.textContent='未能確認送出：'+error.message;}
  finally{replyBusy=false;el('replySend').disabled=false;}
 };
 el('toggleAllPoints').onclick=()=>{showPoints=!showPoints;updatePointsToggle()};
@@ -115,7 +107,7 @@ async function load(){if(busy)return;busy=true;showPoints=false;updatePointsTogg
  if(!data){el('replyPanel').hidden=true;el('latest').innerHTML='<div class="notice">查無聯絡簿，請確認網址是否正確。</div>';el('history').innerHTML='';el('status').textContent='無效連結';return}
  const displayName=data.class_code==='c_mwc0lni8_le3us8'?'五年一班':(/^50[1-7]$/.test(String(data.class_code||''))?'五年'+['','一','二','三','四','五','六','七'][Number(data.class_code)-500]+'班':String(data.class_code||'班級'));const entries=Array.isArray(data.entries)?data.entries:[];const publishedName=entries.map(e=>extractClassLabel(e.reminders)).find(Boolean);el('classTitle').textContent='📒 '+(publishedName||(/^(?:c_[a-z0-9_]+)$/.test(displayName)?'班級':displayName))+'聯絡簿';
  replySetDates(entries);
- el('latest').innerHTML=entries.length?article(entries[0]):'<div class="notice">老師尚未發布聯絡簿，請稍後再查看。</div>';
+ el('latest').innerHTML=entries.length?article(entries[0],false):'<div class="notice">老師尚未發布聯絡簿，請稍後再查看。</div>';
  el('history').innerHTML=entries.slice(1).map(e=>`<details><summary>${esc(e.entry_date)}　查看內容</summary>${article(e)}</details>`).join('')||'<p class="empty">目前沒有較早的聯絡簿。</p>';hasPublishedPoints=entries.some(e=>splitPoints(e.reminders).published);updatePointsToggle();
  lastSuccess=true;el('status').textContent='✅ 已更新 · '+new Date().toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei'});
  }catch(e){el('status').textContent='⚠️ 網路讀取失敗，可點「立即更新」重試';if(!lastSuccess)el('latest').innerHTML='<div class="error">聯絡簿暫時無法載入，請檢查網路或通知老師。</div>'}
