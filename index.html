@@ -849,11 +849,8 @@ function contactBind(){
  $('contactDate').onchange=e=>{const next=e.target.value;if(!contactSelect(next))e.target.value=contactChosenDate};
  $('contactSave').onclick=contactSave;
  $('contactSyncPoints').onclick=()=>{
-  const date=contactSafeDate($('contactDate').value);
-  const approved=contactSplitPoints((contactCache[cl]?.entries||[]).find(e=>e.entry_date===date)?.reminders).published;
-  if(!approved&&!confirm('要將 '+classDisplay(cl)+' 在 '+date+' 的具名加扣點紀錄發布到本班聯絡簿嗎？持有學生聯絡簿網址的人都可能取得這些資料；預設隱藏並非保密。'))return;
   $('contactPublishPoints').checked=true;
-  contactSave();
+  contactSave(); // contactSave requests teacher approval when first publishing names.
  };
  $('contactReload').onclick=()=>{if(contactDirty()&&!confirm('重新讀取會捨棄未儲存的修改，是否繼續？'))return;contactLoad()};
  $('contactCopy').onclick=async()=>{const url=$('contactLink').value;try{await navigator.clipboard.writeText(url);contactStatus('✅ 已複製班級專屬網址')}catch{ $('contactLink').select();contactStatus('請按 Ctrl+C 複製網址')}};
