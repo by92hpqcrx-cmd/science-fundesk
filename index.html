@@ -186,7 +186,7 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 #replyNoticeClose:hover{background:#edd8f2}
 #replyNoticeClose:focus-visible{outline:2px solid #654272;outline-offset:3px}
 @media print{#replyNotice{display:none!important}}
-</style><link rel="stylesheet" href="./fundesk-light.css?v=2"><link rel="stylesheet" href="./fundesk-rps.css?v=2"></head><body class="cloud-locked">
+</style><link rel="stylesheet" href="./fundesk-light.css?v=2"><link rel="stylesheet" href="./fundesk-rps.css?v=2"><style>[data-att-reason-wrap][hidden]{display:none}[data-att-reason-wrap]{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}[data-att-reason]{width:min(240px,100%)}[data-attendance-editor]{gap:8px}</style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>七班快速入口 · 教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
  <div role="status" aria-live="polite"><h2 id="replyNoticeTitle">💬 收到導師回應</h2>
@@ -283,12 +283,45 @@ let scheduleAnchor='';
 let cl='501',view='seats',layout='normal',studentId=null,selectedTask='',editSeats=false,editLabTemplate=false,templatePicked=null,toolTimer=null,timerSeconds=300,timerTick=null,timerDeadline=null,classEndTime="",timerNotified=false;
 const $=id=>document.getElementById(id);const cls=()=>db.classes[cl];const students=()=>cls().students;const student=id=>students().find(s=>s.id===id);const save=()=>{if(!cloudReady){console.warn('未完成雲端載入，暫停儲存');return}cloudQueueSave()};
 // 出勤採例外登記：只有「缺席」寫入資料，沒有紀錄即代表預設出席。
-const att=(sid,date)=>cls().attendance.some(x=>x.sid===sid&&x.date===date&&x.status==='缺席')?'缺席':'出席';
-function recordAttendance(sid,date,absent){
- if(!date)return;
+const attendanceStatuses=['出席','缺席','遲到','課間離席'];
+const attendanceEntry=(sid,date)=>cls().attendance.find(x=>x.sid===sid&&x.date===date&&attendanceStatuses.includes(x.status));
+const att=(sid,date)=>attendanceEntry(sid,date)?.status||'出席';
+function recordAttendance(sid,date,status,reason=''){
+ if(!date||!student(sid)||!attendanceStatuses.includes(status))return;
  cls().attendance=cls().attendance.filter(x=>!(x.sid===sid&&x.date===date));
- if(absent)cls().attendance.push({sid,date,status:'缺席'});
+ if(status!=='出席')cls().attendance.push({sid,date,status,reason:String(reason).trim().slice(0,300)});
  save();
+}
+function attendanceControl(sid,date){
+ const entry=attendanceEntry(sid,date),status=entry?.status||'出席';
+ return `<div class="row" data-attendance-editor>
+ <select data-att-status aria-label="出勤狀態">${attendanceStatuses.map(label=>`<option ${label===status?'selected':''}>${label}</option>`).join('')}</select>
+ <label data-att-reason-wrap ${status==='出席'?'hidden':''}>原因 <input data-att-reason maxlength="300" value="${esc(entry?.reason||'')}" placeholder="填寫原因（選填）"></label>
+ </div>`;
+}
+function bindAttendanceControl(editor,sid,getDate,onUpdate){
+ const select=editor.querySelector('[data-att-status]');
+ const field=editor.querySelector('[data-att-reason]');
+ const label=editor.querySelector('[data-att-reason-wrap]');
+ function refresh(){
+  const entry=attendanceEntry(sid,getDate());
+  select.value=entry?.status||'出席';
+  field.value=entry?.reason||'';
+  label.hidden=select.value==='出席';
+ }
+ select.onchange=()=>{
+  if(!getDate()){refresh();return;}
+  recordAttendance(sid,getDate(),select.value);
+  refresh();
+  if(!label.hidden)field.focus();
+  onUpdate();
+ };
+ field.onchange=()=>{
+  if(!getDate()||select.value==='出席')return;
+  recordAttendance(sid,getDate(),select.value,field.value);
+  onUpdate();
+ };
+ return refresh;
 }
 const taskResult=(tid,sid)=>cls().results.find(x=>x.taskId===tid&&x.sid===sid);
 const taskStatus=(tid,sid)=>taskResult(tid,sid)?.status||'未登記';
@@ -571,7 +604,25 @@ function attentionList(limit){
  return `<div class="list">${show.map(({rec,s,t})=>`<div class="item"><div><b>${esc(s.no)} 號 <span class="studentName">${esc(s.name)}</span></b><small>${esc(t.date)} · ${esc(t.type)} · ${esc(t.title)} · ${esc(rec.status)}</small></div><div class="itemActions"><button class="btn small outline" data-open="${s.id}">查看學生</button></div></div>`).join('')}${show.length<records.length?`<p class="hint">另有 ${records.length-show.length} 筆待追蹤，請點「查看全部」。</p>`:''}</div>`;
 }
 function renderAttention(){return `<section class="panel"><div class="panelHead"><h2>全班未完成／缺考補考名單</h2><div class="actions"><button class="btn small outline" data-csv="pending">匯出待追蹤 CSV</button><button class="btn small soft" data-goto="tasks">管理項目</button></div></div><p class="hint">只有老師明確登記「未完成、未交、缺考、待補考」的紀錄才會列入，未登記不等於缺交。</p>${attentionList()}</section>`}
-function renderAttendance(){let date=$('sessionDate').value;const count=students().filter(s=>att(s.id,date)==='缺席').length;return `<section class="panel"><div class="panelHead"><h2>◷ ${esc(classDisplay(cl))}出勤紀錄</h2><span class="pill">${date}</span></div><p class="hint">全班預設「出席」；點一下學生的「出席」按鈕即改為「缺席」，再點一下恢復「出席」。只有缺席才會記錄日期；出席不產生資料。考試缺考請另在考試項目登記。</p><div class="row" style="margin-bottom:12px"><span class="pill">全班 ${students().length} 人</span><span class="pill">缺席 ${count} 人</span><span class="pill">出席 ${students().length-count} 人</span></div><div class="tablewrap"><table><thead><tr><th>座號</th><th>姓名</th><th>今日出勤（點擊切換）</th><th>累計缺席</th><th>學生資料</th></tr></thead><tbody>${[...students()].sort((a,b)=>a.no-b.no).map(s=>`<tr><td>${s.no}</td><td><span class="studentAvatarInline">${avatarMini(s)}<span class="studentName">${esc(s.name)}</span></span></td><td><button type="button" class="btn small ${att(s.id,date)==='缺席'?'danger':'outline'}" data-att="${s.id}" aria-pressed="${att(s.id,date)==='缺席'}" title="點選切換出席／缺席">${att(s.id,date)}</button></td><td>${cls().attendance.filter(a=>a.sid===s.id&&a.status==='缺席').length}</td><td><button class="btn small outline" data-open="${s.id}">查看</button></td></tr>`).join('')}</tbody></table></div></section>`}
+function attendanceSummary(date){
+ const counts=Object.fromEntries(attendanceStatuses.map(status=>[status,0]));
+ students().forEach(s=>counts[att(s.id,date)]++);
+ return `<span class="pill">全班 ${students().length} 人</span>`+attendanceStatuses.map(status=>`<span class="pill">${status} ${counts[status]} 人</span>`).join('');
+}
+function renderAttendance(){
+ const date=$('sessionDate').value;
+ return `<section class="panel"><div class="panelHead"><h2>◷ ${esc(classDisplay(cl))}出勤紀錄</h2><span class="pill">${esc(date)}</span></div>
+ <p class="hint">預設出席。選取缺席、遲到或課間離席後，可填寫原因，離開欄位時自動儲存。</p>
+ <div class="row" id="attendanceSummary" style="margin-bottom:12px">${attendanceSummary(date)}</div>
+ <div class="tablewrap"><table><thead><tr><th>座號</th><th>姓名</th><th>今日出勤</th><th>累計缺席</th><th>學生資料</th></tr></thead><tbody>
+ ${[...students()].sort((a,b)=>a.no-b.no).map(s=>`<tr data-att-row="${esc(s.id)}"><td>${esc(s.no)}</td><td><span class="studentAvatarInline">${avatarMini(s)}<span class="studentName">${esc(s.name)}</span></span></td>
+ <td>${attendanceControl(s.id,date)}</td><td data-att-count>${cls().attendance.filter(a=>a.sid===s.id&&a.status==='缺席').length}</td><td><button class="btn small outline" data-open="${esc(s.id)}">查看</button></td></tr>`).join('')}
+ </tbody></table></div></section>`;
+}
+function studentAttendanceHistory(id){
+ const entries=cls().attendance.filter(a=>a.sid===id&&a.status!=='出席').sort((a,b)=>b.date.localeCompare(a.date));
+ return entries.map(item=>`<div class="record"><span>${esc(item.date)}</span> <b>${esc(item.status)}</b>${item.reason?' · 原因：'+esc(item.reason):''}</div>`).join('')||'<p class="hint">目前無出勤異常紀錄</p>';
+}
 function taskStatusOptions(type){return type==='考試'?['未登記','已考','缺考','待補考','補考完成','免考']:['未登記','未繳交','已繳交','待訂正','已完成','未完成','未交','已補交','免交']}
 function taskCounts(t){const rs=cls().results.filter(x=>x.taskId===t.id);return `${rs.filter(x=>['已完成','已補交','已考','補考完成'].includes(x.status)).length} 已完成 · ${rs.filter(x=>['未繳交','待訂正','未完成','未交','缺考','待補考'].includes(x.status)).length} 待追蹤`}
 function renderTasks(){return `<section class="panel"><div class="panelHead"><h2>建立當次習作、實驗或單元考</h2><span class="pill purple">先建立項目，再逐生標記</span></div><form id="newTask" class="formgrid"><label>類型<select name="type">${taskTypes.map(t=>`<option>${t}</option>`).join('')}</select></label><label>日期<input type="date" name="date" value="${$('sessionDate').value}" required></label><label>項目名稱<input name="title" required placeholder="例：第三單元 太陽方位觀測習作"></label><label>說明（選填）<input name="note" placeholder="例：實驗後當堂書寫；未完成下次補交"></label><div class="actions"><button class="btn" type="submit">＋ 建立追蹤項目</button></div></form></section><section class="panel"><div class="panelHead"><h2>已建立的追蹤項目</h2><span class="hint">點選項目可快速逐生標記完成狀態</span></div><div class="twoCols">${[...cls().tasks].sort((a,b)=>b.date.localeCompare(a.date)).map(t=>`<button class="taskcard" data-task="${t.id}"><div class="tagline"><span class="pill ${t.type==='考試'?'red':t.type==='實驗'?'purple':'warn'}">${t.type}</span><small>${t.date}</small></div><strong>${esc(t.title)}</strong><small>${taskCounts(t)}　·　${esc(t.note||'')}</small></button>`).join('')||'<p class="emptymsg">尚未建立追蹤項目</p>'}</div></section>`}
@@ -910,7 +961,14 @@ function hookView(){if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty()
  document.querySelectorAll('[data-layout]').forEach(b=>b.onclick=()=>{layout=b.dataset.layout;editSeats=false;editLabTemplate=false;templatePicked=null;render()});$('seatEdit').onclick=()=>{editSeats=!editSeats;render()};
  if(layout==='lab'){$('templateEdit').onclick=()=>{if(!editLabTemplate){if(!confirm('進入七班共用模板編輯？交換座號會同步套用七班，並清除各班個別實驗座位排列；所有學生紀錄保留。'))return;editSeats=false;}editLabTemplate=!editLabTemplate;templatePicked=null;render()};if(editLabTemplate){$('templateReset').onclick=resetLabTemplate;document.querySelectorAll('[data-template-index]').forEach(b=>b.onclick=()=>swapTemplateCell(Number(b.dataset.templateIndex)));}}
  document.querySelectorAll('.seat:not(.templateSeat)').forEach(b=>{b.onclick=()=>{if(editSeats)return;let id=b.dataset.sid;if(id)openStudent(id)};b.ondragstart=e=>{if(!editSeats){e.preventDefault();return}e.dataTransfer.setData('text/plain',b.dataset.seat)};b.ondragover=e=>{if(editSeats){e.preventDefault();b.classList.add('dragover')}};b.ondragleave=()=>b.classList.remove('dragover');b.ondrop=e=>{e.preventDefault();b.classList.remove('dragover');let from=Number(e.dataTransfer.getData('text/plain'));let target=Number(b.dataset.seat);if(!Number.isInteger(from)||from<0)return;let a=layoutMap(layout);[a[from],a[target]]=[a[target],a[from]];setSeat(layout,a);render()}})
-}if(view==='attendance')document.querySelectorAll('[data-att]').forEach(el=>el.onclick=()=>{const sid=el.dataset.att,date=$('sessionDate').value;recordAttendance(sid,date,att(sid,date)!=='缺席');render()});
+}if(view==='attendance')document.querySelectorAll('[data-att-row]').forEach(row=>{
+ const sid=row.dataset.attRow,date=()=>$('sessionDate').value;
+ bindAttendanceControl(row.querySelector('[data-attendance-editor]'),sid,date,()=>{
+  row.querySelector('[data-att-count]').textContent=cls().attendance.filter(a=>a.sid===sid&&a.status==='缺席').length;
+  $('attendanceSummary').innerHTML=attendanceSummary(date());
+  statCards();
+ });
+});
 if(view==='tasks'){$('newTask').onsubmit=e=>{e.preventDefault();let o=Object.fromEntries(new FormData(e.target));cls().tasks.push({id:uid(),type:o.type,date:o.date,title:o.title.trim(),note:o.note||''});save();render()};document.querySelectorAll('[data-task]').forEach(b=>b.onclick=()=>taskDetails(b.dataset.task))}
 if(view==='schedule'){
  document.querySelectorAll('[data-schedule-class]').forEach(b=>b.onclick=()=>{scheduleAnchor='';changeClass(b.dataset.scheduleClass)});
@@ -937,14 +995,17 @@ if(view==='tools'){document.querySelectorAll('[data-time]').forEach(b=>b.onclick
 bindNewFeatures();
 }
 const toMMSS=n=>{n=Math.max(0,Math.floor(Number(n)||0));let h=Math.floor(n/3600),m=Math.floor(n%3600/60),sec=n%60;return h?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`};
-function openStudent(id){studentId=id;let s=student(id);if(!s)return;let abs=cls().attendance.filter(a=>a.sid===id&&a.status==='缺席').sort((a,b)=>b.date.localeCompare(a.date));let prs=cls().points.filter(a=>a.sid===id).sort((a,b)=>b.date.localeCompare(a.date));let unmet=pending(id);let active=[...cls().tasks].sort((a,b)=>b.date.localeCompare(a.date));const labIndex=layoutMap('lab').indexOf(id);const groupLabel=labIndex>=0?['第四組','第五組','第一組','第二組','第三組'][Math.floor(labIndex/6)]:'';$('modalContent').innerHTML=`<div class="studentHeader"><div class="studentAvatarHeader">${avatarThumb(s)}<div><span class="pill">${classDisplay(cl)} · ${s.no} 號${groupLabel?' · 實驗'+groupLabel:''}</span><h2>${esc(s.name)}</h2><div class="hint">積點 ${ptotal(id)>0?'+':''}${ptotal(id)} · 缺席 ${abs.length} 次 · 待追蹤 ${unmet.length} 項</div></div></div><button class="btn small outline" id="editStudent">編輯學生</button></div>${avatarChooser(s)}<div class="twoCols"><div><h3 class="sectionLabel">快速登記出勤</h3><div class="row"><input type="date" id="studentAttDate" value="${$('sessionDate').value}"><button type="button" class="btn small ${att(id,$('sessionDate').value)==='缺席'?'danger':'outline'}" id="studentAttToggle">${att(id,$('sessionDate').value)}</button><span class="hint">點擊切換，只記錄缺席</span></div></div><div><h3 class="sectionLabel">課堂獎懲</h3><div class="row"><button class="btn small" data-delta="1">＋1</button><button class="btn small" data-delta="2">＋2</button><button class="btn small danger" data-delta="-1">－1</button><button class="btn small danger" data-delta="-2">－2</button></div><input id="pointReason" placeholder="加／扣點原因（建議填寫）" style="margin-top:9px;width:100%"></div></div><h3 class="sectionLabel">習作／實驗／考試進度</h3>${active.length?`<div class="tablewrap"><table><thead><tr><th>日期</th><th>類型／名稱</th><th>狀態</th></tr></thead><tbody>${active.map(t=>`<tr><td>${t.date.slice(5)}</td><td><span class="pill">${t.type}</span> ${esc(t.title)}</td><td><select data-student-task="${t.id}">${taskStatusOptions(t.type).map(opt=>`<option ${taskStatus(t.id,id)===opt?'selected':''}>${opt}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`:'<div class="emptymsg">尚無追蹤項目，請到「習作／實驗／考試」建立。</div>'}<div class="twoCols"><div><h3 class="sectionLabel">缺席日期</h3>${abs.length?abs.map(x=>`<div class="record">${x.date}</div>`).join(''):'<p class="hint">目前無缺席紀錄</p>'}</div><div><h3 class="sectionLabel">待完成／待補考</h3>${unmet.length?unmet.map(x=>{let t=cls().tasks.find(t=>t.id===x.taskId);return `<div class="record"><span>${t?.date||''}</span> ${esc(t?.title||'')} <b>${esc(x.status)}</b></div>`}).join(''):'<p class="hint">目前沒有待處理的項目</p>'}</div></div><h3 class="sectionLabel">獎懲歷程</h3>${prs.length?prs.slice(0,12).map(p=>`<div class="record"><span>${p.date}</span> <strong class="${p.delta>0?'pointsPositive':'pointsNegative'}">${p.delta>0?'+':''}${p.delta}</strong> ${esc(p.reason||'課堂表現')}</div>`).join(''):'<p class="hint">尚無獎懲紀錄</p>'}<h3 class="sectionLabel">老師備註</h3><textarea id="studentNote">${esc(s.notes||'')}</textarea><div class="actions"><button id="saveStudentNote" class="btn small outline">儲存備註</button></div>`;
+function openStudent(id){studentId=id;let s=student(id);if(!s)return;let abs=cls().attendance.filter(a=>a.sid===id&&a.status==='缺席').sort((a,b)=>b.date.localeCompare(a.date));let prs=cls().points.filter(a=>a.sid===id).sort((a,b)=>b.date.localeCompare(a.date));let unmet=pending(id);let active=[...cls().tasks].sort((a,b)=>b.date.localeCompare(a.date));const labIndex=layoutMap('lab').indexOf(id);const groupLabel=labIndex>=0?['第四組','第五組','第一組','第二組','第三組'][Math.floor(labIndex/6)]:'';$('modalContent').innerHTML=`<div class="studentHeader"><div class="studentAvatarHeader">${avatarThumb(s)}<div><span class="pill">${classDisplay(cl)} · ${s.no} 號${groupLabel?' · 實驗'+groupLabel:''}</span><h2>${esc(s.name)}</h2><div class="hint">積點 ${ptotal(id)>0?'+':''}${ptotal(id)} · 缺席 ${abs.length} 次 · 待追蹤 ${unmet.length} 項</div></div></div><button class="btn small outline" id="editStudent">編輯學生</button></div>${avatarChooser(s)}<div class="twoCols"><div><h3 class="sectionLabel">快速登記出勤</h3><input type="date" id="studentAttDate" value="${esc($('sessionDate').value)}">${attendanceControl(id,$('sessionDate').value)}</div><div><h3 class="sectionLabel">課堂獎懲</h3><div class="row"><button class="btn small" data-delta="1">＋1</button><button class="btn small" data-delta="2">＋2</button><button class="btn small danger" data-delta="-1">－1</button><button class="btn small danger" data-delta="-2">－2</button></div><input id="pointReason" placeholder="加／扣點原因（建議填寫）" style="margin-top:9px;width:100%"></div></div><h3 class="sectionLabel">習作／實驗／考試進度</h3>${active.length?`<div class="tablewrap"><table><thead><tr><th>日期</th><th>類型／名稱</th><th>狀態</th></tr></thead><tbody>${active.map(t=>`<tr><td>${t.date.slice(5)}</td><td><span class="pill">${t.type}</span> ${esc(t.title)}</td><td><select data-student-task="${t.id}">${taskStatusOptions(t.type).map(opt=>`<option ${taskStatus(t.id,id)===opt?'selected':''}>${opt}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`:'<div class="emptymsg">尚無追蹤項目，請到「習作／實驗／考試」建立。</div>'}<div class="twoCols"><div><h3 class="sectionLabel">出勤紀錄</h3><div id="studentAttendanceHistory">${studentAttendanceHistory(id)}</div></div><div><h3 class="sectionLabel">待完成／待補考</h3>${unmet.length?unmet.map(x=>{let t=cls().tasks.find(t=>t.id===x.taskId);return `<div class="record"><span>${t?.date||''}</span> ${esc(t?.title||'')} <b>${esc(x.status)}</b></div>`}).join(''):'<p class="hint">目前沒有待處理的項目</p>'}</div></div><h3 class="sectionLabel">獎懲歷程</h3>${prs.length?prs.slice(0,12).map(p=>`<div class="record"><span>${p.date}</span> <strong class="${p.delta>0?'pointsPositive':'pointsNegative'}">${p.delta>0?'+':''}${p.delta}</strong> ${esc(p.reason||'課堂表現')}</div>`).join(''):'<p class="hint">尚無獎懲紀錄</p>'}<h3 class="sectionLabel">老師備註</h3><textarea id="studentNote">${esc(s.notes||'')}</textarea><div class="actions"><button id="saveStudentNote" class="btn small outline">儲存備註</button></div>`;
  $('modal').classList.remove('hidden');
  document.querySelectorAll('[data-avatar-choice]').forEach(btn=>btn.onclick=()=>{if(!cloudReady||cloudBlocked)return alert('雲端尚未連線，請確認同步後再設定頭像');s.avatar=btn.dataset.avatarChoice;save();openStudent(id);render()});
  $('clearStudentAvatar').onclick=()=>{if(!cloudReady||cloudBlocked)return alert('雲端尚未連線');delete s.avatar;save();openStudent(id);render()};
  $('editStudent').onclick=()=>{let name=prompt('修改學生姓名',s.name);if(name===null)return;name=name.trim();if(!name)return alert('姓名不可空白');s.name=name;save();openStudent(id);render()};
- const refreshStudentAtt=()=>{const date=$('studentAttDate').value,absent=att(id,date)==='缺席',b=$('studentAttToggle');b.textContent=absent?'缺席':'出席';b.classList.toggle('danger',absent);b.classList.toggle('outline',!absent)};
+ const refreshStudentAtt=bindAttendanceControl($('modalContent').querySelector('[data-attendance-editor]'),id,()=>$('studentAttDate').value,()=>{
+  $('studentAttendanceHistory').innerHTML=studentAttendanceHistory(id);
+  statCards();
+  if(view==='attendance'||view==='seats')render();
+ });
  $('studentAttDate').onchange=refreshStudentAtt;
- $('studentAttToggle').onclick=()=>{let date=$('studentAttDate').value;if(!date)return;recordAttendance(id,date,att(id,date)!=='缺席');openStudent(id);$('studentAttDate').value=date;refreshStudentAtt();statCards()};
  document.querySelectorAll('[data-delta]').forEach(b=>b.onclick=()=>{let delta=Number(b.dataset.delta);cls().points.push({sid:id,date:$('sessionDate').value,delta,reason:$('pointReason').value.trim()||'課堂表現'});save();contactQueuePointsSync(cl,$('sessionDate').value);openStudent(id);statCards()});
  document.querySelectorAll('[data-student-task]').forEach(e=>e.onchange=()=>{let tid=e.dataset.studentTask,rec=taskResult(tid,id);if(rec)rec.status=e.value;else cls().results.push({sid:id,taskId:tid,status:e.value,note:''});save();openStudent(id);statCards()});
  $('saveStudentNote').onclick=()=>{s.notes=$('studentNote').value;save();alert('備註已儲存')};}
