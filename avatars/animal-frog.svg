@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="可愛青蛙頭像">
+
+<path d="M24 194Q26 147 74 143H126Q174 147 176 194Z" fill="#A9CE70" stroke="#9D6859" stroke-width="3"/>
+<path d="M78 146Q100 169 122 146Q134 168 139 194H61Q65 168 78 146Z" fill="#F5F8D6"/>
+<circle cx="52" cy="50" r="30" fill="#A9CE70" stroke="#799A54" stroke-width="3"/><g transform="translate(200 0) scale(-1 1)"><circle cx="52" cy="50" r="30" fill="#A9CE70" stroke="#799A54" stroke-width="3"/></g>
+<ellipse cx="100" cy="102" rx="65" ry="67" fill="#A9CE70" stroke="#8E6659" stroke-width="3"/>
+<circle cx="100" cy="57" r="9" fill="#79B04B"/><circle cx="78" cy="62" r="5" fill="#79B04B"/><circle cx="122" cy="62" r="5" fill="#79B04B"/>
+<path d="M50 119Q72 108 100 120Q128 108 150 119Q146 151 100 157Q54 151 50 119Z" fill="#F5F8D6" opacity=".94"/>
+<ellipse cx="74" cy="96" rx="15" ry="19" fill="#FFF"/><ellipse cx="126" cy="96" rx="15" ry="19" fill="#FFF"/><ellipse cx="74" cy="98" rx="11.5" ry="15" fill="#4B2D28"/><ellipse cx="126" cy="98" rx="11.5" ry="15" fill="#4B2D28"/>
+<circle cx="78" cy="91" r="5" fill="#FFF"/><circle cx="130" cy="91" r="5" fill="#FFF"/>
+<path d="M59 73Q73 64 84 73M116 73Q128 64 141 73" stroke="#71514C" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+<ellipse cx="57" cy="122" rx="11" ry="7" fill="#F5A1AA" opacity=".68"/><ellipse cx="143" cy="122" rx="11" ry="7" fill="#F5A1AA" opacity=".68"/>
+<circle cx="94" cy="121" r="2.5" fill="#668C49"/><circle cx="106" cy="121" r="2.5" fill="#668C49"/><path d="M80 135Q100 150 120 135" stroke="#82594F" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+</svg>
