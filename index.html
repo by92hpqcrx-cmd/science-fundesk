@@ -472,7 +472,7 @@ function nextNativeQuestion(){
  lastQuestionIds[filterKey]=currentQuestion.id;
  gameAnswered=false;refreshGameOnly();
 }
-function answerNativeQuestion(index){const q=currentQuestion,record=quizList.at(-1);if(!q||!record||gameAnswered||record.status!=='待回答')return;gameAnswered=true;record.questionText=q.text;record.unit=q.unit;record.status=index===q.answerIndex?'答對':'答錯';if(index===q.answerIndex&&record.score>0){cls().points.push({sid:record.sid,date:$('sessionDate').value,delta:record.score,reason:'自然科學王 '+q.unit+' 單題答對（'+record.source+'）'});save()}
+function answerNativeQuestion(index){const q=currentQuestion,record=quizList.at(-1);if(!q||!record||gameAnswered||record.status!=='待回答')return;gameAnswered=true;record.questionText=q.text;record.unit=q.unit;record.status=index===q.answerIndex?'答對':'答錯';if(index===q.answerIndex&&record.score>0){cls().points.push({sid:record.sid,date:$('sessionDate').value,delta:record.score,reason:'自然科學王 '+q.unit+' 單題答對（'+record.source+'）'});save();contactQueuePointsSync(cl,$('sessionDate').value)}
  document.querySelectorAll('[data-game-option]').forEach(b=>{b.disabled=true;const i=Number(b.dataset.gameOption);if(i===q.answerIndex)b.classList.add('correct');else if(i===index)b.classList.add('wrong')});const fb=$('nativeQuizFeedback');if(fb){fb.className='gameFeedback '+(index===q.answerIndex?'win':'lose');fb.innerHTML=`<strong>${index===q.answerIndex?'🎉 恭喜答對！太棒了！':'💪 再加油！下次一定會更好！'}</strong><p><b>正確答案：</b>${esc(String.fromCharCode(65+q.answerIndex))}．${esc(q.options[q.answerIndex])}</p><p><b>詳解：</b>${esc(q.explanation)}</p><p class="hint">${index===q.answerIndex?'已自動記錄加分 '+record.score+' 點。':'本題不加分，已記錄答錯。'}請選下一位學生並隨機出題。</p>`}refreshQuizOnly()}
 function loadQuestionBank(){
  const raw=Array.isArray(window.NATURE_QUESTIONS)?window.NATURE_QUESTIONS:[];
@@ -666,7 +666,7 @@ function openStudent(id){studentId=id;let s=student(id);if(!s)return;let abs=cls
  const refreshStudentAtt=()=>{const date=$('studentAttDate').value,absent=att(id,date)==='缺席',b=$('studentAttToggle');b.textContent=absent?'缺席':'出席';b.classList.toggle('danger',absent);b.classList.toggle('outline',!absent)};
  $('studentAttDate').onchange=refreshStudentAtt;
  $('studentAttToggle').onclick=()=>{let date=$('studentAttDate').value;if(!date)return;recordAttendance(id,date,att(id,date)!=='缺席');openStudent(id);$('studentAttDate').value=date;refreshStudentAtt();statCards()};
- document.querySelectorAll('[data-delta]').forEach(b=>b.onclick=()=>{let delta=Number(b.dataset.delta);cls().points.push({sid:id,date:$('sessionDate').value,delta,reason:$('pointReason').value.trim()||'課堂表現'});save();openStudent(id);statCards()});
+ document.querySelectorAll('[data-delta]').forEach(b=>b.onclick=()=>{let delta=Number(b.dataset.delta);cls().points.push({sid:id,date:$('sessionDate').value,delta,reason:$('pointReason').value.trim()||'課堂表現'});save();contactQueuePointsSync(cl,$('sessionDate').value);openStudent(id);statCards()});
  document.querySelectorAll('[data-student-task]').forEach(e=>e.onchange=()=>{let tid=e.dataset.studentTask,rec=taskResult(tid,id);if(rec)rec.status=e.value;else cls().results.push({sid:id,taskId:tid,status:e.value,note:''});save();openStudent(id);statCards()});
  $('saveStudentNote').onclick=()=>{s.notes=$('studentNote').value;save();alert('備註已儲存')};}
 function openAddStudent(){let no=prompt('新增學生的座號',String(students().length+1));if(no===null)return;no=Number(no);if(!Number.isInteger(no)||no<1||students().some(s=>s.no===no))return alert('請輸入尚未使用的正整數座號');let name=prompt('學生姓名');if(!name||!name.trim())return;students().push({id:uid(),no,name:name.trim(),notes:''});save();render()}
@@ -767,7 +767,9 @@ function contactQueuePointsSync(code,date){
 function contactPointPreview(){
  const preview=$('contactPointPublishPreview');if(!preview)return;
  const date=contactSafeDate($('contactDate').value),items=contactDailyPoints(date);
- preview.textContent='本日已有 '+items.length+' 筆加扣點紀錄'+(items.length?'（按發布後同步）':'（目前無紀錄）');
+ const entry=(contactCache[cl]?.entries||[]).find(e=>e.entry_date===date);
+ const approved=contactSplitPoints(entry?.reminders).published;
+ preview.textContent='本日已有 '+items.length+' 筆加扣點紀錄 · '+(approved?'已開啟同步（閱讀頁預設隱藏）':'尚未發布，請按下方同步按鈕');
 }
 function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);return u.href}
 function renderContact(){
@@ -783,7 +785,7 @@ function renderContact(){
  <p class="contactMuted">本頁只能顯示 FunDesk「課堂表現」已記錄的點數，不能在聯絡簿另外加扣分。首次勾選並發布後，這個班級、日期的後續點數會自動同步。</p>
  <label><input type="checkbox" id="contactPublishPoints"> 將當日學生姓名、加扣分和原因發布到聯絡簿</label>
  <p class="contactMuted">⚠️ 閱讀連結免登入；任何持有網址的人都能讀取已發布紀錄。閱讀頁的「隱藏」按鈕只用於投影遮蔽，不能保護個資。請先確認符合學校的資料使用規定。</p>
- <div id="contactPointPublishPreview" class="contactMuted"></div></section>
+ <div id="contactPointPublishPreview" class="contactMuted"></div><div class="actions"><button type="button" class="btn outline" id="contactSyncPoints">🔄 同步當日加扣點到聯絡簿</button></div><p class="contactMuted">先確認班級與日期。首次公開具名紀錄會請老師確認；之後該日期新增加扣點會自動更新，閱讀頁仍預設隱藏。</p></section>
  <div class="actions"><button type="button" class="btn" id="contactSave">💾 發布／儲存聯絡簿</button><button type="button" class="btn outline" id="contactReload">↻ 重新讀取雲端</button></div>
  <p class="contactStatus" id="contactStatus" role="status">載入中…</p></section>
  <aside><section class="panel contactShare"><h2>🔗 ${esc(classDisplay(code))}專屬閱讀網址</h2><p class="contactMuted">每班都有不同連結。學生免登入，只能看此連結對應班級的聯絡簿，不能修改。</p>
@@ -840,12 +842,19 @@ async function contactSave(){if(contactBusy)return;if(!cloudReady){contactStatus
  if(![fields.lesson,fields.homework,fields.reminders].some(x=>x.trim())){contactStatus('請至少填寫一個欄位再發布',true);return}
  contactBusy=true;$('contactSave').disabled=true;contactStatus('正在發布到雲端…');
  try{await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({p_class_code:code,p_entry_date:date,p_lesson:fields.lesson,p_homework:fields.homework,p_reminders:fields.reminders})});
-  if(view==='contact'&&cl===code){const refreshed=await contactLoad(code);if(view==='contact'&&cl===code&&refreshed)contactStatus('✅ '+classDisplay(code)+' 已發布到雲端！學生網頁約 20 秒內自動更新。')}}catch(e){contactStatus('❌ 儲存失敗：'+cloudErr(e),true)}finally{contactBusy=false;if($('contactSave'))$('contactSave').disabled=false}
+  if(view==='contact'&&cl===code){const refreshed=await contactLoad(code);if(view==='contact'&&cl===code&&refreshed)contactStatus('✅ '+classDisplay(code)+' 已發布到雲端！加扣點已包含在此日期聯絡簿，學生網頁約 20 秒內自動更新。')}}catch(e){contactStatus('❌ 儲存失敗：'+cloudErr(e),true)}finally{contactBusy=false;if($('contactSave'))$('contactSave').disabled=false}
 }
 function contactBind(){
  contactChosenDate=today();
  $('contactDate').onchange=e=>{const next=e.target.value;if(!contactSelect(next))e.target.value=contactChosenDate};
  $('contactSave').onclick=contactSave;
+ $('contactSyncPoints').onclick=()=>{
+  const date=contactSafeDate($('contactDate').value);
+  const approved=contactSplitPoints((contactCache[cl]?.entries||[]).find(e=>e.entry_date===date)?.reminders).published;
+  if(!approved&&!confirm('要將 '+classDisplay(cl)+' 在 '+date+' 的具名加扣點紀錄發布到本班聯絡簿嗎？持有學生聯絡簿網址的人都可能取得這些資料；預設隱藏並非保密。'))return;
+  $('contactPublishPoints').checked=true;
+  contactSave();
+ };
  $('contactReload').onclick=()=>{if(contactDirty()&&!confirm('重新讀取會捨棄未儲存的修改，是否繼續？'))return;contactLoad()};
  $('contactCopy').onclick=async()=>{const url=$('contactLink').value;try{await navigator.clipboard.writeText(url);contactStatus('✅ 已複製班級專屬網址')}catch{ $('contactLink').select();contactStatus('請按 Ctrl+C 複製網址')}};
  $('contactOpen').onclick=()=>window.open($('contactLink').value,'_blank','noopener,noreferrer');
