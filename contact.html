@@ -18,6 +18,9 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const stamp=t=>t?new Date(t).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false}):'';
 function sections(e){return [['📘 今日課程',e.lesson],['✏️ 回家作業',e.homework],['📢 重要提醒',e.reminders]].map(([name,v])=>`<section><h3>${name}</h3><div class="content ${v?'':'empty'}">${v?esc(v):'（無）'}</div></section>`).join('')}
 const CONTACT_POINT_START='[FunDesk積點START]',CONTACT_POINT_END='[FunDesk積點END]';
+ const CONTACT_CLASS_START='[FunDesk班名START]',CONTACT_CLASS_END='[FunDesk班名END]';
+ function extractClassLabel(text){const v=String(text||''),a=v.indexOf(CONTACT_CLASS_START),b=v.indexOf(CONTACT_CLASS_END,a+CONTACT_CLASS_START.length);return a<0||b<0?'':v.slice(a+CONTACT_CLASS_START.length,b).trim().slice(0,35)}
+ function stripClassLabel(text){return String(text||'').replace(/\[FunDesk班名START\][\s\S]*?\[FunDesk班名END\]/g,'').trim()}
 let showPoints=false,hasPublishedPoints=false;
 function updatePointsToggle(){
  const btn=el('toggleAllPoints');if(!btn)return;
@@ -28,9 +31,9 @@ function updatePointsToggle(){
 }
 function splitPoints(text){
  const v=String(text||''),a=v.indexOf(CONTACT_POINT_START),b=v.indexOf(CONTACT_POINT_END,a+CONTACT_POINT_START.length);
- if(a<0||b<0)return {reminders:v,points:[],published:false};
+ if(a<0||b<0)return {reminders:stripClassLabel(v),points:[],published:false};
  let points=[];try{const x=JSON.parse(v.slice(a+CONTACT_POINT_START.length,b).trim());if(Array.isArray(x))points=x}catch{}
- return {reminders:(v.slice(0,a)+v.slice(b+CONTACT_POINT_END.length)).trim(),points,published:true};
+ return {reminders:stripClassLabel((v.slice(0,a)+v.slice(b+CONTACT_POINT_END.length)).trim()),points,published:true};
 }
 function pointPanel(points,published){
  if(!published)return '';
@@ -52,7 +55,7 @@ async function load(){if(busy)return;busy=true;showPoints=false;updatePointsTogg
  try{const response=await fetch(API_URL+'/rest/v1/rpc/fundesk_contact_public_read',{method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({p_token:token}),cache:'no-store'});
  if(!response.ok)throw Error('讀取失敗（HTTP '+response.status+'）');const data=await response.json();
  if(!data){el('latest').innerHTML='<div class="notice">查無聯絡簿，請確認網址是否正確。</div>';el('history').innerHTML='';el('status').textContent='無效連結';return}
- const displayName=data.class_code==='c_mwc0lni8_le3us8'?'五年一班':(/^50[1-7]$/.test(String(data.class_code||''))?'五年'+['','一','二','三','四','五','六','七'][Number(data.class_code)-500]+'班':String(data.class_code||'班級'));el('classTitle').textContent='📒 '+displayName+'聯絡簿';const entries=Array.isArray(data.entries)?data.entries:[];
+ const displayName=data.class_code==='c_mwc0lni8_le3us8'?'五年一班':(/^50[1-7]$/.test(String(data.class_code||''))?'五年'+['','一','二','三','四','五','六','七'][Number(data.class_code)-500]+'班':String(data.class_code||'班級'));const entries=Array.isArray(data.entries)?data.entries:[];const publishedName=entries.map(e=>extractClassLabel(e.reminders)).find(Boolean);el('classTitle').textContent='📒 '+(publishedName||(/^(?:c_[a-z0-9_]+)$/.test(displayName)?'班級':displayName))+'聯絡簿';
  el('latest').innerHTML=entries.length?article(entries[0]):'<div class="notice">老師尚未發布聯絡簿，請稍後再查看。</div>';
  el('history').innerHTML=entries.slice(1).map(e=>`<details><summary>${esc(e.entry_date)}　查看內容</summary>${article(e)}</details>`).join('')||'<p class="empty">目前沒有較早的聯絡簿。</p>';hasPublishedPoints=entries.some(e=>splitPoints(e.reminders).published);updatePointsToggle();
  lastSuccess=true;el('status').textContent='✅ 已更新 · '+new Date().toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei'});
