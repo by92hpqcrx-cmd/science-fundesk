@@ -85,7 +85,10 @@ async function threadCall(payload={}){
   body:JSON.stringify({p_share_token:token,...payload})
  });
  const data=await response.json();
- if(!response.ok)throw Error(data?.code==='PGRST202'?'請先執行新版 contact_messages.sql 啟用留言區。':data?.message||'留言區無法連線。');
+ if(!response.ok){
+  if(data?.code==='PGRST202'||data?.message==='請先登入教師帳號')throw Error('此班的免登入留言尚未啟用，請通知科任老師更新。');
+  throw Error(data?.message||'留言區無法連線。');
+ }
  return data;
 }
 function displayThread(data){
