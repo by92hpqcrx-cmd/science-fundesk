@@ -149,7 +149,7 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 @media(max-width:560px){.tabletHero{padding:18px}.tabletHeroEmoji{display:none}.tabletIntro{font-size:15px}.tabletPhotosGrid{grid-template-columns:1fr}.tabletRuleItem b{font-size:16px}}
 @media print{.sidebar,.topbar,.stats,.cloudStatus,.tabletNav,.tabletActions{display:none!important}.shell,.main{display:block!important;margin:0!important;width:100%!important}.tabletSection{break-inside:avoid}.tabletGuide{max-width:none}}
 </style>
-<link rel="stylesheet" href="notebook.css?v=20261112"><style>.labDutyTable{width:100%;min-width:590px;border-collapse:collapse}.labDutyTable th,.labDutyTable td{border:1px solid var(--line);text-align:center;padding:9px}.labDutyTable th{background:var(--bg)}#labDutyForm input{max-width:100%}#labDutyForm label{display:grid;gap:4px}#labDutyStatus{margin:8px 0}</style></head><body class="cloud-locked">
+<link rel="stylesheet" href="notebook.css?v=20261112"><style>.labDutyTable{width:100%;min-width:590px;border-collapse:collapse}.labDutyTable th,.labDutyTable td{border:1px solid var(--line);text-align:center;padding:9px}.labDutyTable th{background:var(--bg)}#labDutyForm input{max-width:100%}#labDutyForm label{display:grid;gap:4px}#labDutyStatus{margin:8px 0}.labDutyCard{margin:8px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px}.labDutyCard summary{cursor:pointer;font-weight:700}.labDutyCard .tablewrap{margin-top:10px}</style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><h1>🔐 自然科任 FunDesk</h1><p>七班快速入口 · 教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <div id="cloudStatus" class="cloudStatus" role="status" aria-live="polite">尚未登入雲端</div>
 <div class="shell">
@@ -302,20 +302,65 @@ function labAssignments(seats,people,previous){
  });
 }
 function labSheets(){return Array.isArray(cls().labDutySheets)?cls().labDutySheets:[]}
-function renderLabDuty(){
- const dates=(cls().scheduleLessons||[]).filter(x=>String(x.type).includes('實驗')&&x.topic&&isoDate(x.date));
- const sheets=labSheets();
- return `<section class="panel"><div class="panelHead"><h2>${esc(classDisplay(cl))}｜實驗工作分配</h2></div>
- <p class="hint">依首頁的實驗分組分配工作。成員相同的組別，每新增一次實驗就輪換一個職務。每項實驗各存一張 A4 表。</p>
- <form id="labDutyForm" class="actions">
- <label>實驗日期 <input id="labDutyDate" type="date" value="${esc($('sessionDate').value)}" required></label>
- <label>實驗名稱 <input id="labDutyTopic" type="text" list="labDutyTopics" maxlength="100" required></label>
- <datalist id="labDutyTopics">${[...new Set(dates.map(x=>x.topic))].map(topic=>`<option value="${esc(topic)}"></option>`).join('')}</datalist>
- <button type="submit" class="btn">建立分工表</button></form>
+function labScheduleSource(){
+ const own=cls().scheduleLessons||[];
+ if(own.length)return {lessons:own,template:false};
+ const classMatch=/^五年([一二三四五六七])班$/.exec(className(cl));
+ const code=classMatch?String(501+'一二三四五六七'.indexOf(classMatch[1])):cl;
+ const lessons=window.SCIENCE_SCHEDULE?.[code]||[];
+ return {lessons,template:lessons.length>0};
+}
+function scheduledLabTopics(lesson){
+ const topic=String(lesson.topic||'').trim();
+ const tagged=[...topic.matchAll(/【(?:實驗|實作)】([^；;【]+)/g)].map(match=>match[1].trim());
+ const topics=tagged.length?tagged:String(lesson.type).includes('實驗')?[topic]:[];
+ return topics.filter(name=>name&&!/教師示範/.test(name));
+}
+function plannedLabSheets(lessons,saved,seats,people){
+ const byExperiment=new Map();
+ const key=(date,topic)=>JSON.stringify([date,topic]);
+ for(const sheet of saved)byExperiment.set(key(sheet.date,sheet.topic),sheet);
+ for(const lesson of lessons){
+  const date=isoDate(String(lesson.date||'').replaceAll('/','-'));
+  if(!date||lesson.type==='停課')continue;
+  for(const topic of scheduledLabTopics(lesson)){
+   const id=key(date,topic),existing=byExperiment.get(id);
+   if(existing){
+    if(!existing.groups&&lesson.period&&!existing.periods.includes(lesson.period))existing.periods.push(lesson.period);
+    continue;
+   }
+   byExperiment.set(id,{id:'scheduled:'+id,date,topic,periods:lesson.period?[lesson.period]:[]});
+  }
+ }
+ const sheets=[...byExperiment.values()].sort((a,b)=>a.date.localeCompare(b.date)||
+  String(a.periods?.[0]||'').localeCompare(String(b.periods?.[0]||''),'zh-Hant',{numeric:true}));
+ return sheets.map((sheet,index)=>{
+  if(!sheet.groups)sheet.groups=labAssignments(seats,people,sheets[index-1]);
+  return sheet;
+ });
+}
+function labDutyCards(sheets,activeDate){
+ const active=sheets.find(s=>s.date>=activeDate)||sheets[sheets.length-1];
+ return sheets.map(sheet=>`<details class="labDutyCard" ${sheet===active?'open':''}>
+ <summary>${esc(sheet.date)} ${esc(sheet.periods?.join('、')||'')}　${esc(sheet.topic)}</summary>
+ <div class="tablewrap">${labDutyTable(sheet)}</div>
+ <div class="actions"><button type="button" class="btn small outline" data-print-lab="${esc(sheet.id)}">列印這項實驗（A4）</button></div></details>`).join('');
+}
+function renderLabDuty(atHome=false){
+ const {lessons,template}=labScheduleSource(),seats=layoutMap('lab'),people=students();
+ const saved=labSheets(),sheets=plannedLabSheets(lessons,saved,seats,people);
+ const assigned=new Set(seats.filter(Boolean)),unassigned=people.filter(s=>!assigned.has(s.id));
+ const date=$('sessionDate').value;
+ return `<section class="panel" id="labDutyPanel"><div class="panelHead"><h2>${atHome?'實驗工作分配':esc(classDisplay(cl))+'｜實驗工作分配'}</h2></div>
+ <p class="hint">依${template?'內建班級課表':'本班教學進度'}與實驗座位自動排表，同一天同項實驗合併為一張。</p>
+ ${unassigned.length?`<p class="notice">尚未安排實驗座位：${unassigned.map(s=>esc(s.no)+'號').join('、')}。</p>`:''}
+ ${!assigned.size&&sheets.length?'<p class="notice">請先匯入學生名單並確認實驗分組，表格才會顯示分工。</p>':''}
  <div id="labDutyStatus" class="hint" role="status"></div>
- ${sheets.slice().reverse().map(sheet=>`<details><summary>${esc(sheet.date)}　${esc(sheet.topic)}</summary>
- <div style="overflow-x:auto">${labDutyTable(sheet)}</div><div class="actions"><button type="button" class="btn outline" data-print-lab="${esc(sheet.id)}">列印這項實驗（A4）</button></div></details>`).join('')}
- ${sheets.length?'':'<p class="hint">目前尚無實驗分工表。</p>'}</section>`;
+ ${sheets.length?labDutyCards(sheets,date):'<p class="emptymsg">目前沒有安排實驗。可在「我的教學進度」新增實驗課程。</p>'}
+ ${atHome?'':`<details class="labDutyCard"><summary>新增課表以外的實驗</summary><form id="labDutyForm" class="actions">
+ <label>實驗日期 <input id="labDutyDate" type="date" value="${esc(date)}" required></label>
+ <label>實驗名稱 <input id="labDutyTopic" type="text" maxlength="100" required></label>
+ <button type="submit" class="btn">建立分工表</button></form></details>`}</section>`;
 }
 function labDutyTable(sheet){
  const columns=['組別',...labRoleColumns];
@@ -341,26 +386,29 @@ function printLabDuty(sheet){
  page.focus();
 }
 function bindLabDuty(){
- $('labDutyForm').onsubmit=e=>{
+ const {lessons}=labScheduleSource(),seats=layoutMap('lab'),people=students();
+ const sheets=plannedLabSheets(lessons,labSheets(),seats,people);
+ const form=$('labDutyForm');
+ if(form)form.onsubmit=e=>{
   e.preventDefault();
   const topic=$('labDutyTopic').value.trim(),date=isoDate($('labDutyDate').value),status=$('labDutyStatus');
   if(!topic||!date){status.textContent='請輸入實驗名稱及日期。';return}
-  const sheets=labSheets();
+  const saved=labSheets();
   if(sheets.some(s=>s.topic===topic&&s.date===date)){status.textContent='這項實驗已有分工表，請展開下方同日期、同名稱的紀錄。';return}
-  if(sheets.length&&date<sheets[sheets.length-1].date){status.textContent='請依實驗日期順序建立分工表，讓輪調順序和上課順序一致。';return}
-  const seats=layoutMap('lab'),assigned=new Set(seats.filter(Boolean));
+  const assigned=new Set(seats.filter(Boolean));
   const unassigned=students().filter(s=>!assigned.has(s.id));
   if(!assigned.size||unassigned.length){
    status.textContent=unassigned.length?'請先在首頁的實驗分組安排這些學生的座位：'+unassigned.map(s=>s.no+'號').join('、'):'目前沒有可分配的學生。';
    return;
   }
-  const sheet={id:uid(),topic,date,groups:labAssignments(seats,students(),sheets[sheets.length-1])};
-  cls().labDutySheets=[...sheets,sheet];save();render();
-  const newest=document.querySelector('[data-print-lab]');newest.closest('details').open=true;
+  const previous=sheets.filter(s=>s.date<=date).pop();
+  const sheet={id:uid(),topic,date,groups:labAssignments(seats,people,previous)};
+  cls().labDutySheets=[...saved,sheet];save();render();
+  document.querySelector(`[data-print-lab="${sheet.id}"]`).closest('details').open=true;
   $('labDutyStatus').textContent='已建立 '+topic+' 的分工表。';
  };
  document.querySelectorAll('[data-print-lab]').forEach(button=>button.onclick=()=>{
-  const sheet=labSheets().find(s=>s.id===button.dataset.printLab);if(sheet)printLabDuty(sheet);
+  const sheet=sheets.find(s=>s.id===button.dataset.printLab);if(sheet)printLabDuty(sheet);
  });
 }
 
@@ -372,7 +420,7 @@ function renderSeats(){
  const lessons=(Array.isArray(cls().scheduleLessons)?cls().scheduleLessons:[]).filter(x=>x.date===date);
  const seatMarkup=layout==='lab'?labGroups():`<div class="seatstage">講 台 ／ 黑 板</div><div class="seats">${cells}</div>`;
  const templateControls=layout==='lab'?`<button class="btn small ${editLabTemplate?'danger':'outline'}" id="templateEdit">${editLabTemplate?'完成編輯模板':'編輯共用模板'}</button>${editLabTemplate?'<button class="btn small outline" id="templateReset">還原 PDF 原始座位</button>':''}`:'';
- return `${renderQuickLinks()}<div class="gridMain"><section class="panel"><div class="panelHead"><h2>▦ ${esc(classDisplay(cl))}座位表</h2><div class="row"><div class="switch"><button data-layout="normal" class="${layout==='normal'?'active':''}">一般座位</button><button data-layout="lab" class="${layout==='lab'?'active':''}">實驗分組</button></div><button class="btn small outline" id="seatEdit" ${editLabTemplate?'disabled':''}>${editSeats?'完成調整':'調整本班座位'}</button>${templateControls}</div></div>${seatMarkup}${layout==='lab'?'<div class="actions"><button type="button" class="btn outline" data-goto="labDuty">實驗工作分配</button></div>':''}<p class="hint">${editLabTemplate?'共用模板編輯：依序點選兩個位置，就會交換座號，並同步套用到 501～507 班。若有自訂本班實驗座位，修改共用模板會清除該排列。':editSeats?'拖曳學生卡片交換座位；只影響目前班級，不影響七班共用模板。':layout==='lab'?'實驗座位依第一至第五組分區，每組六席；黑板在上方；前排由左至右為第三、第二、第一組，後排由左至右為第五、第四組。點選姓名可查看所屬組別及學生紀錄。':'點選學生姓名可查看詳細資料；黃色表示有待追蹤項目，紅色表示當日缺席。'}</p></section><div><section class="panel"><div class="panelHead"><h2>當日課程</h2><span class="pill">${esc(date)}</span></div>${lessons.length?lessons.map(x=>`<div class="lesson ${x.rush?'rush':''}"><span class="pill ${x.rush?'warn':''}">${esc(x.period)} ${x.rush?'需趕課':esc(x.type)}</span><h3>${esc(x.topic)}</h3></div>`).join(''):'<div class="emptymsg">這一天沒有預載授課進度<br>可切換日期或進入教學進度查看</div>'}<div class="actions"><button class="btn small soft" data-goto="tasks">建立習作／考試</button><button class="btn small outline" data-goto="attendance">當日點名</button></div></section><section class="panel"><div class="panelHead"><h2>需要處理</h2><button class="btn small outline" data-goto="attention">查看全部</button></div>${attentionList(5)}</section></div></div>`;
+ return `${renderQuickLinks()}<div class="gridMain"><section class="panel"><div class="panelHead"><h2>▦ ${esc(classDisplay(cl))}座位表</h2><div class="row"><div class="switch"><button data-layout="normal" class="${layout==='normal'?'active':''}">一般座位</button><button data-layout="lab" class="${layout==='lab'?'active':''}">實驗分組</button></div><button class="btn small outline" id="seatEdit" ${editLabTemplate?'disabled':''}>${editSeats?'完成調整':'調整本班座位'}</button>${templateControls}</div></div>${seatMarkup}${layout==='lab'?'<div class="actions"><button type="button" class="btn outline" data-goto="labDuty">實驗工作分配</button></div>':''}<p class="hint">${editLabTemplate?'共用模板編輯：依序點選兩個位置，就會交換座號，並同步套用到 501～507 班。若有自訂本班實驗座位，修改共用模板會清除該排列。':editSeats?'拖曳學生卡片交換座位；只影響目前班級，不影響七班共用模板。':layout==='lab'?'實驗座位依第一至第五組分區，每組六席；黑板在上方；前排由左至右為第三、第二、第一組，後排由左至右為第五、第四組。點選姓名可查看所屬組別及學生紀錄。':'點選學生姓名可查看詳細資料；黃色表示有待追蹤項目，紅色表示當日缺席。'}</p></section><div><section class="panel"><div class="panelHead"><h2>當日課程</h2><span class="pill">${esc(date)}</span></div>${lessons.length?lessons.map(x=>`<div class="lesson ${x.rush?'rush':''}"><span class="pill ${x.rush?'warn':''}">${esc(x.period)} ${x.rush?'需趕課':esc(x.type)}</span><h3>${esc(x.topic)}</h3></div>`).join(''):'<div class="emptymsg">這一天沒有預載授課進度<br>可切換日期或進入教學進度查看</div>'}<div class="actions"><button class="btn small soft" data-goto="tasks">建立習作／考試</button><button class="btn small outline" data-goto="attendance">當日點名</button></div></section><section class="panel"><div class="panelHead"><h2>需要處理</h2><button class="btn small outline" data-goto="attention">查看全部</button></div>${attentionList(5)}</section></div></div>${renderLabDuty(true)}`;
 }
 function attentionList(limit){
  const records=cls().results.filter(x=>['未繳交','待訂正','未完成','未交','缺考','待補考','補考未完成'].includes(x.status))
@@ -719,7 +767,7 @@ function hookClassManager(){
  $('manageSeats').onclick=()=>{view='seats';render()};
 }
 function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
-function hookView(){if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){$('editQuickLinks').onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings)}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='seats'){
+function hookView(){if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();$('editQuickLinks').onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings)}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='seats'){
  document.querySelectorAll('[data-layout]').forEach(b=>b.onclick=()=>{layout=b.dataset.layout;editSeats=false;editLabTemplate=false;templatePicked=null;render()});$('seatEdit').onclick=()=>{editSeats=!editSeats;render()};
  if(layout==='lab'){$('templateEdit').onclick=()=>{if(!editLabTemplate){if(!confirm('進入七班共用模板編輯？交換座號會同步套用七班，並清除各班個別實驗座位排列；所有學生紀錄保留。'))return;editSeats=false;}editLabTemplate=!editLabTemplate;templatePicked=null;render()};if(editLabTemplate){$('templateReset').onclick=resetLabTemplate;document.querySelectorAll('[data-template-index]').forEach(b=>b.onclick=()=>swapTemplateCell(Number(b.dataset.templateIndex)));}}
  document.querySelectorAll('.seat:not(.templateSeat)').forEach(b=>{b.onclick=()=>{if(editSeats)return;let id=b.dataset.sid;if(id)openStudent(id)};b.ondragstart=e=>{if(!editSeats){e.preventDefault();return}e.dataTransfer.setData('text/plain',b.dataset.seat)};b.ondragover=e=>{if(editSeats){e.preventDefault();b.classList.add('dragover')}};b.ondragleave=()=>b.classList.remove('dragover');b.ondrop=e=>{e.preventDefault();b.classList.remove('dragover');let from=Number(e.dataTransfer.getData('text/plain'));let target=Number(b.dataset.seat);if(!Number.isInteger(from)||from<0)return;let a=layoutMap(layout);[a[from],a[target]]=[a[target],a[from]];setSeat(layout,a);render()}})
