@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#244b91"><title>FunDesk 平板遙控器｜課堂表現</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7fe;color:#213553;font-family:system-ui,"Noto Sans TC",sans-serif}
+header{background:linear-gradient(125deg,#24529b,#32a78a);color:white;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{font-size:clamp(20px,4vw,28px);margin:0}h2{font-size:20px;margin:3px 0 14px}
+main{max-width:930px;margin:18px auto;padding:0 14px 40px}
+.panel{border:1px solid #dae6f4;border-radius:18px;background:white;padding:18px;margin-bottom:15px;box-shadow:0 5px 16px #1c4c7010}
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.controls label{flex:1;min-width:145px}
+label{display:block;font-size:14px;font-weight:700;color:#435b77;margin-bottom:10px}
+input,select{width:100%;font:inherit;min-height:45px;padding:9px;border:1px solid #b9cbe0;border-radius:10px;background:white;color:#183b5c;margin-top:5px}
+button{font:inherit;cursor:pointer;border:0;border-radius:11px;padding:11px 17px;font-weight:800;min-height:45px}
+button:disabled{opacity:.5;cursor:default}.primary{background:#215dc2;color:white}.secondary{background:#e5edfa;color:#284e8c}.danger{background:#be445a;color:white}
+#students{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:10px;margin:13px 0}
+.student{border:2px solid #dce6f5;background:white;color:#254261;display:flex;flex-direction:column;gap:3px;text-align:center}
+.student strong{font-size:19px}.student span{font-weight:500;font-size:13px}
+.student.active{background:#e4f8ec;border-color:#299d65;color:#155f3b}
+.reasonGrid{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+.reasonGrid button{font-size:13px;min-height:38px;background:#eef3fb;color:#24466e;padding:8px 11px}
+.reasonGrid button.active{background:#d1e7fe;box-shadow:inset 0 0 0 2px #3575c9}
+.actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:15px 0}
+.actions button{font-size:19px;min-height:68px}.note{font-size:13px;color:#58718b;line-height:1.6}.status{padding:12px;background:#edf6ff;border-radius:11px;color:#1c5c9b;margin:13px 0;white-space:pre-wrap}
+.error{background:#ffe9eb;color:#9e2c3d}.ok{background:#e5f7eb;color:#1b7545}
+.hidden{display:none!important}#login{max-width:530px;margin:42px auto}#selectedCount{font-weight:800}
+@media(max-width:550px){.actions{grid-template-columns:repeat(2,minmax(0,1fr))}#students{grid-template-columns:repeat(3,minmax(0,1fr))}.student{padding:9px 4px}header{flex-wrap:wrap}}
+</style></head>
+<body><header><h1>📱 FunDesk 課堂表現遙控器</h1><button id="logout" class="secondary hidden">🔒 登出／上鎖</button></header>
+<main>
+<section id="login" class="panel"><h2>教師登入</h2><p class="note">使用與 FunDesk 電腦版相同的教師電子郵件及密碼。此頁不會儲存密碼；請勿把平板交給學生使用。</p>
+<form id="loginForm"><label>電子郵件<input id="email" type="email" autocomplete="username" required></label><label>密碼<input id="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit">登入並載入班級</button></form></section>
+<div id="app" class="hidden">
+<section class="panel"><div class="controls"><label>選擇班級<select id="classes"></select></label><label>課堂日期（臺灣時間）<input id="date" type="date"></label></div>
+<div class="controls"><button class="secondary" id="reload">↻ 更新學生名單</button><button class="secondary" id="selectAll">選全班</button><button class="secondary" id="clear">清除選取</button></div>
+<p class="note">已選取 <span id="selectedCount">0</span> 人。全班只允許加分，不允許連坐扣分。</p></section>
+<section class="panel"><h2>選擇學生</h2><div id="students"></div></section>
+<section class="panel"><h2>一鍵加扣分</h2><p class="note">可先點下方原因，系統會自動使用建議分數；也可以使用自訂原因。</p>
+<div id="reasons" class="reasonGrid"></div><label>原因／備註<input id="reason" maxlength="90" placeholder="例如：筆記認真"></label>
+<div class="actions"><button class="primary" data-delta="1">＋1 分</button><button class="primary" data-delta="2">＋2 分</button><button class="danger" data-delta="-1">－1 分</button><button class="danger" data-delta="-2">－2 分</button></div>
+<p class="note">儲存成功後，紀錄會進入教師 FunDesk 同一個班級。若當日聯絡簿已開啟加扣點發布，還需從教師端同步至聯絡簿。</p></section></div>
+<div id="status" class="status" role="status">請以教師帳號登入。</div>
+<p class="note">平板遙控器僅供教師使用。每次修改會以雲端版本比對，發現同時操作時會重新讀取，避免覆蓋其他裝置的紀錄。</p>
+</main>
+<script>
+"use strict";
+const API="https://ayvwsexnxvjjcrbtyoof.supabase.co";
+const KEY="sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L";
+const $=id=>document.getElementById(id);
+const esc=x=>String(x??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+const today=()=>{const a=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Taipei",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()).map(x=>[x.type,x.value]));return a.year+"-"+a.month+"-"+a.day};
+const behaviors=[["🙋 主動發言",1],["👂 專心上課",1],["📝 筆記認真",2],["💻 平板使用優良",2],["🔬 實驗表現",2],["🤝 合作良好",2],["📚 未帶課習",-1],["💭 上課分心",-1],["⏰ 上課遲到",-1],["🗣️ 干擾上課",-1],["🎮 平板違規",-2]];
+let session=null,rows=[],meta={},selection=new Set(),saving=false,lastAction=Date.now(),classCode="";
+function status(s,type=""){const e=$("status");e.textContent=s;e.className="status "+type}
+async function api(path,options={},auth=false,retry=true){
+ const headers={apikey:KEY,...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})};
+ if(!auth&&session?.access_token)headers.Authorization="Bearer "+session.access_token;
+ const response=await fetch(API+path,{...options,headers,cache:"no-store"});
+ if(response.status===401&&!auth&&retry&&session?.refresh_token){
+  session=await api("/auth/v1/token?grant_type=refresh_token",{method:"POST",body:JSON.stringify({refresh_token:session.refresh_token})},true,false);
+  return api(path,options,false,false);
+ }
+ const raw=await response.text();let data;try{data=raw?JSON.parse(raw):null}catch{data=raw}
+ if(!response.ok)throw Error("HTTP "+response.status+": "+(data?.message||data?.error_description||JSON.stringify(data)));
+ return data;
+}
+function className(c){
+ const n=String(meta[c]?.name||"").trim();if(n&&n!==c)return n;
+ if(c==="c_mwc0lni8_le3us8")return "五年一班";
+ return /^50[1-7]$/.test(c)?"五年"+["","一","二","三","四","五","六","七"][Number(c)-500]+"班":c;
+}
+function current(){return rows.find(x=>x.class_code===classCode)}
+function people(){return (current()?.payload?.students||[]).slice().sort((a,b)=>Number(a.no)-Number(b.no))}
+function draw(){
+ const students=people(),ids=new Set(students.map(x=>x.id));selection=new Set([...selection].filter(x=>ids.has(x)));
+ $("students").innerHTML=students.map(s=>'<button class="student '+(selection.has(s.id)?"active":"")+'" data-sid="'+esc(s.id)+'" aria-pressed="'+selection.has(s.id)+'"><strong>'+esc(s.no)+' 號</strong><span>'+esc(s.name)+'</span></button>').join("")||'<p>本班尚未有學生名單。</p>';
+ $("selectedCount").textContent=String(selection.size);
+}
+function chooseClass(){classCode=$("classes").value;selection.clear();draw()}
+async function reload(silent=false){
+ if(saving)return;
+ if(!silent)status("正在讀取教師雲端班級資料…");
+ const data=await api("/rest/v1/fundesk_teacher_data?select=class_code,payload,revision&order=class_code.asc");
+ if(!Array.isArray(data))throw Error("雲端資料格式錯誤");
+ rows=data;const shared=rows.find(x=>x.class_code==="shared")?.payload||{};
+ meta=shared.classMeta||{};
+ const codes=Array.isArray(shared.classCodes)?shared.classCodes:rows.filter(x=>x.class_code!=="shared").map(x=>x.class_code);
+ const valid=codes.filter(c=>rows.some(x=>x.class_code===c&&Array.isArray(x.payload?.students))&&meta[c]?.active!==false);
+ const prev=classCode;
+ $("classes").innerHTML=valid.map(c=>'<option value="'+esc(c)+'">'+esc(className(c))+'</option>').join("");
+ if(valid.includes(prev))classCode=prev;else classCode=valid[0]||"";
+ $("classes").value=classCode;draw();
+ if(!silent)status("✅ 已載入 "+valid.length+" 班學生資料。","ok");
+}
+function lock(){
+ session=null;rows=[];selection.clear();classCode="";
+ $("app").classList.add("hidden");$("login").classList.remove("hidden");$("logout").classList.add("hidden");
+ $("password").value="";status("🔒 已上鎖，請重新登入。");
+}
+$("date").value=today();
+$("loginForm").onsubmit=async event=>{
+ event.preventDefault();const b=event.target.querySelector("button");b.disabled=true;
+ try{
+  session=await api("/auth/v1/token?grant_type=password",{method:"POST",body:JSON.stringify({email:$("email").value.trim(),password:$("password").value})},true);
+  await reload();
+  $("password").value="";$("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");lastAction=Date.now();
+ }catch(err){session=null;status("登入或載入失敗："+err.message,"error")}
+ finally{b.disabled=false}
+};
+$("logout").onclick=lock;
+$("reload").onclick=()=>reload().catch(err=>status("讀取失敗："+err.message,"error"));
+$("classes").onchange=chooseClass;
+$("selectAll").onclick=()=>{selection=new Set(people().map(x=>x.id));draw()};
+$("clear").onclick=()=>{selection.clear();draw()};
+$("students").onclick=e=>{const b=e.target.closest("[data-sid]");if(!b)return;const id=b.dataset.sid;if(selection.has(id))selection.delete(id);else selection.add(id);draw()};
+$("reasons").innerHTML=behaviors.map(([name,delta],i)=>'<button type="button" data-reason="'+i+'">'+esc(name)+' ('+(delta>0?"+":"")+delta+')</button>').join("");
+$("reasons").onclick=e=>{
+ const b=e.target.closest("[data-reason]");if(!b)return;
+ const [name,delta]=behaviors[Number(b.dataset.reason)];$("reason").value=name.replace(/^[^ ]+ /,"");
+ document.querySelectorAll("[data-reason]").forEach(x=>x.classList.toggle("active",x===b));
+ document.querySelectorAll("[data-delta]").forEach(x=>x.classList.toggle("secondary",Number(x.dataset.delta)===delta));
+};
+async function addPoints(delta){
+ if(saving||!session)return;
+ const ids=[...selection],name=className(classCode),date=$("date").value,reason=$("reason").value.trim()||"課堂表現";
+ if(!ids.length)return status("請先點選學生。","error");
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return status("請確認上課日期。","error");
+ if(delta<0&&ids.length===people().length&&people().length>1)return status("禁止全班連坐扣分，請改選個別學生。","error");
+ if(!confirm("確定要在 "+name+" "+date+" 對 "+ids.length+" 位學生各"+(delta>0?"加":"扣")+Math.abs(delta)+" 分？\n原因："+reason))return;
+ saving=true;document.querySelectorAll("[data-delta]").forEach(x=>x.disabled=true);
+ try{
+  for(let attempt=0;attempt<4;attempt++){
+   const data=await api("/rest/v1/fundesk_teacher_data?select=class_code,payload,revision&class_code=eq."+encodeURIComponent(classCode));
+   const row=data?.[0];if(!row||!Array.isArray(row.payload?.students))throw Error("找不到此班級雲端資料");
+   const studentIds=new Set(row.payload.students.map(x=>x.id));if(ids.some(id=>!studentIds.has(id)))throw Error("學生名單已異動，請重新載入");
+   const payload=structuredClone(row.payload),stamp=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+   if(!Array.isArray(payload.points))payload.points=[];
+   ids.forEach((sid,j)=>payload.points.push({sid,date,delta,reason,id:"remote-"+stamp+"-"+j}));
+   try{
+    const revision=await api("/rest/v1/rpc/fundesk_save_teacher_data",{method:"POST",body:JSON.stringify({p_class_code:classCode,p_payload:payload,p_expected_revision:Number(row.revision)||0})});
+    if(typeof revision!=="number")throw Error("儲存回傳版本異常");
+    const local=current();if(local){local.payload=payload;local.revision=revision}
+    status("✅ 已同步到 "+name+"："+ids.length+" 人各 "+(delta>0?"+":"")+delta+" 分（"+reason+"）。\n老師電腦版會自動更新。","ok");
+    return;
+   }catch(err){
+    if(attempt===3||!/revision|版本|conflict|409|400/i.test(String(err.message)))throw err;
+   }
+  }
+ }catch(err){status("❌ 儲存失敗，請勿重複按鈕以免重複記分："+err.message,"error")}
+ finally{saving=false;document.querySelectorAll("[data-delta]").forEach(x=>x.disabled=false)}
+}
+document.querySelectorAll("[data-delta]").forEach(b=>b.onclick=()=>addPoints(Number(b.dataset.delta)));
+["pointerdown","keydown","touchstart"].forEach(type=>document.addEventListener(type,()=>{if(session)lastAction=Date.now()},{passive:true}));
+setInterval(()=>{if(session&&Date.now()-lastAction>10*60*1000)lock()},5000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&session&&!saving)reload(true).catch(()=>{})});
+</script></body></html>
