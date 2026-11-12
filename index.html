@@ -360,7 +360,7 @@ function scheduleImportTemplate(){const templates=window.SCIENCE_SCHEDULE?.[cl];
 function scheduleExportCsv(){const headings=['date','period','type','unit','activity','topic','rush','note','done'],all=scheduleLessons();let lines=[headings.join(','),...all.map(x=>headings.map(h=>scheduleCsvQuote(x[h])).join(','))];download('fundesk_schedule_'+cl+'.csv','\uFEFF'+lines.join('\r\n'),'text/csv;charset=utf-8')}
 async function scheduleImportCsv(file){if(!file)return;const text=(await file.text()).replace(/^\uFEFF/,'');const rows=scheduleCsvParse(text),h=(rows.shift()||[]).map(x=>x.trim().toLowerCase());if(!h.includes('date')||!h.includes('topic'))return alert('CSV 必須包含 date 和 topic 欄位。可以先匯出一份範本。');const current=scheduleLessons(),used=new Set(current.map(x=>x.date+'|'+x.period));let count=0,skipped=0;for(const r of rows){const p=Object.fromEntries(h.map((k,i)=>[k,(r[i]||'').trim()]));const date=isoDate(p.date?.replaceAll('/','-'));if(!date||!p.topic){skipped++;continue}const period=p.period||'第1節',key=date+'|'+period;if(used.has(key)){skipped++;continue}used.add(key);current.push({id:uid(),date,period,topic:p.topic.slice(0,240),type:p.type||'一般教學',unit:p.unit||'—',activity:/^0[1-4]-0[1-3]$/.test(p.activity)?p.activity:'',rush:['true','yes','1','是'].includes((p.rush||'').toLowerCase()),note:(p.note||'').slice(0,500),done:['true','yes','1','是'].includes((p.done||'').toLowerCase())});count++}save();render();alert(`已匯入 ${count} 節；略過 ${skipped} 筆。`)}
 function studentGroupIndex(sid){const i=layoutMap('lab').indexOf(sid);return i<0?-1:Math.floor(i/6)}
-function pointAdd(ids,delta,reason){ids.forEach(id=>{if(student(id))cls().points.push({sid:id,date:$('sessionDate').value,delta,reason:reason||'課堂表現'})});save();render()}
+function pointAdd(ids,delta,reason){const code=cl,date=$('sessionDate').value;ids.forEach(id=>{if(student(id))cls().points.push({sid:id,date,delta,reason:reason||'課堂表現'})});save();render();contactQueuePointsSync(code,date)}
 function pointCards(){return [...students()].sort((a,b)=>a.no-b.no).map(s=>`<button class="personCard ${pointSelection.has(s.id)?'selected':''}" data-point-person="${s.id}" aria-pressed="${pointSelection.has(s.id)}"><b>${s.no} 號</b><span>${esc(s.name)}</span><strong>${ptotal(s.id)>0?'+':''}${ptotal(s.id)} 分</strong></button>`).join('')}
 function renderPoints(){return `<section class="panel"><div class="panelHead"><h2>★ ${esc(classDisplay(cl))}加減分工作台</h2><span class="pill">點學生卡片可多選</span></div><div class="actions"><button class="btn small outline" data-select-points="all">選全班</button><button class="btn small outline" data-select-points="clear">清除選取</button><button class="btn small outline" data-select-points="group">選實驗小組</button><select id="pointGroup">${['第一組','第二組','第三組','第四組','第五組'].map((x,i)=>`<option value="${i}">${x}</option>`).join('')}</select></div><p class="hint">已選 <strong id="selectedPointCount">${pointSelection.size}</strong> 位；只影響目前 ${classDisplay(cl)}。點數與原因保留在學生紀錄。</p><div id="pointPeople" class="personGrid">${pointCards()}</div><div class="actions"><button class="btn" data-bulk-point="1">＋1 分</button><button class="btn" data-bulk-point="2">＋2 分</button><button class="btn danger" data-bulk-point="-1">－1 分</button><button class="btn danger" data-bulk-point="-2">－2 分</button><label>自訂分數 <input type="number" id="customPoint" value="1" style="width:80px"></label><button class="btn outline" id="giveCustomPoint">套用</button></div><label class="inlineLabel">原因／備註 <input id="pointsReason" placeholder="如：實驗操作認真、合作良好" style="min-width:240px;flex:1"></label><h3>常用行為一鍵記錄</h3><div class="behaviorGrid">${BEHAVIORS.map(([name,d,emoji])=>`<button type="button" class="behaviorButton" data-behavior="${esc(name)}" data-value="${d}" aria-label="${esc(name)} ${d>0?'加':'扣'} ${Math.abs(d)} 分"><b>${emoji} ${d>0?'＋':'－'}${Math.abs(d)} 分</b><span>${esc(name)}</span></button>`).join('')}</div><p class="hint">可選個人、全班或某個實驗小組，再按加減分或常用行為。全班可加分；全班扣分會被阻擋，以免誤操作或形成連坐處罰。違規請先提醒並記錄具體行為。</p></section>`}
 function correctionTasks(){return cls().tasks.filter(t=>t.type!=='考試')}
@@ -734,10 +734,34 @@ function contactSplitPoints(text){
  let points=[];try{const obj=JSON.parse(v.slice(a+CONTACT_POINT_START.length,b).trim());if(Array.isArray(obj))points=obj}catch{}
  return {reminders:(v.slice(0,a)+v.slice(b+CONTACT_POINT_END.length)).trim(),points,published:true};
 }
-function contactDailyPoints(date){
- const people=new Map((db.classes[cl]?.students||[]).map(x=>[x.id,x]));
- return (db.classes[cl]?.points||[]).filter(p=>p.date===date&&people.has(p.sid)).map(p=>{
+function contactDailyPoints(date,code=cl){
+ const people=new Map((db.classes[code]?.students||[]).map(x=>[x.id,x]));
+ return (db.classes[code]?.points||[]).filter(p=>p.date===date&&people.has(p.sid)).map(p=>{
  const st=people.get(p.sid);return {no:st.no,name:String(st.name||'').slice(0,25),delta:Number(p.delta)||0,reason:String(p.reason||'').slice(0,90)};
+ });
+}
+
+// After explicit publication by a teacher, keep the shared view up to date.
+// Never create a new public entry or expose a date that the teacher has not opted in to share.
+let contactPointsSyncQueue=Promise.resolve();
+function contactQueuePointsSync(code,date){
+ if(!cloudReady||cloudBlocked||!/^\d{4}-\d{2}-\d{2}$/.test(date||''))return;
+ contactPointsSyncQueue=contactPointsSyncQueue.then(async()=>{
+  try{
+   // Save the teacher's point record first, before preparing its public snapshot.
+   await cloudQueue;
+   if(!cloudReady||cloudBlocked||!cloudSession)return;
+   const data=await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_get',{method:'POST',body:JSON.stringify({p_class_code:code})});
+   const entry=(Array.isArray(data?.entries)?data.entries:[]).find(e=>e.entry_date===date);
+   if(!entry)return;
+   const parsed=contactSplitPoints(entry.reminders);
+   if(!parsed.published)return;
+   const points=contactDailyPoints(date,code);
+   const reminders=parsed.reminders+(parsed.reminders?'\n':'')+CONTACT_POINT_START+'\n'+JSON.stringify(points)+'\n'+CONTACT_POINT_END;
+   await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({
+    p_class_code:code,p_entry_date:date,p_lesson:entry.lesson||'',p_homework:entry.homework||'',p_reminders:reminders
+   })});
+  }catch(err){console.error('FunDesk 加扣點同步到聯絡簿失敗：',err);const msg=$('contactStatus');if(msg&&view==='contact'&&cl===code)contactStatus('⚠️ 加扣點同步失敗：'+cloudErr(err),true)}
  });
 }
 function contactPointPreview(){
@@ -756,7 +780,7 @@ function renderContact(){
  <label for="contactReminder">📢 重要提醒</label><textarea id="contactReminder" maxlength="3000" placeholder="例如：下次帶星座盤、彩色筆"></textarea>
  <section style="padding:14px;margin:12px 0;border:1px solid #b5cfe9;border-radius:12px;background:#f0f7ff">
  <h3>⭐ 在聯絡簿顯示 FunDesk 加扣點紀錄</h3>
- <p class="contactMuted">自動帶入上方所選日期、目前班級在「全班加減分」的既有紀錄，無需重複輸入。只會在按「發布／儲存聯絡簿」後更新學生閱讀頁。</p>
+ <p class="contactMuted">本頁只能顯示 FunDesk「全班加減分」已記錄的點數，不能在聯絡簿另外加扣分。首次勾選並發布後，這個班級、日期的後續點數會自動同步。</p>
  <label><input type="checkbox" id="contactPublishPoints"> 將當日學生姓名、加扣分和原因發布到聯絡簿</label>
  <p class="contactMuted">⚠️ 閱讀連結免登入；任何持有網址的人都能讀取已發布紀錄。閱讀頁的「隱藏」按鈕只用於投影遮蔽，不能保護個資。請先確認符合學校的資料使用規定。</p>
  <div id="contactPointPublishPreview" class="contactMuted"></div></section>
@@ -765,17 +789,7 @@ function renderContact(){
  <aside><section class="panel contactShare"><h2>🔗 ${esc(classDisplay(code))}專屬閱讀網址</h2><p class="contactMuted">每班都有不同連結。學生免登入，只能看此連結對應班級的聯絡簿，不能修改。</p>
  <input type="text" readonly id="contactLink" aria-label="班級聯絡簿網址" value="讀取中…"><div class="actions"><button type="button" class="btn outline" id="contactCopy" disabled>複製網址</button><button type="button" class="btn outline" id="contactOpen" disabled>學生畫面 ↗</button></div><p class="contactMuted">連結請只提供該班學生與家長。取得網址的人都能閱讀該班聯絡簿，請勿放入姓名、成績等個資。</p></section>
  <section class="panel contactHistory"><h2>📅 已發布日期</h2><div id="contactList">讀取中…</div></section>
- <section class="panel"><h2>⭐ 學生加扣點紀錄／備註（僅教師可見）</h2>
- <p class="contactMuted">以下紀錄只寫入教師端學生積點資料，不會顯示在學生公開聯絡簿。</p>
- <form id="contactPointForm">
- <label for="contactPointStudent">選擇學生</label>
- <select id="contactPointStudent" required style="width:100%">
- ${[...db.classes[code].students].sort((a,b)=>Number(a.no)-Number(b.no)).map(x=>`<option value="${esc(x.id)}">${esc(x.no)} 號 · ${esc(x.name)}</option>`).join("")}
- </select>
- <label for="contactPointDelta">加扣分</label><select id="contactPointDelta"><option value="1">＋1 分</option><option value="2">＋2 分</option><option value="-1">－1 分</option><option value="-2">－2 分</option></select>
- <label for="contactPointReason">原因／備註</label><textarea id="contactPointReason" maxlength="300" required placeholder="例如：實驗操作認真、忘記帶習作"></textarea>
- <div class="actions"><button type="submit" class="btn">⭐ 儲存加扣點</button></div></form>
- <div id="contactPointHistory" aria-live="polite"></div></section></aside></div>`;
+</aside></div>`;
 }
 function contactStatus(message,err=false){const e=$('contactStatus');if(e){e.textContent=message;e.style.color=err?'#ffb5ae':'#c4eedc'}}
 function contactFields(){return {lesson:$('contactLesson')?.value||'',homework:$('contactHomework')?.value||'',reminders:$('contactReminder')?.value||''}}
@@ -828,38 +842,10 @@ async function contactSave(){if(contactBusy)return;if(!cloudReady){contactStatus
  try{await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({p_class_code:code,p_entry_date:date,p_lesson:fields.lesson,p_homework:fields.homework,p_reminders:fields.reminders})});
   if(view==='contact'&&cl===code){const refreshed=await contactLoad(code);if(view==='contact'&&cl===code&&refreshed)contactStatus('✅ '+classDisplay(code)+' 已發布到雲端！學生網頁約 20 秒內自動更新。')}}catch(e){contactStatus('❌ 儲存失敗：'+cloudErr(e),true)}finally{contactBusy=false;if($('contactSave'))$('contactSave').disabled=false}
 }
-function contactPointHistory(){
- const root=$('contactPointHistory');if(!root)return;
- const list=[...(cls().points||[])].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,30);
- root.innerHTML='<h3>最近 30 筆加扣點</h3>'+(list.length?list.map(p=>{
- const st=students().find(x=>x.id===p.sid),n=Number(p.delta)||0;
- return `<div style="padding:9px 0;border-bottom:1px solid #e1e7f1"><b>${esc(p.date||'')} · ${esc(st?st.no+' 號 '+st.name:'已移除學生')} · ${n>0?'+':''}${esc(n)} 分</b><div class="contactMuted">${esc(p.reason||'（無備註）')}</div></div>`;
- }).join(''):'<p class="contactMuted">目前沒有加扣點紀錄。</p>');
-}
-function contactPointBind(){
- const form=$('contactPointForm');if(!form)return;
- contactPointHistory();
- form.onsubmit=e=>{
-  e.preventDefault();
-  if(!cloudReady||cloudBlocked)return alert('教師雲端未就緒，暫時不能儲存加扣點。');
-  const sid=$('contactPointStudent').value,delta=Number($('contactPointDelta').value),reason=$('contactPointReason').value.trim();
-  const date=contactSafeDate($('contactDate').value);
-  if(!student(sid))return alert('請選擇有效學生');
-  if(![1,2,-1,-2].includes(delta))return alert('分數格式有誤');
-  if(!reason)return alert('請填寫加扣點原因／備註');
-  cls().points.push({sid,date,delta,reason});
-  save();
-  $('contactPointReason').value='';
-  contactPointHistory();
-  contactPointPreview();
-  contactStatus('✅ 已記錄加扣點，正在同步教師雲端；請再次發布聯絡簿才會更新閱讀頁');
- };
-}
 function contactBind(){
  contactChosenDate=today();
  $('contactDate').onchange=e=>{const next=e.target.value;if(!contactSelect(next))e.target.value=contactChosenDate};
  $('contactSave').onclick=contactSave;
- contactPointBind();
  $('contactReload').onclick=()=>{if(contactDirty()&&!confirm('重新讀取會捨棄未儲存的修改，是否繼續？'))return;contactLoad()};
  $('contactCopy').onclick=async()=>{const url=$('contactLink').value;try{await navigator.clipboard.writeText(url);contactStatus('✅ 已複製班級專屬網址')}catch{ $('contactLink').select();contactStatus('請按 Ctrl+C 複製網址')}};
  $('contactOpen').onclick=()=>window.open($('contactLink').value,'_blank','noopener,noreferrer');
