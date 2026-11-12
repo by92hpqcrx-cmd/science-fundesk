@@ -362,7 +362,7 @@ async function scheduleImportCsv(file){if(!file)return;const text=(await file.te
 function studentGroupIndex(sid){const i=layoutMap('lab').indexOf(sid);return i<0?-1:Math.floor(i/6)}
 function pointAdd(ids,delta,reason){const code=cl,date=$('sessionDate').value;ids.forEach(id=>{if(student(id))cls().points.push({sid:id,date,delta,reason:reason||'課堂表現'})});save();render();contactQueuePointsSync(code,date)}
 function pointCards(){return [...students()].sort((a,b)=>a.no-b.no).map(s=>`<button class="personCard ${pointSelection.has(s.id)?'selected':''}" data-point-person="${s.id}" aria-pressed="${pointSelection.has(s.id)}"><b>${s.no} 號</b><span>${esc(s.name)}</span><strong>${ptotal(s.id)>0?'+':''}${ptotal(s.id)} 分</strong></button>`).join('')}
-function renderPoints(){return `<section class="panel"><div class="panelHead"><h2>★ ${esc(classDisplay(cl))}課堂表現</h2><span class="pill">點學生卡片可多選</span></div><div class="actions"><button class="btn small outline" data-select-points="all">選全班</button><button class="btn small outline" data-select-points="clear">清除選取</button><button class="btn small outline" data-select-points="group">選實驗小組</button><select id="pointGroup">${['第一組','第二組','第三組','第四組','第五組'].map((x,i)=>`<option value="${i}">${x}</option>`).join('')}</select></div><p class="hint">已選 <strong id="selectedPointCount">${pointSelection.size}</strong> 位；只影響目前 ${classDisplay(cl)}。點數與原因保留在學生紀錄。</p><div id="pointPeople" class="personGrid">${pointCards()}</div><div class="actions"><button class="btn" data-bulk-point="1">＋1 分</button><button class="btn" data-bulk-point="2">＋2 分</button><button class="btn danger" data-bulk-point="-1">－1 分</button><button class="btn danger" data-bulk-point="-2">－2 分</button><label>自訂分數 <input type="number" id="customPoint" value="1" style="width:80px"></label><button class="btn outline" id="giveCustomPoint">套用</button></div><label class="inlineLabel">原因／備註 <input id="pointsReason" placeholder="如：實驗操作認真、合作良好" style="min-width:240px;flex:1"></label><h3>常用行為一鍵記錄</h3><div class="behaviorGrid">${BEHAVIORS.map(([name,d,emoji])=>`<button type="button" class="behaviorButton" data-behavior="${esc(name)}" data-value="${d}" aria-label="${esc(name)} ${d>0?'加':'扣'} ${Math.abs(d)} 分"><b>${emoji} ${d>0?'＋':'－'}${Math.abs(d)} 分</b><span>${esc(name)}</span></button>`).join('')}</div><p class="hint">可選個人、全班或某個實驗小組，再按加減分或常用行為。全班可加分；全班扣分會被阻擋，以免誤操作或形成連坐處罰。違規請先提醒並記錄具體行為。</p></section>`}
+function renderPoints(){return `<section class="panel"><div class="panelHead"><h2>★ ${esc(classDisplay(cl))}課堂表現</h2><span class="pill">點學生卡片可多選</span></div><div class="actions"><button class="btn small outline" data-select-points="all">選全班</button><button class="btn small outline" data-select-points="clear">清除選取</button><button class="btn small outline" data-select-points="group">選實驗小組</button><select id="pointGroup">${['第一組','第二組','第三組','第四組','第五組'].map((x,i)=>`<option value="${i}">${x}</option>`).join('')}</select></div><p class="hint"><a href="./remote.html" target="_blank" rel="noopener noreferrer">📱 開啟平板加扣分遙控器 ↗</a>（使用同一個教師帳號，平板操作會同步回這個頁面）</p><p class="hint">已選 <strong id="selectedPointCount">${pointSelection.size}</strong> 位；只影響目前 ${classDisplay(cl)}。點數與原因保留在學生紀錄。</p><div id="pointPeople" class="personGrid">${pointCards()}</div><div class="actions"><button class="btn" data-bulk-point="1">＋1 分</button><button class="btn" data-bulk-point="2">＋2 分</button><button class="btn danger" data-bulk-point="-1">－1 分</button><button class="btn danger" data-bulk-point="-2">－2 分</button><label>自訂分數 <input type="number" id="customPoint" value="1" style="width:80px"></label><button class="btn outline" id="giveCustomPoint">套用</button></div><label class="inlineLabel">原因／備註 <input id="pointsReason" placeholder="如：實驗操作認真、合作良好" style="min-width:240px;flex:1"></label><h3>常用行為一鍵記錄</h3><div class="behaviorGrid">${BEHAVIORS.map(([name,d,emoji])=>`<button type="button" class="behaviorButton" data-behavior="${esc(name)}" data-value="${d}" aria-label="${esc(name)} ${d>0?'加':'扣'} ${Math.abs(d)} 分"><b>${emoji} ${d>0?'＋':'－'}${Math.abs(d)} 分</b><span>${esc(name)}</span></button>`).join('')}</div><p class="hint">可選個人、全班或某個實驗小組，再按加減分或常用行為。全班可加分；全班扣分會被阻擋，以免誤操作或形成連坐處罰。違規請先提醒並記錄具體行為。</p></section>`}
 function correctionTasks(){return cls().tasks.filter(t=>t.type!=='考試')}
 function correctionStatus(tid,sid){const x=taskStatus(tid,sid);if(x==='未交'||x==='未完成')return '未繳交';if(x==='已補交')return '已完成';return CORRECTION_STATUSES.includes(x)?x:'未登記'}
 function setCorrectionStatus(tid,sid,value){const rec=taskResult(tid,sid);if(rec)rec.status=value;else cls().results.push({taskId:tid,sid,status:value,note:''});save()}
@@ -986,6 +986,38 @@ function cloudQueueSave(){
  }).finally(()=>{cloudOutstanding--;if(!cloudBlocked&&cloudOutstanding===0)cloudStatus('✅ 雲端已同步')});
  return cloudQueue;
 }
+// Refresh remote tablet edits only when the teacher computer has no unsaved cloud writes.
+// Never replace local unsaved data with a remote snapshot.
+let remotePollBusy=false;
+async function cloudPollRemotePoints(){
+ if(remotePollBusy||!cloudReady||cloudBlocked||lockInProgress||cloudOutstanding>0||document.hidden)return;
+ remotePollBusy=true;
+ try{
+  await cloudQueue;
+  if(!cloudReady||cloudBlocked||cloudOutstanding>0)return;
+  const rows=await cloudGetAll();if(!Array.isArray(rows))return;
+  let changed=false,pending=false;
+  for(const row of rows){
+   const code=row.class_code,revision=Number(row.revision||0);
+   if(!CLASSES.includes(code)||revision===Number(cloudRevisions[code]||0))continue;
+   const localSerialized=JSON.stringify(cloudPayload(code));
+   if(localSerialized!==cloudSnapshots[code]){pending=true;continue}
+   if(!Array.isArray(row.payload?.students))continue;
+   db.classes[code]=row.payload;
+   cloudSnapshots[code]=JSON.stringify(row.payload);cloudRevisions[code]=revision;
+   changed=true;
+  }
+  if(pending){cloudStatus('⚠️ 其他裝置已更新雲端；本機有未儲存內容，請先確認同步',true);return}
+  if(changed){
+   if(view!=='contact'||!contactDirty())render();
+   else contactStatus('✅ 平板加扣點已同步，聯絡簿編輯內容未被覆蓋');
+   cloudStatus('✅ 已接收平板最新紀錄');
+  }
+ }catch(e){console.warn('FunDesk 平板同步檢查失敗：',e)}
+ finally{remotePollBusy=false}
+}
+setInterval(cloudPollRemotePoints,8000);
+window.addEventListener('focus',cloudPollRemotePoints);
 async function cloudBoot(){
  const requested=new URL(location.href).searchParams.get('class');if(requested&&/^[A-Za-z0-9_-]{1,40}$/.test(requested))cl=requested;
  cloudRenderQuickClasses();
