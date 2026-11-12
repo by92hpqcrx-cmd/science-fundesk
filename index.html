@@ -102,6 +102,7 @@
 .seatAvatarArt{position:absolute;inset:3px;background-repeat:no-repeat;background-position:center;background-size:contain;opacity:.14;pointer-events:none;z-index:0}
 .seat>:not(.seatAvatarArt){position:relative;z-index:1}
 @media(max-width:600px){.avatarOptions{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.avatarGroupCaption{grid-column:1/-1;font-size:15px;font-weight:800;color:#4c7691;padding:10px 2px 3px;border-top:1px dashed #c0dbe9;margin-top:4px}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -229,11 +230,11 @@ function openLinkSettings(){
 const DEFAULT_LAB_TEMPLATE=[[14,29,19,9,4,24],[15,30,20,10,5,25],[11,26,16,6,1,21],[12,27,17,7,2,22],[13,28,18,8,3,23]];
 // 全班積點與作業訂正的基本設定（恢復原始版遺漏的常數）
 
-const STUDENT_AVATARS=[['girl-1','女生・馬尾'],['girl-2','女生・短髮'],['girl-3','女生・雙辮'],['girl-4','女生・眼鏡'],['girl-5','女生・丸子頭'],['boy-1','男生・短髮'],['boy-2','男生・眼鏡'],['boy-3','男生・捲髮'],['boy-4','男生・棒球帽'],['boy-5','男生・妹妹頭']];
+const STUDENT_AVATARS=[['girl-1','女生・馬尾'],['girl-2','女生・短髮'],['girl-3','女生・雙辮'],['girl-4','女生・眼鏡'],['girl-5','女生・丸子頭'],['boy-1','男生・短髮'],['boy-2','男生・眼鏡'],['boy-3','男生・捲髮'],['boy-4','男生・棒球帽'],['boy-5','男生・妹妹頭'],['animal-cat','動物・貓咪'],['animal-dog','動物・小狗'],['animal-rabbit','動物・兔子'],['animal-bear','動物・小熊'],['animal-panda','動物・熊貓'],['animal-fox','動物・狐狸'],['animal-lion','動物・獅子'],['animal-koala','動物・無尾熊'],['animal-tiger','動物・老虎'],['animal-frog','動物・青蛙']];
 const studentAvatarPath=s=>s&&STUDENT_AVATARS.some(([id])=>id===s.avatar)?'avatars/'+s.avatar+'.svg':'';
 const avatarWatermark=s=>{const src=studentAvatarPath(s);return src?'<span class="seatAvatarArt" style="background-image:url('+src+')" aria-hidden="true"></span>':''};
 const avatarThumb=s=>{const src=studentAvatarPath(s);return src?'<img class="studentAvatarThumb" src="'+src+'" alt="自選頭像">':'<span class="studentAvatarPlaceholder" aria-hidden="true">☺</span>'};
-const avatarChooser=s=>'<section class="avatarPicker"><h3 class="sectionLabel">選擇學生頭像</h3><p class="hint">點選頭像立即儲存，座位表會顯示淡淡的頭像底圖。</p><div class="avatarOptions">'+STUDENT_AVATARS.map(([id,label])=>'<button type="button" class="avatarOption '+(s.avatar===id?'chosen':'')+'" data-avatar-choice="'+id+'" aria-pressed="'+(s.avatar===id)+'" title="'+label+'"><img src="avatars/'+id+'.svg" alt="'+label+'"><small>'+label+'</small></button>').join('')+'</div><button type="button" class="btn small outline" id="clearStudentAvatar">不使用頭像</button></section>';
+const avatarChooser=s=>'<section class="avatarPicker"><h3 class="sectionLabel">選擇學生頭像（人物／動物共 20 款）</h3><p class="hint">點選頭像立即儲存，座位表會顯示淡淡的頭像底圖。</p><div class="avatarOptions">'+STUDENT_AVATARS.map(([id,label],index)=>(index===10?'<div class="avatarGroupCaption">可愛動物頭像</div>':'')+'<button type="button" class="avatarOption '+(s.avatar===id?'chosen':'')+'" data-avatar-choice="'+id+'" aria-pressed="'+(s.avatar===id)+'" title="'+label+'"><img src="avatars/'+id+'.svg" alt="'+label+'"><small>'+label+'</small></button>').join('')+'</div><button type="button" class="btn small outline" id="clearStudentAvatar">不使用頭像</button></section>';
 const BEHAVIORS=[['主動發言',1,'🙋'],['專心上課',1,'👂'],['完成任務',2,'✏️'],['合作良好',2,'🤝'],['實驗表現',2,'🔬'],['主動服務',2,'⭐'],['筆記認真',2,'📝'],['平板使用優良',2,'💻'],['干擾上課',-1,'🗣️'],['任意走動',-1,'🚶'],['未帶課習',-1,'📚'],['上課分心',-1,'💭'],['上課遲到',-1,'⏰'],['不尊重同學',-2,'😠'],['實驗違規',-2,'⚠️'],['平板違規',-2,'🎮']];
 const CORRECTION_STATUSES=['未繳交','已繳交','待訂正','已完成'];
 const taskTypes=['習作','實驗','考試'];
