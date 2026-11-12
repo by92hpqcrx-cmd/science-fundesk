@@ -194,7 +194,7 @@ const taskTypes=['習作','實驗','考試'];
 let CLASSES=['501','502','503','504','505','506','507'];
 const DEFAULT_CLASSES=[...CLASSES];
 const freshClass=()=>({students:[],seats:{normal:[],lab:[]},attendance:[],tasks:[],results:[],points:[],scheduleLessons:[]});
-const className=c=>{const n=String(db?.classMeta?.[c]?.name||'').trim();return /^50[1-7]$/.test(c)&&(!n||n===c)?'五年'+['','一','二','三','四','五','六','七'][Number(c)-500]+'班':n||c;};
+const className=c=>{const n=String(db?.classMeta?.[c]?.name||'').trim();if(n&&n!==c)return n;if(c==='c_mwc0lni8_le3us8')return '五年一班';return /^50[1-7]$/.test(c)?'五年'+['','一','二','三','四','五','六','七'][Number(c)-500]+'班':n||c;};
 const activeCodes=()=>CLASSES.filter(c=>db?.classMeta?.[c]?.active!==false);
 const classDisplay=c=>/^\d+$/.test(className(c))?className(c)+' 班':className(c);
 const classOptions=()=>activeCodes().map(c=>`<option value="${esc(c)}">${esc(classDisplay(c))}</option>`).join('');
@@ -728,11 +728,14 @@ let contactCache={},contactChosenDate='',contactLoadingFor='',contactBusy=false,
 const contactSafeDate=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x:today();
 const contactHtmlDate=x=>esc(x||'');
 const CONTACT_POINT_START='[FunDesk積點START]',CONTACT_POINT_END='[FunDesk積點END]';
+ const CONTACT_CLASS_START='[FunDesk班名START]',CONTACT_CLASS_END='[FunDesk班名END]';
+ function contactStripClassName(text){const v=String(text||''),a=v.indexOf(CONTACT_CLASS_START),b=v.indexOf(CONTACT_CLASS_END,a+CONTACT_CLASS_START.length);return a<0||b<0?v:(v.slice(0,a)+v.slice(b+CONTACT_CLASS_END.length)).trim()}
+ function contactPackClassName(text,code){const clean=contactStripClassName(text);return clean+(clean?'\n':'')+CONTACT_CLASS_START+String(classDisplay(code)).slice(0,35)+CONTACT_CLASS_END;}
 function contactSplitPoints(text){
  const v=String(text||''),a=v.indexOf(CONTACT_POINT_START),b=v.indexOf(CONTACT_POINT_END,a+CONTACT_POINT_START.length);
- if(a<0||b<0)return {reminders:v,points:[],published:false};
+ if(a<0||b<0)return {reminders:contactStripClassName(v),points:[],published:false};
  let points=[];try{const obj=JSON.parse(v.slice(a+CONTACT_POINT_START.length,b).trim());if(Array.isArray(obj))points=obj}catch{}
- return {reminders:(v.slice(0,a)+v.slice(b+CONTACT_POINT_END.length)).trim(),points,published:true};
+ return {reminders:contactStripClassName((v.slice(0,a)+v.slice(b+CONTACT_POINT_END.length)).trim()),points,published:true};
 }
 function contactDailyPoints(date,code=cl){
  const people=new Map((db.classes[code]?.students||[]).map(x=>[x.id,x]));
@@ -759,7 +762,7 @@ function contactQueuePointsSync(code,date){
    const points=contactDailyPoints(date,code);
    const reminders=parsed.reminders+(parsed.reminders?'\n':'')+CONTACT_POINT_START+'\n'+JSON.stringify(points)+'\n'+CONTACT_POINT_END;
    await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({
-    p_class_code:code,p_entry_date:date,p_lesson:entry.lesson||'',p_homework:entry.homework||'',p_reminders:reminders
+    p_class_code:code,p_entry_date:date,p_lesson:entry.lesson||'',p_homework:entry.homework||'',p_reminders:contactPackClassName(reminders,code)
    })});
   }catch(err){console.error('FunDesk 加扣點同步到聯絡簿失敗：',err);const msg=$('contactStatus');if(msg&&view==='contact'&&cl===code)contactStatus('⚠️ 加扣點同步失敗：'+cloudErr(err),true)}
  });
@@ -841,7 +844,7 @@ async function contactSave(){if(contactBusy)return;if(!cloudReady){contactStatus
  }
  if(![fields.lesson,fields.homework,fields.reminders].some(x=>x.trim())){contactStatus('請至少填寫一個欄位再發布',true);return}
  contactBusy=true;$('contactSave').disabled=true;contactStatus('正在發布到雲端…');
- try{await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({p_class_code:code,p_entry_date:date,p_lesson:fields.lesson,p_homework:fields.homework,p_reminders:fields.reminders})});
+ try{await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({p_class_code:code,p_entry_date:date,p_lesson:fields.lesson,p_homework:fields.homework,p_reminders:contactPackClassName(fields.reminders,code)})});
   if(view==='contact'&&cl===code){const refreshed=await contactLoad(code);if(view==='contact'&&cl===code&&refreshed)contactStatus('✅ '+classDisplay(code)+' 已發布到雲端！加扣點已包含在此日期聯絡簿，學生網頁約 20 秒內自動更新。')}}catch(e){contactStatus('❌ 儲存失敗：'+cloudErr(e),true)}finally{contactBusy=false;if($('contactSave'))$('contactSave').disabled=false}
 }
 function contactBind(){
