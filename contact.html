@@ -3,29 +3,60 @@
 <link rel="apple-touch-icon" href="./contact-book-icon.png?v=20261112">
 <meta name="application-name" content="FunDesk 班級聯絡簿">
 <meta name="apple-mobile-web-app-title" content="班級聯絡簿">
-<meta name="theme-color" content="#086149">
+<meta name="theme-color" content="#eef8ff">
+<link rel="stylesheet" href="./fundesk-light.css?v=2">
 <style>
-:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f7ff;color:#243955;font-family:system-ui,-apple-system,'Noto Sans TC',sans-serif;line-height:1.7}header{background:linear-gradient(120deg,#477fcd,#6b9fdf);color:white;padding:24px 16px}header .wrap{max-width:860px;margin:auto}h1{font-size:clamp(25px,5vw,36px);margin:4px 0}header p{margin:4px 0;opacity:.96}main{max-width:860px;margin:20px auto;padding:0 14px 40px}.bar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:15px}.bar span{font-size:13px;color:#5a718c}.btn{border:1px solid #c0d4ef;background:white;padding:9px 15px;border-radius:10px;color:#255497;font-weight:750;cursor:pointer}.entry{padding:23px;background:white;border:1px solid #e1e9f5;box-shadow:0 4px 16px #385a8612;border-radius:16px;margin-bottom:15px}.entry h2{margin:0 0 7px;font-size:20px;color:#255a9a}.date{font-size:12px;color:#74849a;margin-bottom:18px}.entry section{border-top:1px solid #edf1f7;padding:12px 0}.entry h3{margin:2px 0 8px;font-size:16px}.content{font-size:17px;white-space:pre-wrap;overflow-wrap:anywhere}.empty{color:#8694a7}.notice{padding:18px;background:white;border-radius:14px;color:#637992}.historyTitle{margin:24px 0 10px;font-size:18px}.foot{font-size:12px;color:#70839e;text-align:center;margin-top:20px}.error{color:#aa3d3d;background:#fff0f0;padding:15px;border-radius:10px}details{background:white;border-radius:12px;border:1px solid #e0e9f4;margin-bottom:10px;padding:12px}summary{cursor:pointer;font-weight:700;color:#24568d}details .entry{box-shadow:none;border:none;margin:0;padding:9px}.pointPanel{margin:14px 0;padding:14px;background:#fff8e9;border:1px solid #eddbac;border-radius:12px}.pointPanel h3{margin:0 0 7px}.pointRecord{border-top:1px solid #ecdfbe;padding:8px 0}.pointReason{font-size:14px;color:#6b6172}.pointNotice{font-size:12px;color:#786541;margin:8px 0}.pointToggle{background:#fff;border:1px solid #d7bb76;color:#684f19;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer}.pointHidden .pointDetails{display:none}.pointToolbar{margin:14px 0;padding:14px;border:1px solid #b5d8c8;border-radius:12px;background:#f0faf5}.pointToolbar .pointToggle{display:inline-flex;align-items:center;font-size:15px;padding:10px 16px;background:#fff;border:1px solid #85b79b;color:#175a3b}.pointToolbar p{font-size:12px;color:#527366;margin:8px 0 0}@media print{.pointPanel{display:none!important}}@media(max-width:480px){.entry{padding:16px}.bar{align-items:start;flex-direction:column}}
-</style><link rel="stylesheet" href="notebook.css?v=20261112"><style id="notebookScale">@media screen and (min-width:701px){body.notebookViewer{zoom:75%}}@media print{body.notebookViewer{zoom:100%}}</style><style>
-body.notebookViewer .pointPanel,body.notebookViewer .pointToolbar,body.notebookViewer #pointScreenNote{background:#213c36;border-color:#59716a}
-body.notebookViewer .pointPanel,body.notebookViewer .pointPanel h3,body.notebookViewer .pointPanel .pointRecord b,
-body.notebookViewer .pointPanel .pointReason,body.notebookViewer .pointNotice,
-body.notebookViewer .pointToolbar p,body.notebookViewer #pointScreenNote{color:#edf5ed}
-body.notebookViewer .pointRecord{border-color:#617972}
-body.notebookViewer .pointToolbar .pointToggle{color:#143c2b}
-#replyPanel{border-top:1px solid #92ad9e;margin-top:12px}#replyPanel label{display:block;margin-top:10px;font-weight:700}
-#replyPanel input,#replyPanel select,#replyPanel textarea{box-sizing:border-box;width:100%;font:inherit;padding:8px;border:1px solid #7b9989;border-radius:8px;color:#18372d;background:#fff}
-#replyPanel textarea{min-height:95px;resize:vertical}
-#replyPanel .btn{margin-top:12px}
-#replyHistory{margin-top:14px}
-#replyHistory h3{margin-bottom:6px}
-#replyHistoryList{list-style:none;margin:0;padding:0}
-#replyHistoryList li{padding:8px 0;border-top:1px solid #c8d9d0}
-#replyHistoryList time{font-size:.9em}
-.replySent{margin-left:8px;color:#14513d;font-weight:700}
-.replyHistoryText{white-space:pre-wrap;overflow-wrap:anywhere}
-#replyPanel{background:#eaf7ef;color:#244e3b;border:1px solid #a9cdbc;border-radius:12px;padding:12px}#replyPanel h3{color:#244e3b}@media print{#replyPanel{display:none!important}}
-</style></head><body class="notebookViewer"><header><div class="wrap"><small>FUNDESK · 我們的班級小黑板</small><div class="chalkDoodle" aria-hidden="true">✧　 /\_/\<br>　( •ᴗ• )　☆<br>　 / づ♡</div><h1 id="classTitle">📒 班級聯絡簿</h1><p>自然科課程紀錄 · 考試預告 · 重要記事</p></div></header>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body.notebookViewer{margin:0;line-height:1.65;color:var(--ink);font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif}
+.notebookViewer header,.notebookViewer main{width:min(100% - 28px,980px);margin-inline:auto}
+.notebookViewer header{margin-top:24px;padding:14px clamp(16px,4vw,30px);border:1px solid #d6e9f6;border-radius:24px;background:linear-gradient(110deg,#eef8ff,#f4f6ff 62%,#edf9f2)}
+.notebookViewer header .wrap{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.notebookViewer header small{color:#4a6682;font-size:13px;letter-spacing:.08em;font-weight:800}
+.notebookViewer h1{color:#283f70;font-size:clamp(24px,5vw,36px);line-height:1.2;margin:5px 0}
+.notebookViewer header p{color:#4a6682;font-size:15px;margin:4px 0}
+.notebookViewer header .fundeskSticker{flex:none;width:clamp(74px,15vw,125px)}
+.notebookViewer main{margin-top:16px;padding-bottom:35px}
+.notebookViewer .bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.notebookViewer .bar span,.notebookViewer .date,.notebookViewer .foot{color:#526a7d;font-size:15px}
+.notebookViewer .entry,.notebookViewer details,.notebookViewer .notice,.notebookViewer .pointToolbar{background:#fff;border:1px solid #dbe8f1;border-radius:20px;box-shadow:var(--shadow);padding:clamp(14px,3vw,22px);margin:0 0 12px}
+.notebookViewer h2{color:#294f79;font-size:24px;margin:0 0 4px}
+.notebookViewer h3{color:#315a72;font-size:19px;margin:0 0 6px}
+.notebookViewer .entry section{border-top:1px solid #e3edf4;padding:12px 0}
+.notebookViewer .entry section:first-of-type{margin-top:12px}
+.notebookViewer .content{font-size:18px;white-space:pre-wrap;overflow-wrap:anywhere}
+.notebookViewer .empty{color:#526a7d}
+.notebookViewer details summary{cursor:pointer;color:#315a8d;font-weight:800}
+.notebookViewer details .entry{border:0;box-shadow:none;margin:10px 0 0;padding:0}
+.notebookViewer .foot{text-align:center;margin-top:18px}
+.notebookViewer .notice{color:#315475;background:#f0f8ff}
+.notebookViewer .error{border-radius:12px;padding:12px;background:#fff0f0;color:#972f47}
+.notebookViewer button{font:inherit}
+.notebookViewer .btn,.notebookViewer .pointToggle{border:1px solid #b9d3e9;border-radius:12px;padding:8px 13px;background:#f9fcff;color:#315a8d;font-weight:800;cursor:pointer}
+.notebookViewer .btn:disabled{cursor:default}
+.notebookViewer .pointToolbar,.notebookViewer .pointPanel{background:#f5effd;border:1px solid #e2d8ef;color:#503c63}
+.notebookViewer .pointPanel{padding:14px;border-radius:16px;margin:8px 0}
+.notebookViewer .pointPanel h3,.notebookViewer .pointNotice,.notebookViewer .pointReason{color:#503c63}
+.notebookViewer .pointToolbar p,.notebookViewer .pointNotice{margin:6px 0;font-size:15px}
+.notebookViewer .pointRecord{padding:7px 0;border-top:1px solid #ded1eb}
+.notebookViewer .pointHidden .pointDetails{display:none}
+#replyPanel{margin-top:12px;background:#edf8f2;color:#284f43;border:1px solid #c5dfd2;border-radius:16px;padding:clamp(12px,3vw,18px)}
+#replyPanel h3{color:#245b48}
+#replyPanel label{display:block;font-weight:800;margin-top:12px}
+#replyPanel textarea{display:block;width:100%;min-height:95px;resize:vertical;padding:10px;border:1px solid #b9d4e1;border-radius:10px;color:#263f58;background:#fff;font:inherit}
+.threadSendRow{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin-top:12px}
+#replyPanel #threadSend{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:9px 16px;border:1px solid #355fba;border-radius:12px;background:#355fba;color:#fff;font-weight:800}
+#replyPanel #threadSend:not(:disabled):hover{background:#294e9b}
+#replyPanel #threadSend:disabled{background:#e0eaf2;color:#486276;border-color:#bfd3e2}
+#threadStatus{font-size:15px}
+@media screen and (min-width:701px){body.notebookViewer{zoom:75%}}
+@media(max-width:520px){.notebookViewer header{margin-top:14px}.notebookViewer .bar{flex-wrap:wrap}}
+@media print{
+ body.notebookViewer{zoom:100%;background:#fff}
+ .notebookViewer header,.notebookViewer .entry,.notebookViewer details{background:#fff;box-shadow:none}
+ .notebookViewer .fundeskSticker,.notebookViewer .bar,.notebookViewer .pointPanel,.notebookViewer .pointToolbar,#pointScreenNote,#replyPanel{display:none!important}
+}
+</style></head><body class="notebookViewer"><header><div class="wrap"><div><small>FUNDESK · 自然科</small><h1 id="classTitle">📒 班級聯絡簿</h1><p>自然科課程紀錄 · 考試預告 · 重要記事</p></div><span class="fundeskSticker" data-scene="notes" aria-hidden="true"></span></div></header>
 <main><div class="bar"><span id="status" role="status">正在連線…</span><button class="btn" id="refresh" type="button">↻ 立即更新</button></div><p class="notice" id="pointScreenNote">🔒 學生加扣點紀錄預設隱藏。給導師查看時可按「顯示」；投影到電腦大螢幕前請按「隱藏」。此按鈕不提供帳號權限保護。</p><div id="pointToolbar" class="pointToolbar"><button id="toggleAllPoints" class="pointToggle" type="button" aria-expanded="false" aria-controls="latest history">👁 顯示加扣點紀錄</button><p>預設隱藏，僅在此頁面按鈕展開；投影前請按「隱藏」。已發布的資料並非保密資料。</p><p id="pointEmpty" class="pointNotice" hidden>目前沒有已發布的加扣點紀錄。老師發布當日加扣點後，「課堂表現」新增的紀錄會自動同步。</p></div><article id="latestEntry" class="entry"><div id="latest"></div>
  <form id="replyPanel" hidden>
  <h3><img src="data:image/webp;base64,UklGRlgKAABXRUJQVlA4WAoAAAAQAAAASwAASwAAQUxQSH8DAAABoEXbtmlX2rFt45Vt27Zt27Zt27aN2LZtO3utWbjJ2Xudqv+ImAD1v+sVFh3h/98QsOMdX1a21v/2+H6Brgs8MWcJK/66pcu2/hlg8szo3lAF+rvn5FEwrRZfPlSQ+8S2LrlwEeQQ/557IswFfnctg4wC30SKC3gGINN4L1CY9yNgMo8bhF3CTM71Ksa3EbXnNMgq/gwTlNoIsowHBb0Iss0L+4vZY4GtESoihPh9BxKIq4XstcQiihJFBP8KEtF2hIhLQSJ59q4AAendQgilKQKunZTCvKO92A8nWAjhXnt7/LAopz3O2ml5IKk8e6S1y1vkYPoha+cTi+G5j31s3QQ5hG9sbFdyqtpxEiToQ2U6+ryErfGQ+gQkqTPe1LV41av4scgRUYw7TKV/g732O2SdaVHES2cZCb5i77BbjlBqm3lZhMH1TawzhmdUzJE3fcksi/CACe+Njjv6khYGSDoXhBhQSt0JMGmthWEkzcjeyyCtiYQtLw2nGHkERCSOZ9qmNzTy2L/E80TO7EZG9tbQmkhrURj7uS3ciPfl4wwmTbIXR69RZr1yZ4tnmISj0N9QXE7OL/PieGJ/Q8e2AYA0Qmu6kR0mQfOlvSyN8LAJv29B+Hq3LtjTjuoiDey6yES6f4kcahOOUbyOgRdBRAwiXp11ZuLfM5yl9f6LiHhWC+LFKcZH/o68nwN5RvcwlkgLQUUnJvdSjpN6VjHyB7pGWQamftGNeyvnwYUrET1erBsBCcDEfPnmyuTdq8A3GS/WVo7YY7x39M2nxyijG41gpVYvtflZf7IlgF+PUOavWUXT1m+PgMkuVzy5t7IZ9D088VA3QLZ5NvfOXQItqLXb4YEYZJM9EAM69yRfc2q/GXgQy8CHCebUefMsiojxfZi5rCYII8KNxrZtAcnrzzD1DsiFuN1UnjuaowyVuIL5ODP+da4gfOxl5JYldsdItolDlkFGtTXG2SY+BbkUX3g58y91z2CaM+/fXcN0pDP1oGsIjxk41EXl/s7OcNHExs5uArsGhzjbpABuHX490ZkK3fPW934pb+rq6etpayjLKahp7xsZm5waGxnq7W6qry3OqWgfHOnv7urq6mxpqMz/4d0PvvziwxduODBTmfYJi0tOSUtNjA0LCIpKTMvKXmvt7MyM1OS4mKiQgIik9Kz0lOTk5OT42IggL2USAFZQOCCyBgAAUB4AnQEqTABMAD5hKo5FpCKhFwultEAGBLQAX/TmbY83s2fI67ZiKO/n/fRvtpfMb9oHvG+jbeMfQA6Un7jvaVzSv+m7Zvkv91ykKbd+2WpZZ4lPr3rbFAD7wPVR0DfW3sC/rvvuX6zNmyVNyA9bctjTgk9CslkdtlF8BAFU9yAQYcbIYWu1Hr2e/vWCWu11OI2HuH5W0MK+BTp/cB4IyJbkUTsZQGIEopnKzrSdhDdxSJA799ULe10rvUsb1T4GfCEenoEc2vrAUMxlszvf/bOawkmSHRVSagQ8bgtWD4iIikL7oJI6RwoNpH/lTa/V46K8SAAcp6sMMwAA/v6lNmlR+KJonV/U7wNoy6XUVideGkqJS/9846XmAIYHVZ1E2DzYwMLNX8d5yiOZqBuh4+XW8kHqWT/d6vqtk4qL8wS8u0UQe/ZEfMp/dVvSHy6Cw1u0bhaSj4H+CpxSpDVFRE3vQkFndejMvOqcnXrqaV2wMmIkMgoQhK61W1ookPHw/1mpgv3jkwDZ24Fp/uideX9w1D+dU7rzrEqyd5rGXP0tP/Vyde9700NXOqBWc823yQlQc/Jbet+OqtKVjoVOhEwKOiLGe5jd5kQ/YxgRs7uVmHf/QxxvxvBK752G5qMtGwbyCG38sfPKfa0A5Im8wIJXmLImf/R+5d82xkG+8Wf+1+d/wa57p85X4C5Ai1CSabvZ+M9yG8j2AZ9MqdrJez+84SneSkDjI3qpPqiYtM3gFqC+r+/3e8ZY+UyQlL01u1VU2D7x7EUeUovggoBL02aUuWXwjJG+8nSzdtucTCygPFPSqtKFBj3zeRxScZev6ixC1AQsKJr7fddtemmyZyH0xO0T6duGjUTyFT/VlSepdS7m+8BT/jQnK4jHoQJOgm9EsZDtJEFWtpWN0wXfsQgXu1lzezjOzVu/phmtGQGRRnGwI+vl6dILviJNi6OHYNScmLfhMUAz6NAFNMH8zCTHqOCFwQn+wl9sf76R4Ns/oB9WEqwl8fCEyYgxUpL/q8mZtpKAwYV2+/4bc4eKOznORTN1QDnAaIAtMg1d99VstJ5GjwzGX2qdy/xlUnpU96UI/kzXC64LVasC3cLCFn6mMuNk/X9WKO0VlfOcbzk/tA48MwOF6twwpWlz9at48Xsig6kElMdUmKjnZhTW8FFUhSzcsOyIF6KtNPy6/kD48vsee1k15MPbo6KItPfh4J5LxI7iAxGoRfBb4TU+igIZ8jP1tHAEsbM7EwVsGLNJSVF8u6I/DYPsdB77qTiH7e/l8CCf43u84dQSPhmo2xyUum4zOKyYsYzvTsDpRH798okmRrZGmonkYEhMNGAoH0a/W3McHuxUwDKUz5KYic4IwWAVGJa2tEjq6Y9S2mP4PW0DV1GE3tt5dDs+porwckPdOFt8x33AHpastL+zbRasWTwKL7G/h2/Ao97YJGTDYwf7PiOn2/6kn8mC04HcnaW6E2Ii4SDJ5BcXLrA2smSC52oOy7EOFfDJRIWtSiMZmNhsV2iz4a86ks7wHM3bjbLqsNQfN7YEKCWy/PbdcTGfb+4KcnQxk8XtkeIuNQzuf7Waqy2y8KfWC/6sRWSA0uAzZJU6HG17Eanc3HvGlzLzu8vjzWxCpDy8m5fOUdhJ0JK0rYvsviHa6+A/U7pDU1T/8Bx7wd8Xa1ZCIUwcpsgYZedL+U2/zqBYvWsqiGFI0HEqmrSnOVM+LSJyKQpT2x9xOFo6ZqlccB6qxpWV7Fde004TCwme0ZQy/pIC06FK6MhhrTavoi97uVe9/NWWd58TtvQ5SrLcpkgl/r/hZDvK7ibHN9Y8s7Rm1Ub9JI+ufBaVD4+7srBFAVFzh+W0wkPAyV5zMxM5kJx6vHHBrVoZY3/jKQSl/toCDArKmyZhJrP7aYbC2TtP3GbpZPDQQr3b/J5hW8ry99a593WRAlgkz5/9DzGzUtDV9igql2w6QC2AA+LK1IMyipHVD1Kd34iFU9B+9fLPzs83PhzoCfEbocAGZSezGVCHY4lQ1rJJN8dyuIk4bdal20OeC68AR21gqBJgoLQ988vPl+2NV92drMHrnas0UDSGs5I9+D6G2JK/U9iMYMFHmdesun6620MvLWdCdOSRaUBFHGrvuU6ZfwViCzNUGwkdL3FqbTerwR99+8LB5v0EY6p1vZ9BBpoVRKBq0hOQO6xVSa1vn+h0nZPJKTFuulkcf7tk+2ZpZ/i0JoP/mXuupaL8SjZQyz4S8jM6h5kSOmIJP0LiICVd9yK6w+vsXAh0RMfaIAAAAA==" width="48" height="48" alt="" style="vertical-align:middle"> 留言區</h3>
@@ -33,8 +64,10 @@ body.notebookViewer .pointToolbar .pointToggle{color:#143c2b}
  <div id="threadMessages" aria-live="polite">正在讀取留言…</div>
  <label for="threadMessage">導師留言</label>
  <textarea id="threadMessage" maxlength="1000" required placeholder="輸入給科任老師的留言"></textarea>
- <button class="btn" id="threadSend" type="submit" disabled>送出留言</button>
- <span id="threadStatus" role="status"></span>
+ <div class="threadSendRow">
+ <button class="btn" id="threadSend" type="submit" disabled><img src="data:image/webp;base64,UklGRlYEAABXRUJQVlA4WAoAAAAQAAAATwAATwAAQUxQSLgBAAABkEPbtqk99/9j27adlLZtJ51V2lZnW61t27Ztvr3vLh6Kd782GRExAea/AVPVGtg0OYEUHXrkl/7UTxSZ2216K1mrlgkhqfq0G5JI6krmBJBvwO5vEgHQ2n7G9QyNlz+TRNCv42kdKzv6opUsAQKgZWvjctaO2z5KlqEAtSOlO8nVZ9yWRBLwgYD9Vdu4mrP37p8SAYR5HqmNSW4k1ZzzQBIJgGEA9K26cTFnz90/JZIECYAkAZLUUhP/pGoz70tixCASpD6Ui12Wztu/S5bhoB9goOabmGcfdV0SIwOIAL0pHrMyFyRLIgSI4MGvqSbmC0USYCBAEpE8+7xg3KZLBKMDDIRfo03cs818KikaQwhA93PFzpg8/XZ/l2wEhHmghhgnkyqNv+QpAD4AJOBBVzK7YYxJ33CvjUSSAG0f43AfWR9IEiRA6EQ6l5rQgmSAH7RsY1yu8DvAkgRAktqRyqm8r0RSViQIgPZXbeN0psui1d7uj0T6oA1JbiXvkrQms6l6SyQJ+7mycXypvIkpjTGlz8qnBcb1evt7msBCh2SpJ4WcM0kmNMc66Vcnk0hTdJrZ0PyLGlZQOCB4AgAAsA4AnQEqUABQAD5RJo9FI6IhE9wFDDgFBLKAKsG8BtgNwBvAG8hf4/AAOzbnQfC3sdk/wwNR4xDPtS8+b/j+UT6N9gL9Rf94Tncd7j9yOoqhVUXaHDFq9D02PcH6PuFaTU2AJQ5BMMX8PYcqhHjtMlKBN4PHPj2SmciFf6wAAP7+BtAufsAdkQByXpjIZo5YxPyb6WgJiQk8KAg6IKfWxrhvbzTT40PvdMNhV24Rj46AuTbDHskHq38/qY+t27rMmyxGwPmBfo8ZN3CvutwkcGZ6DlRL+xZH699fuNCa3RPwpAglWwXIkLIda/foZ+OIi2bd8PmA0xIzfP3uytJuap2+Uw4BCV6bHT3ybRMG7zcLDfWiyj//Wk4B4uxM/3nLv/2V059ZpvO9O2C4Ppla2oCjP355wljIqMWlf+lf3u8obaaJojwJB2wdfps22JSCAt04kgoR3iiaHyD+/iefV+oGBYxeSZ2OWRa+Ld6fwJAs/TMkT19tC1Oracaqrjk48QifMdx1mBk1zLn2AMAC/le1XYFShkYVTPtukvSOOzGo5bJ7yaJ2l5jivn2ORjZjFgqeh06feJERStJvnxH4HBUN97izOn4S3wTrzGY8srmvQEsCzPfr+rAGaJjFxhBLMCOH3RKkKnc62tM7s2vfELOJ3Sxfjs/mrTh42R43HWO94gCHPm0ptBBA/URb5QPk13ILfqsvHPjBnSPpXDnLE0tcPHOQttYWR9HgkRSNKE5beX3Tch/ho634uT1zmW96+i5J3smn28ToAdtIMh69EqK05QMbptpuyKX4melp+QutPpnkGNOGSWB+TC7J7Y/bwQ4+wAwAAAA=" width="24" height="24" alt=""><span id="threadSendLabel">送出留言</span></button>
+ <span id="threadStatus" role="status" aria-live="polite"></span>
+ </div>
  </form></article><h2 class="historyTitle">📅 過往聯絡簿</h2><div id="history"></div><p class="foot">此連結可閱讀老師發布的內容，包括老師選擇公開的學生加扣點紀錄。加扣點預設隱藏，但網址持有人仍可取得資料。頁面約每 20 秒自動更新。</p></main>
 <script>
 (()=>{'use strict';
@@ -98,6 +131,7 @@ function displayThread(data){
   <div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(item.message)}</div></article>`).join('')||'目前沒有留言。';
  if(el('threadMessages').innerHTML!==markup)el('threadMessages').innerHTML=markup;
  el('threadSend').disabled=threadBusy||!data.can_post;
+ if(!data.can_post)el('threadStatus').textContent='班級聯絡簿發布後即可留言。';
 }
 async function refreshThread(){
  if(!hasThread||threadBusy)return;
@@ -114,7 +148,7 @@ el('replyPanel').onsubmit=async event=>{
  const field=el('threadMessage'),status=el('threadStatus'),message=field.value.trim();
  if(!message){status.textContent='請輸入留言。';return;}
  if(threadPending?.message!==message)threadPending={message,id:crypto.randomUUID()};
- threadBusy=true;++threadRequest;el('threadSend').disabled=true;status.textContent='正在送出…';
+ threadBusy=true;++threadRequest;el('threadSend').disabled=true;el('threadSendLabel').textContent='送出中…';status.textContent='正在送出…';
  try{
   const data=await threadCall({p_message:message,p_request_id:threadPending.id});
   threadPending=null;
@@ -122,7 +156,7 @@ el('replyPanel').onsubmit=async event=>{
   status.textContent='留言已送出。';
   threadBusy=false;displayThread(data);
  }catch(err){status.textContent=err.message;el('threadSend').disabled=false;}
- finally{threadBusy=false;}
+ finally{threadBusy=false;el('threadSendLabel').textContent='送出留言';}
 };
 el('toggleAllPoints').onclick=()=>{showPoints=!showPoints;updatePointsToggle()};
 let busy=false,lastSuccess=false;
