@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="學生卡通頭像">
+<path d="M20 195Q21 149 77 142H123Q179 149 180 195Z" fill="#d3b8f6" stroke="#745f67" stroke-width="2.5"/>
+<path d="M78 143L100 161L122 143L118 134H82Z" fill="#f6bd9c"/>
+<path d="M78 147L100 164L122 147" fill="none" stroke="#fff" stroke-width="8" stroke-linejoin="round"/>
+<path d="M45 103Q29 22 101 23Q168 19 158 105L141 113L56 113Z" fill="#76513b"/><path d="M49 93Q10 125 31 163Q20 185 42 185Q60 169 50 153Q64 120 60 104ZM151 93Q190 125 169 163Q180 185 158 185Q140 169 150 153Q136 120 140 104Z" fill="#76513b"/>
+<ellipse cx="101" cy="105" rx="57" ry="63" fill="#ffceab" stroke="#b97861" stroke-width="2.2"/>
+<ellipse cx="46" cy="109" rx="11" ry="17" fill="#ffceab" stroke="#b97861" stroke-width="2"/>
+<ellipse cx="156" cy="109" rx="11" ry="17" fill="#ffceab" stroke="#b97861" stroke-width="2"/>
+<path d="M49 77Q61 39 129 44Q115 72 88 77L101 60Q87 86 58 94Z" fill="#76513b"/><path d="M148 52l5 9 10 1-8 7 2 10-9-5-10 5 2-10-7-7 10-1Z" fill="#fce270"/>
+<path d="M66 89q11-9 22-2M115 87q11-7 22 2" fill="none" stroke="#654437" stroke-width="4" stroke-linecap="round"/>
+<ellipse cx="79" cy="104" rx="10.5" ry="13.5" fill="#4a322e"/><ellipse cx="122" cy="104" rx="10.5" ry="13.5" fill="#4a322e"/>
+<circle cx="83" cy="99" r="3.8" fill="white"/><circle cx="126" cy="99" r="3.8" fill="white"/>
+<ellipse cx="65" cy="122" rx="12" ry="7" fill="#f5a2a2" opacity=".60"/><ellipse cx="137" cy="122" rx="12" ry="7" fill="#f5a2a2" opacity=".60"/>
+<path d="M100 113l-3 7h6" fill="none" stroke="#d69678" stroke-width="2" stroke-linecap="round"/>
+<path d="M88 136Q101 146 114 136" fill="none" stroke="#a95859" stroke-width="3.4" stroke-linecap="round"/>
+
+<path d="M30 193H170" stroke="#f6b0df" stroke-width="5"/>
+</svg>
