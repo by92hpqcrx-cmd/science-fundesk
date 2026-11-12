@@ -170,16 +170,16 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 const KEY='science_fundesk_v1';
 // 連結不包含學生資料，預設網址可由老師在主頁修改。
 const LINK_KEY='science_fundesk_links_v1';
-const LINK_DEFAULTS={personal:'https://by92hpqcrx-cmd.github.io/nature-science-game/personal.html',four:'https://by92hpqcrx-cmd.github.io/nature-science-game/four-player.html',sky:'https://by92hpqcrx-cmd.github.io/sky-adventure/',learnmode:'https://www.learnmode.net/home/',kangxuan:'https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=na&grade=all&item=ebook&bookcase=mybookcase',kahoot:'https://kahoot.com/'};
+const LINK_DEFAULTS={personal:'https://by92hpqcrx-cmd.github.io/nature-science-game/personal.html',four:'https://by92hpqcrx-cmd.github.io/nature-science-game/four-player.html',sky:'https://by92hpqcrx-cmd.github.io/sky-adventure/',learnmode:'https://www.learnmode.net/home/',kangxuan:'https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=na&grade=all&item=ebook&bookcase=mybookcase',kahoot:'https://kahoot.com/',monopoly:'https://by92hpqcrx-cmd.github.io/dachen-monopoly/'};
 let quickLinks={...LINK_DEFAULTS};
 try{const x=JSON.parse(localStorage.getItem(LINK_KEY));if(x&&typeof x==='object')Object.keys(LINK_DEFAULTS).forEach(k=>{if(typeof x[k]==='string' && (x[k].trim() || !['personal','four'].includes(k)))quickLinks[k]=x[k]})}catch{}
 function safeLink(v){try{const u=new URL(v);return ['https:','http:'].includes(u.protocol)?u.href:''}catch{return ''}}
 function renderQuickLinks(){
- const cfg=[['personal','🎮','自然科學王・個人賽'],['four','🏆','自然科學王・四人搶答'],['sky','🌌','星空冒險島'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['kahoot','🎯','Kahoot! 互動測驗']];
+ const cfg=[['personal','🎮','自然科學王・個人賽'],['four','🏆','自然科學王・四人搶答'],['sky','🌌','星空冒險島'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版']];
  return `<section class="panel quicklinks"><div class="panelHead"><h2>教學快捷入口</h2><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quicklinkGrid">${cfg.map(([id,icon,title])=>{const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" href="${esc(link)}" target="_blank" rel="noopener noreferrer"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>開啟網站 ↗</small></a>`:`<button type="button" class="quickLink missing" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div><p class="hint">個人賽與四人搶答已設定為自然科學王網站；所有連結會在新分頁開啟。</p></section>`;
 }
 function openLinkSettings(){
- const cfg=[['personal','自然科學王・個人賽'],['four','自然科學王・四人搶答'],['sky','星空冒險島'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['kahoot','Kahoot! 互動測驗']];
+ const cfg=[['personal','自然科學王・個人賽'],['four','自然科學王・四人搶答'],['sky','星空冒險島'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['kahoot','Kahoot! 互動測驗'],['monopoly','校園大富翁・單機版']];
  $('modalContent').innerHTML=`<h2>教學快捷入口設定</h2><p class="hint">網址只儲存在目前瀏覽器；必須是 http:// 或 https:// 網址。</p><form id="quickLinkForm">${cfg.map(([id,title])=>`<label class="linkField"><strong>${title}</strong><input type="url" name="${id}" value="${esc(quickLinks[id])}" placeholder="https://..."></label>`).join('')}<div class="actions"><button class="btn" type="submit">儲存連結</button><button class="btn outline" type="button" id="cancelQuickLinks">取消</button></div></form>`;
  $('modal').classList.remove('hidden');$('cancelQuickLinks').onclick=()=>$('modal').classList.add('hidden');
  $('quickLinkForm').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);for(const k of Object.keys(LINK_DEFAULTS)){const v=String(fd.get(k)||'').trim();if(v&&!safeLink(v)){alert('網址格式有誤：'+k);return}quickLinks[k]=v}try{localStorage.setItem(LINK_KEY,JSON.stringify(quickLinks))}catch{}$('modal').classList.add('hidden');render()};
