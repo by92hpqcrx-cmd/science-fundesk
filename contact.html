@@ -24,15 +24,16 @@ body.notebookViewer .pointToolbar .pointToggle{color:#143c2b}
 #replyHistoryList time{font-size:.9em}
 .replySent{margin-left:8px;color:#14513d;font-weight:700}
 .replyHistoryText{white-space:pre-wrap;overflow-wrap:anywhere}
-@media print{#replyPanel{display:none!important}}
+#replyPanel{background:#eaf7ef;color:#244e3b;border:1px solid #a9cdbc;border-radius:12px;padding:12px}#replyPanel h3{color:#244e3b}@media print{#replyPanel{display:none!important}}
 </style></head><body class="notebookViewer"><header><div class="wrap"><small>FUNDESK · 我們的班級小黑板</small><div class="chalkDoodle" aria-hidden="true">✧　 /\_/\<br>　( •ᴗ• )　☆<br>　 / づ♡</div><h1 id="classTitle">📒 班級聯絡簿</h1><p>自然科課程紀錄 · 考試預告 · 重要記事</p></div></header>
 <main><div class="bar"><span id="status" role="status">正在連線…</span><button class="btn" id="refresh" type="button">↻ 立即更新</button></div><p class="notice" id="pointScreenNote">🔒 學生加扣點紀錄預設隱藏。給導師查看時可按「顯示」；投影到電腦大螢幕前請按「隱藏」。此按鈕不提供帳號權限保護。</p><div id="pointToolbar" class="pointToolbar"><button id="toggleAllPoints" class="pointToggle" type="button" aria-expanded="false" aria-controls="latest history">👁 顯示加扣點紀錄</button><p>預設隱藏，僅在此頁面按鈕展開；投影前請按「隱藏」。已發布的資料並非保密資料。</p><p id="pointEmpty" class="pointNotice" hidden>目前沒有已發布的加扣點紀錄。老師發布當日加扣點後，「課堂表現」新增的紀錄會自動同步。</p></div><article id="latestEntry" class="entry"><div id="latest"></div>
  <form id="replyPanel" hidden>
- <label for="replyText">💬 導師回應</label>
- <textarea id="replyText" maxlength="1000" required placeholder="輸入給科任老師的回應"></textarea>
- <button class="btn" id="replySend" type="submit">送出回應</button>
- <span id="replyStatus" role="status"></span>
- <div id="replyHistory" hidden><h3>最近已傳送的回應</h3><ul id="replyHistoryList"></ul></div><p id="replyDeleteStatus" role="status" hidden></p>
+ <h3><img src="data:image/webp;base64,UklGRlgKAABXRUJQVlA4WAoAAAAQAAAASwAASwAAQUxQSH8DAAABoEXbtmlX2rFt45Vt27Zt27Zt27aN2LZtO3utWbjJ2Xudqv+ImAD1v+sVFh3h/98QsOMdX1a21v/2+H6Brgs8MWcJK/66pcu2/hlg8szo3lAF+rvn5FEwrRZfPlSQ+8S2LrlwEeQQ/557IswFfnctg4wC30SKC3gGINN4L1CY9yNgMo8bhF3CTM71Ksa3EbXnNMgq/gwTlNoIsowHBb0Iss0L+4vZY4GtESoihPh9BxKIq4XstcQiihJFBP8KEtF2hIhLQSJ59q4AAendQgilKQKunZTCvKO92A8nWAjhXnt7/LAopz3O2ml5IKk8e6S1y1vkYPoha+cTi+G5j31s3QQ5hG9sbFdyqtpxEiToQ2U6+ryErfGQ+gQkqTPe1LV41av4scgRUYw7TKV/g732O2SdaVHES2cZCb5i77BbjlBqm3lZhMH1TawzhmdUzJE3fcksi/CACe+Njjv6khYGSDoXhBhQSt0JMGmthWEkzcjeyyCtiYQtLw2nGHkERCSOZ9qmNzTy2L/E80TO7EZG9tbQmkhrURj7uS3ciPfl4wwmTbIXR69RZr1yZ4tnmISj0N9QXE7OL/PieGJ/Q8e2AYA0Qmu6kR0mQfOlvSyN8LAJv29B+Hq3LtjTjuoiDey6yES6f4kcahOOUbyOgRdBRAwiXp11ZuLfM5yl9f6LiHhWC+LFKcZH/o68nwN5RvcwlkgLQUUnJvdSjpN6VjHyB7pGWQamftGNeyvnwYUrET1erBsBCcDEfPnmyuTdq8A3GS/WVo7YY7x39M2nxyijG41gpVYvtflZf7IlgF+PUOavWUXT1m+PgMkuVzy5t7IZ9D088VA3QLZ5NvfOXQItqLXb4YEYZJM9EAM69yRfc2q/GXgQy8CHCebUefMsiojxfZi5rCYII8KNxrZtAcnrzzD1DsiFuN1UnjuaowyVuIL5ODP+da4gfOxl5JYldsdItolDlkFGtTXG2SY+BbkUX3g58y91z2CaM+/fXcN0pDP1oGsIjxk41EXl/s7OcNHExs5uArsGhzjbpABuHX490ZkK3fPW934pb+rq6etpayjLKahp7xsZm5waGxnq7W6qry3OqWgfHOnv7urq6mxpqMz/4d0PvvziwxduODBTmfYJi0tOSUtNjA0LCIpKTMvKXmvt7MyM1OS4mKiQgIik9Kz0lOTk5OT42IggL2USAFZQOCCyBgAAUB4AnQEqTABMAD5hKo5FpCKhFwultEAGBLQAX/TmbY83s2fI67ZiKO/n/fRvtpfMb9oHvG+jbeMfQA6Un7jvaVzSv+m7Zvkv91ykKbd+2WpZZ4lPr3rbFAD7wPVR0DfW3sC/rvvuX6zNmyVNyA9bctjTgk9CslkdtlF8BAFU9yAQYcbIYWu1Hr2e/vWCWu11OI2HuH5W0MK+BTp/cB4IyJbkUTsZQGIEopnKzrSdhDdxSJA799ULe10rvUsb1T4GfCEenoEc2vrAUMxlszvf/bOawkmSHRVSagQ8bgtWD4iIikL7oJI6RwoNpH/lTa/V46K8SAAcp6sMMwAA/v6lNmlR+KJonV/U7wNoy6XUVideGkqJS/9846XmAIYHVZ1E2DzYwMLNX8d5yiOZqBuh4+XW8kHqWT/d6vqtk4qL8wS8u0UQe/ZEfMp/dVvSHy6Cw1u0bhaSj4H+CpxSpDVFRE3vQkFndejMvOqcnXrqaV2wMmIkMgoQhK61W1ookPHw/1mpgv3jkwDZ24Fp/uideX9w1D+dU7rzrEqyd5rGXP0tP/Vyde9700NXOqBWc823yQlQc/Jbet+OqtKVjoVOhEwKOiLGe5jd5kQ/YxgRs7uVmHf/QxxvxvBK752G5qMtGwbyCG38sfPKfa0A5Im8wIJXmLImf/R+5d82xkG+8Wf+1+d/wa57p85X4C5Ai1CSabvZ+M9yG8j2AZ9MqdrJez+84SneSkDjI3qpPqiYtM3gFqC+r+/3e8ZY+UyQlL01u1VU2D7x7EUeUovggoBL02aUuWXwjJG+8nSzdtucTCygPFPSqtKFBj3zeRxScZev6ixC1AQsKJr7fddtemmyZyH0xO0T6duGjUTyFT/VlSepdS7m+8BT/jQnK4jHoQJOgm9EsZDtJEFWtpWN0wXfsQgXu1lzezjOzVu/phmtGQGRRnGwI+vl6dILviJNi6OHYNScmLfhMUAz6NAFNMH8zCTHqOCFwQn+wl9sf76R4Ns/oB9WEqwl8fCEyYgxUpL/q8mZtpKAwYV2+/4bc4eKOznORTN1QDnAaIAtMg1d99VstJ5GjwzGX2qdy/xlUnpU96UI/kzXC64LVasC3cLCFn6mMuNk/X9WKO0VlfOcbzk/tA48MwOF6twwpWlz9at48Xsig6kElMdUmKjnZhTW8FFUhSzcsOyIF6KtNPy6/kD48vsee1k15MPbo6KItPfh4J5LxI7iAxGoRfBb4TU+igIZ8jP1tHAEsbM7EwVsGLNJSVF8u6I/DYPsdB77qTiH7e/l8CCf43u84dQSPhmo2xyUum4zOKyYsYzvTsDpRH798okmRrZGmonkYEhMNGAoH0a/W3McHuxUwDKUz5KYic4IwWAVGJa2tEjq6Y9S2mP4PW0DV1GE3tt5dDs+porwckPdOFt8x33AHpastL+zbRasWTwKL7G/h2/Ao97YJGTDYwf7PiOn2/6kn8mC04HcnaW6E2Ii4SDJ5BcXLrA2smSC52oOy7EOFfDJRIWtSiMZmNhsV2iz4a86ks7wHM3bjbLqsNQfN7YEKCWy/PbdcTGfb+4KcnQxk8XtkeIuNQzuf7Waqy2y8KfWC/6sRWSA0uAzZJU6HG17Eanc3HvGlzLzu8vjzWxCpDy8m5fOUdhJ0JK0rYvsviHa6+A/U7pDU1T/8Bx7wd8Xa1ZCIUwcpsgYZedL+U2/zqBYvWsqiGFI0HEqmrSnOVM+LSJyKQpT2x9xOFo6ZqlccB6qxpWV7Fde004TCwme0ZQy/pIC06FK6MhhrTavoi97uVe9/NWWd58TtvQ5SrLcpkgl/r/hZDvK7ibHN9Y8s7Rm1Ub9JI+ufBaVD4+7srBFAVFzh+W0wkPAyV5zMxM5kJx6vHHBrVoZY3/jKQSl/toCDArKmyZhJrP7aYbC2TtP3GbpZPDQQr3b/J5hW8ry99a593WRAlgkz5/9DzGzUtDV9igql2w6QC2AA+LK1IMyipHVD1Kd34iFU9B+9fLPzs83PhzoCfEbocAGZSezGVCHY4lQ1rJJN8dyuIk4bdal20OeC68AR21gqBJgoLQ988vPl+2NV92drMHrnas0UDSGs5I9+D6G2JK/U9iMYMFHmdesun6620MvLWdCdOSRaUBFHGrvuU6ZfwViCzNUGwkdL3FqbTerwR99+8LB5v0EY6p1vZ9BBpoVRKBq0hOQO6xVSa1vn+h0nZPJKTFuulkcf7tk+2ZpZ/i0JoP/mXuupaL8SjZQyz4S8jM6h5kSOmIJP0LiICVd9yK6w+vsXAh0RMfaIAAAAA==" width="48" height="48" alt="" style="vertical-align:middle"> 留言區</h3>
+ <div id="threadMessages" aria-live="polite">正在讀取留言…</div>
+ <label for="threadMessage">導師留言</label>
+ <textarea id="threadMessage" maxlength="1000" required placeholder="輸入給科任老師的留言"></textarea>
+ <button class="btn" id="threadSend" type="submit" disabled>送出留言</button>
+ <span id="threadStatus" role="status"></span>
  </form></article><h2 class="historyTitle">📅 過往聯絡簿</h2><div id="history"></div><p class="foot">此連結可閱讀老師發布的內容，包括老師選擇公開的學生加扣點紀錄。加扣點預設隱藏，但網址持有人仍可取得資料。頁面約每 20 秒自動更新。</p></main>
 <script>
 (()=>{'use strict';
@@ -75,80 +76,50 @@ function article(e,wrapped=true){
  const parsed=splitPoints(e.reminders);
  return `${wrapped?'<article class="entry">':''}<h2>${esc(e.entry_date)}</h2><div class="date">最後更新：${esc(stamp(e.updated_at))}</div>${sections({...e,reminders:parsed.reminders})}${pointPanel(parsed.points,parsed.published)}${wrapped?'</article>':''}`;
 }
-const replyHistoryKey='fundesk_sent_replies_v1:'+token;
-let sentReplies=[];
-function readSentReplies(){
- try{
-  const stored=JSON.parse(localStorage.getItem(replyHistoryKey)||'[]');
-  if(Array.isArray(stored))return stored.filter(item=>
-   item&&typeof item.id==='string'&&typeof item.message==='string'&&Number.isFinite(Date.parse(item.sentAt))
-  ).slice(0,5);
- }catch{}
- return sentReplies;
-}
-function renderSentReplies(){
- el('replyHistory').hidden=!sentReplies.length;
- el('replyHistoryList').innerHTML=sentReplies.map(item=>
-  `<li><time datetime="${esc(item.sentAt)}">${esc(stamp(item.sentAt))}</time><span class="replySent">已傳送</span> <button class="btn" type="button" data-delete-sent-reply="${esc(item.id)}">刪除回應</button>
-  <div class="replyHistoryText">${esc(item.message)}</div></li>`
- ).join('');
-}
-function rememberSentReply(id,message){
- sentReplies=[{id,message,sentAt:new Date().toISOString()},...readSentReplies().filter(item=>item.id!==id)].slice(0,5);
- try{localStorage.setItem(replyHistoryKey,JSON.stringify(sentReplies));}catch{}
- renderSentReplies();
-}
-let sentReplyDeleting=false;
-el('replyHistoryList').onclick=async event=>{
- const button=event.target.closest('[data-delete-sent-reply]');
- if(!button||sentReplyDeleting||!window.confirm('確定刪除這則已傳送的回應？FunDesk 也會移除這則回應。'))return;
- const id=button.dataset.deleteSentReply,status=el('replyDeleteStatus');
- sentReplyDeleting=true;button.disabled=true;status.hidden=false;status.textContent='正在刪除…';
- try{
-  const response=await fetch(API_URL+'/rest/v1/rpc/fundesk_contact_sent_reply_delete',{
-   method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},
-   body:JSON.stringify({p_token:token,p_request_id:id})
-  });
-  const result=await response.json();
-  if(!response.ok||result?.ok!==true)throw Error(result?.code==='PGRST202'?'刪除功能尚未啟用，請通知科任老師。':'刪除失敗，請再試一次。');
-  sentReplies=readSentReplies().filter(item=>item.id!==id);
-  try{localStorage.setItem(replyHistoryKey,JSON.stringify(sentReplies));}catch{}
-  renderSentReplies();status.textContent='已刪除回應。';
- }catch(error){status.textContent=error.message||'刪除失敗，請再試一次。';}
- finally{sentReplyDeleting=false;button.disabled=false;}
-};
-if(/^[0-9a-f]{64}$/.test(token)){
- sentReplies=readSentReplies();renderSentReplies();
- window.addEventListener('storage',event=>{
-  if(event.key===replyHistoryKey||event.key===null){sentReplies=readSentReplies();renderSentReplies();}
+const threadToken=new URLSearchParams(pageUrl.hash.slice(1)).get('thread')||'';
+const hasThread=/^[0-9a-f]{64}$/.test(threadToken);
+let threadBusy=false,threadRequest=0,threadPending=null;
+async function threadCall(payload={}){
+ const response=await fetch(API_URL+'/rest/v1/rpc/fundesk_contact_messages',{
+  method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},cache:'no-store',
+  body:JSON.stringify({p_thread_token:threadToken,p_share_token:token,...payload})
  });
+ const data=await response.json();
+ if(!response.ok)throw Error(data?.code==='PGRST202'?'留言區尚未啟用。':data?.message||'留言區無法連線。');
+ return data;
 }
-let replyDate='';
-let replyPending=null,replyBusy=false;
-function replySetDates(entries){
- if(!replyBusy&&!el('replyText').value.trim())replyDate=entries[0]?.entry_date||'';
- el('replyPanel').hidden=!entries.length;
+function displayThread(data){
+ const items=Array.isArray(data?.messages)?data.messages:[];
+ const markup=items.map(item=>`<article style="padding:8px 0;border-bottom:1px solid #aac5b5">
+  <b>${item.author_role==='subject'?'科任老師':'導師'}</b> <small>${esc(stamp(item.created_at))}</small>
+  <div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(item.message)}</div></article>`).join('')||'目前沒有留言。';
+ if(el('threadMessages').innerHTML!==markup)el('threadMessages').innerHTML=markup;
+ el('threadSend').disabled=threadBusy||!data.can_post;
+}
+async function refreshThread(){
+ if(!hasThread||threadBusy)return;
+ const request=++threadRequest;
+ el('replyPanel').hidden=false;
+ try{
+  const data=await threadCall();
+  if(request===threadRequest)displayThread(data);
+ }catch(err){if(request===threadRequest)el('threadMessages').textContent=err.message;}
 }
 el('replyPanel').onsubmit=async event=>{
- event.preventDefault();if(replyBusy)return;
- const date=replyDate,author='導師',message=el('replyText').value.trim();
- const status=el('replyStatus');
- if(!date||!message){status.textContent='請填寫回應。';return}
- const signature=JSON.stringify([date,author,message]);
- if(replyPending?.signature!==signature)replyPending={signature,id:crypto.randomUUID()};
- replyBusy=true;el('replySend').disabled=true;status.textContent='正在送出…';
+ event.preventDefault();
+ if(!hasThread||threadBusy)return;
+ const field=el('threadMessage'),status=el('threadStatus'),message=field.value.trim();
+ if(!message){status.textContent='請輸入留言。';return;}
+ if(threadPending?.message!==message)threadPending={message,id:crypto.randomUUID()};
+ threadBusy=true;++threadRequest;el('threadSend').disabled=true;status.textContent='正在送出…';
  try{
-  const response=await fetch(API_URL+'/rest/v1/rpc/fundesk_contact_reply_submit_open',{
-   method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},
-   body:JSON.stringify({p_token:token,p_entry_date:date,p_request_id:replyPending.id,p_author:author,p_message:message})
-  });
-  const result=await response.json();
-  if(!response.ok||result?.ok!==true)throw Error(result?.code==='PGRST202'?'免回應碼送出尚未啟用，請通知科任老師。':result?.message||'送出失敗，請重試。');
-  rememberSentReply(replyPending.id,message);
-  if(el('replyText').value.trim()===message)el('replyText').value='';
-  replyPending=null;status.textContent='回應已送出，FunDesk 教師端會自動更新。';
- }catch(error){status.textContent='未能確認送出：'+error.message;}
- finally{replyBusy=false;el('replySend').disabled=false;}
+  const data=await threadCall({p_message:message,p_request_id:threadPending.id});
+  threadPending=null;
+  if(field.value.trim()===message)field.value='';
+  status.textContent='留言已送出。';
+  threadBusy=false;displayThread(data);
+ }catch(err){status.textContent=err.message;el('threadSend').disabled=false;}
+ finally{threadBusy=false;}
 };
 el('toggleAllPoints').onclick=()=>{showPoints=!showPoints;updatePointsToggle()};
 let busy=false,lastSuccess=false;
@@ -159,7 +130,7 @@ async function load(){if(busy)return;busy=true;showPoints=false;updatePointsTogg
  if(!response.ok)throw Error('讀取失敗（HTTP '+response.status+'）');const data=await response.json();
  if(!data){el('replyPanel').hidden=true;el('latest').innerHTML='<div class="notice">查無聯絡簿，請確認網址是否正確。</div>';el('history').innerHTML='';el('status').textContent='無效連結';return}
  const displayName=data.class_code==='c_mwc0lni8_le3us8'?'五年一班':(/^50[1-7]$/.test(String(data.class_code||''))?'五年'+['','一','二','三','四','五','六','七'][Number(data.class_code)-500]+'班':String(data.class_code||'班級'));const entries=Array.isArray(data.entries)?data.entries:[];const publishedName=entries.map(e=>extractClassLabel(e.reminders)).find(Boolean);el('classTitle').textContent='📒 '+(publishedName||(/^(?:c_[a-z0-9_]+)$/.test(displayName)?'班級':displayName))+'聯絡簿';
- replySetDates(entries);
+ if(hasThread)refreshThread();
  el('latest').innerHTML=entries.length?article(entries[0],false):'<div class="notice">老師尚未發布聯絡簿，請稍後再查看。</div>';
  el('history').innerHTML=entries.slice(1).map(e=>`<details><summary>${esc(e.entry_date)}　查看內容</summary>${article(e)}</details>`).join('')||'<p class="empty">目前沒有較早的聯絡簿。</p>';hasPublishedPoints=entries.some(e=>splitPoints(e.reminders).published);updatePointsToggle();
  lastSuccess=true;el('status').textContent='✅ 已更新 · '+new Date().toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei'});
@@ -168,4 +139,5 @@ async function load(){if(busy)return;busy=true;showPoints=false;updatePointsTogg
  el('refresh').onclick=load;document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});setInterval(()=>{if(!document.hidden)load()},20000);load();
 })();
 </script></body></html>
+
 

@@ -1225,7 +1225,7 @@ function contactQueuePointsSync(code,date,fillMissingSeats=false){
   }catch(err){console.error('FunDesk 加扣點同步到聯絡簿失敗：',err);const msg=$('contactStatus');if(msg&&view==='contact'&&cl===code)contactStatus('⚠️ 加扣點同步失敗：'+cloudErr(err),true)}
  });
 }
-function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);u.searchParams.set('v','reply-delete-1');return u.href}
+function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);u.searchParams.set('v','teacher-messages-1');return u.href}
 function renderContact(){
  const date=contactChosenDate||today(),code=cl;
  return `<div class="contactShell"><section class="panel contactForm"><div class="panelHead"><div><small class="chalkEyebrow">FUNDESK · 我們的班級小黑板</small><h2>📒 ${esc(classDisplay(code))}聯絡簿</h2></div><span class="chalkCat" aria-hidden="true">/\\_/\\<br>( •ᴗ• ) ♡</span></div>
@@ -1234,8 +1234,11 @@ function renderContact(){
  <label for="contactLesson">📘 今日課程</label><textarea id="contactLesson" maxlength="3000" placeholder="例如：自然課第3單元，認識北極星"></textarea>
  <label for="contactHomework">✏️ 考試預告</label><textarea id="contactHomework" maxlength="3000" placeholder="例如：下週二考第三單元，範圍為課本第30～45頁"></textarea>
  <label for="contactReminder">📢 重要記事</label><textarea id="contactReminder" maxlength="3000" placeholder="例如：下次帶星座盤、彩色筆"></textarea>
- <div id="contactReplyLabel" style="font-weight:700;margin-top:12px">💬 導師回應</div>
+ <div id="contactReplyLabel" style="font-weight:700;margin-top:12px">💬 留言區</div>
  <div id="contactReplies" role="region" aria-labelledby="contactReplyLabel" aria-live="polite" style="min-height:3em;padding:10px 12px;margin:6px 0 12px;border:1px solid #84a696;border-radius:8px;overflow-wrap:anywhere">讀取中…</div>
+ <label for="contactMessage">科任老師留言</label><textarea id="contactMessage" maxlength="1000" rows="3" placeholder="輸入給導師的留言"></textarea>
+ <div class="actions"><button type="button" class="btn" id="contactMessageSend">送出留言</button><button type="button" class="btn outline" id="contactThreadCopy" disabled>複製導師留言連結</button></div>
+ <p id="contactMessageStatus" role="status"></p>
  <div class="actions"><button type="button" class="btn" id="contactSave">💾 發布／儲存聯絡簿</button><button type="button" class="btn outline" id="contactReload">↻ 重新讀取雲端</button></div>
  <p class="contactStatus" id="contactStatus" role="status">載入中…</p></section>
  <aside><section class="panel contactShare"><h2>🔗 ${esc(classDisplay(code))}專屬閱讀網址</h2><p class="contactMuted">每班都有不同連結。學生免登入，只能看此連結對應班級的聯絡簿，不能修改。</p>
@@ -1246,6 +1249,7 @@ function renderContact(){
 function contactStatus(message,err=false){const e=$('contactStatus');if(e){e.textContent=message;e.style.color=err?'#97304c':'#245b48'}}
 function contactFields(){return {lesson:$('contactLesson')?.value||'',homework:$('contactHomework')?.value||'',reminders:$('contactReminder')?.value||''}}
 function contactDirty(){
+ if($('contactMessage')?.value.trim())return true;
  const entry=(contactCache[cl]?.entries||[]).find(e=>e.entry_date===contactChosenDate)||{};
  const old=contactSplitPoints(entry.reminders);
  const now=contactFields();
@@ -1253,6 +1257,7 @@ function contactDirty(){
 }
 function contactSelect(date,force=false){
  if(!force&&contactDirty()&&!confirm('目前有未儲存的修改，確定切換日期並捨棄修改？'))return false;
+ if(!force)$('contactMessage').value='';
  contactChosenDate=contactSafeDate(date);const entry=(contactCache[cl]?.entries||[]).find(e=>e.entry_date===contactChosenDate)||{};
  $('contactDate').value=contactChosenDate;
  $('contactReplies').textContent='正在讀取 '+contactChosenDate+' 的回應…';
@@ -1300,7 +1305,7 @@ async function contactSave(){if(contactBusy)return;if(!cloudReady){contactStatus
 let contactReplyRequest=0,contactReplyDeleting=false;
 async function contactDeleteReply(button){
  if(contactReplyDeleting||!confirm('確定刪除這則導師回應？'))return;
- const code=cl,date=contactChosenDate;
+ const code=cl,date=button.dataset.entryDate;
  contactReplyDeleting=true;button.disabled=true;
  ++contactReplyRequest;
  try{
@@ -1309,37 +1314,69 @@ async function contactDeleteReply(button){
   });
   if(result?.ok!==true)throw Error('刪除失敗');
   button.closest('article')?.remove();
-  if(view==='contact'&&cl===code&&contactChosenDate===date)contactStatus('已刪除導師回應。');
+  if(view==='contact'&&cl===code)contactStatus('已刪除導師回應。');
  }catch(err){
-  if(view==='contact'&&cl===code&&contactChosenDate===date)contactStatus(
+  if(view==='contact'&&cl===code)contactStatus(
    /PGRST202|HTTP 404/.test(String(err?.message))?'請先執行 contact_replies_delete.sql，啟用回應刪除。':'刪除失敗，請再試一次。',true);
  }finally{
   contactReplyDeleting=false;button.disabled=false;contactRefreshReplies();
  }
 }
+let contactMessageBusy=false,contactMessagePending=null;
 async function contactRefreshReplies(){
- if(view!=='contact'||!cloudReady||!$('contactReplies')||contactReplyDeleting)return;
- const code=cl,date=contactChosenDate,request=++contactReplyRequest;
- const list=$('contactReplies');
+ if(view!=='contact'||!cloudReady||!$('contactReplies')||contactReplyDeleting||!contactCache[cl]?.token)return;
+ const code=cl,request=++contactReplyRequest,list=$('contactReplies');
  try{
-  const data=await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_replies',{
-   method:'POST',body:JSON.stringify({p_class_code:code,p_entry_date:date})
+  const data=await cloudFetch('/rest/v1/rpc/fundesk_contact_messages',{
+   method:'POST',body:JSON.stringify({p_class_code:code})
   });
-  if(request!==contactReplyRequest||!list.isConnected||cl!==code||date!==contactChosenDate)return;
-  const items=Array.isArray(data?.replies)?data.replies:[];
+  if(request!==contactReplyRequest||!list.isConnected||cl!==code)return;
+  const copy=$('contactThreadCopy');
+  if(/^[0-9a-f]{64}$/.test(data?.thread_token||'')){
+   const url=new URL(contactViewerUrl(contactCache[code].token));
+   url.hash=new URLSearchParams({thread:data.thread_token}).toString();
+   copy.dataset.url=url.href;copy.disabled=false;
+  }
+  const items=Array.isArray(data?.messages)?data.messages:[];
   const timestamp=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',dateStyle:'short',timeStyle:'short'});
-  list.innerHTML=items.map(item=>`<article style="padding:8px 0;border-top:1px solid currentColor">
-   <b>${esc(item.author_name)}</b> <small>${esc(timestamp.format(new Date(item.created_at)))}</small>
-   <button type="button" class="btn small outline" data-delete-reply="${esc(item.request_id)}">刪除回應</button>
-   <div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(item.message)}</div></article>`).join('')||'目前沒有導師回應。';
+  list.innerHTML=items.map(item=>`<article style="padding:8px 0;border-top:1px solid #c5dfd2">
+   <b>${item.author_role==='subject'?'科任老師':'導師'}</b> <small>${esc(timestamp.format(new Date(item.created_at)))}</small>
+   <button type="button" class="btn small outline" data-delete-reply="${esc(item.request_id)}" data-entry-date="${esc(item.entry_date)}">刪除留言</button>
+   <div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(item.message)}</div></article>`).join('')||'目前沒有留言。';
  }catch(err){
   if(request!==contactReplyRequest||!list.isConnected)return;
-  list.textContent=String(err?.message).includes('PGRST202')||String(err?.message).includes('HTTP 404')
-   ?'尚未啟用導師回應，請先執行 contact_replies.sql。':'導師回應暫時無法讀取，稍後會重試。';
+  list.textContent=/PGRST202|HTTP 404/.test(String(err?.message))?'請先執行 contact_messages.sql 啟用留言區。':'留言暫時無法讀取，稍後會重試。';
  }
+}
+async function sendContactMessage(){
+ const field=$('contactMessage'),button=$('contactMessageSend'),status=$('contactMessageStatus');
+ const message=field.value.trim(),code=cl,date=contactChosenDate;
+ if(contactMessageBusy)return;
+ if(!message){status.textContent='請輸入留言。';return;}
+ if(!contactCache[code]?.entries.length){status.textContent='請先發布一則班級聯絡簿。';return;}
+ const key=JSON.stringify([code,date,message]);
+ if(contactMessagePending?.key!==key)contactMessagePending={key,id:crypto.randomUUID()};
+ contactMessageBusy=true;button.disabled=true;status.textContent='正在送出…';
+ try{
+  await cloudFetch('/rest/v1/rpc/fundesk_contact_messages',{method:'POST',body:JSON.stringify({
+   p_class_code:code,p_entry_date:date,p_request_id:contactMessagePending.id,p_message:message
+  })});
+  contactMessagePending=null;
+  if(field.isConnected&&field.value.trim()===message)field.value='';
+  status.textContent='留言已送出。';
+  contactRefreshReplies();
+ }catch(err){status.textContent=/PGRST202|HTTP 404/.test(String(err?.message))?'請先啟用留言區。':'送出失敗，請再試一次。';}
+ finally{contactMessageBusy=false;button.disabled=false;}
 }
 setInterval(()=>{if(!document.hidden&&view==='contact')contactRefreshReplies()},20000);
 function contactBind(){
+ $('contactMessageSend').onclick=sendContactMessage;
+ $('contactThreadCopy').onclick=async event=>{
+  const url=event.currentTarget.dataset.url;
+  if(!url)return;
+  try{await navigator.clipboard.writeText(url);$('contactMessageStatus').textContent='已複製導師專用留言連結。';}
+  catch{window.prompt('複製導師專用留言連結',url);}
+ };
  $('contactReplies').onclick=e=>{const button=e.target.closest('[data-delete-reply]');if(button)contactDeleteReply(button);};
  contactChosenDate=today();
  $('contactDate').onchange=e=>{const next=e.target.value;if(!contactSelect(next))e.target.value=contactChosenDate};
