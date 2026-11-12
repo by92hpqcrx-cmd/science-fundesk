@@ -149,19 +149,19 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 @media(max-width:560px){.tabletHero{padding:18px}.tabletHeroEmoji{display:none}.tabletIntro{font-size:15px}.tabletPhotosGrid{grid-template-columns:1fr}.tabletRuleItem b{font-size:16px}}
 @media print{.sidebar,.topbar,.stats,.cloudStatus,.tabletNav,.tabletActions{display:none!important}.shell,.main{display:block!important;margin:0!important;width:100%!important}.tabletSection{break-inside:avoid}.tabletGuide{max-width:none}}
 </style>
-<link rel="stylesheet" href="notebook.css?v=20261112"></head><body class="cloud-locked">
+<link rel="stylesheet" href="notebook.css?v=20261112"><style>.labDutyTable{width:100%;min-width:590px;border-collapse:collapse}.labDutyTable th,.labDutyTable td{border:1px solid var(--line);text-align:center;padding:9px}.labDutyTable th{background:var(--bg)}#labDutyForm input{max-width:100%}#labDutyForm label{display:grid;gap:4px}#labDutyStatus{margin:8px 0}</style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><h1>🔐 自然科任 FunDesk</h1><p>七班快速入口 · 教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <div id="cloudStatus" class="cloudStatus" role="status" aria-live="polite">尚未登入雲端</div>
 <div class="shell">
  <aside class="sidebar"><div class="brand"><span class="brandmark">✦</span><div><b>自然科任 FunDesk</b><small>五年級科任教學工作台</small></div></div>
  <label class="fieldlabel" for="classSelect">目前班級</label><select id="classSelect" class="classSelect"></select>
  <div class="fastClasses" id="fastClasses"><b>班級快速入口</b><div id="fastClassLinks"></div></div>
- <button type="button" id="cloudLockNow" class="sidebarCloudLogout" style="background:#dbeafe;color:#173d69;border-color:#9fc3f4">🔒 離開教室・立即上鎖</button><button type="button" id="cloudLogout" class="sidebarCloudLogout">🚪 登出雲端</button>
+ <button type="button" id="cloudLogout" class="sidebarCloudLogout">🚪 登出雲端</button>
  <div class="mini">115學年度 · 第一學期<br>課程：神祕的天空／燃燒與生鏽</div>
- <nav id="nav"><button data-view="seats" class="active">▦　座位表總覽</button><button data-view="attention">▤　待追蹤清單 <i id="sidebarPending"></i></button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試</button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="correction">☑　作業訂正</button><button data-view="board">▣　作業播放表</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　我的班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
+ <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attention">▤　待追蹤清單 <i id="sidebarPending"></i></button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試</button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="correction">☑　作業訂正</button><button data-view="board">▣　作業播放表</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　我的班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
  <div class="sidebarFoot">教師登入後存取雲端學生紀錄<br><strong>使用公用電腦後請登出</strong><br></div>
  </aside>
- <main class="main"><header class="topbar"><div><div class="eyebrow">SCIENCE CLASSROOM · 115-1</div><h1 id="pageTitle">座位表總覽</h1><p id="pageSub">點選座位即可查看學生紀錄並進行課堂操作</p></div><div class="topActions"><label>紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" class="btn outline">↓ 備份</button></div></header>
+ <main class="main"><header class="topbar"><div><div class="eyebrow">SCIENCE CLASSROOM · 115-1</div><h1 id="pageTitle">首頁</h1><p id="pageSub">點選座位即可查看學生紀錄並進行課堂操作</p></div><div class="topActions"><label>紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" class="btn outline">↓ 備份</button></div></header>
  <div id="stats" class="stats"></div><div id="content"></div></main>
 </div>
 <div id="siteError" hidden role="alert" style="position:fixed;right:14px;bottom:14px;z-index:9999;background:#fff2f2;color:#9a1a1a;border:2px solid #d04444;border-radius:10px;padding:12px;max-width:440px;font-size:14px;"></div><div id="modal" class="modal hidden"><div class="shade" data-close="true"></div><section class="dialog"><button class="close" data-close="true">×</button><div id="modalContent"></div></section></div>
@@ -200,7 +200,7 @@ const classDisplay=c=>/^\d+$/.test(className(c))?className(c)+' 班':className(c
 const classOptions=()=>activeCodes().map(c=>`<option value="${esc(c)}">${esc(classDisplay(c))}</option>`).join('');
 const syncClassOptions=()=>{const sel=$('classSelect');sel.innerHTML=classOptions();if(activeCodes().includes(cl))sel.value=cl};
 const time={1:'08:50–09:30',2:'09:40–10:20',3:'10:35–11:15',4:'11:25–12:05',5:'13:20–14:00',6:'14:10–14:50',7:'15:00–15:40'};
-const titles={seats:'座位表總覽',attention:'待追蹤清單',attendance:'出勤紀錄',tasks:'習作／實驗／考試',schedule:'我的教學進度',contact:'班級聯絡簿',points:'課堂表現',correction:'作業訂正',board:'作業播放表',quiz:'抽籤問答',students:'學生名單',tools:'課堂小工具',tabletRules:'平板使用守則',classes:'我的班級管理',settings:'資料管理'};
+const titles={seats:'首頁',labDuty:'實驗工作分配',attention:'待追蹤清單',attendance:'出勤紀錄',tasks:'習作／實驗／考試',schedule:'我的教學進度',contact:'班級聯絡簿',points:'課堂表現',correction:'作業訂正',board:'作業播放表',quiz:'抽籤問答',students:'學生名單',tools:'課堂小工具',tabletRules:'平板使用守則',classes:'我的班級管理',settings:'資料管理'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>{let parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());let v=Object.fromEntries(parts.map(x=>[x.type,x.value]));return `${v.year}-${v.month}-${v.day}`};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -280,7 +280,90 @@ function setSeat(kind,arr){cls().seats[kind]=arr;save()}
 function changeClass(c){if(!activeCodes().includes(c))return;if(view==='contact'&&contactDirty()&&!confirm('目前有未儲存的聯絡簿，確定切換班級並捨棄修改？')){syncClassOptions();return;} const u=new URL(location.href);u.searchParams.set('class',c);history.replaceState({},'',u.href);pointSelection.clear();quizList=[];quizPicked.clear();currentQuestion=null;gameAnswered=false;correctionTaskId='';cl=c;editSeats=false;editLabTemplate=false;templatePicked=null;studentId=null;selectedTask='';$('modal').classList.add('hidden');render()}
 function statCards(){let n=tally();$('stats').innerHTML=[['學生人數',students().length,'目前班級'],['待補習作',n.missing,'實驗／習作未完成'],['待補考',n.exam,'缺考或補考未完成'],['缺席紀錄',n.absent,'累計缺席次數']].map(([a,b,c])=>`<div class="stat"><span>${a}</span><strong>${b}</strong><small>${c}</small></div>`).join('');$('sidebarPending').textContent=n.missing+n.exam||''}
 function renderTabletRules(){return `<div class="tabletGuide"><div class="tabletHero"><div><span class="tabletEyebrow">DA CHENG ELEMENTARY · DIGITAL LEARNING</span><h2>📱 學生平板使用守則</h2><p>先聽指令、專心學習、安全上網、準時歸還</p></div><span class="tabletHeroEmoji" aria-hidden="true">👩🏻‍🏫📲✨</span></div><div class="tabletIntro">我們的約定：平板是全校共用的學習工具，用得正確、用得安全，下一位同學也能安心使用。</div><div class="tabletNav"><a href="#tabletSec1">🎒 領取前</a><a href="#tabletSec2">💻 上課中</a><a href="#tabletSec3">🛡️ 安全與健康</a><a href="#tabletSec4">🔌 歸還</a><a href="#tabletPhotos">📷 操作圖解</a></div><section class="tabletSection" id="tabletSec1"><h3 style="background:#dceeff">🎒 ① 領取前：先聽指令，再拿平板</h3><div class="tabletRulesGrid"><article class="tabletRuleItem"><span class="tabletRuleNo">01</span><div><b>依座號領取</b><p>依照老師指定的座號或設備編號領取，不擅自更換，也不幫別人亂拿。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">02</span><div><b>雙手拿穩</b><p>拿取時雙手托住平板，避免抓螢幕、甩動保護套或推擠。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">03</span><div><b>先平放桌面</b><p>領到後平放桌面，等全班領取完畢，老師說開始才能操作。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">04</span><div><b>先檢查外觀</b><p>發現螢幕破裂、保護殼鬆脫、無法開機或電量異常，先告訴老師，不自行拆修。</p></div></article></div></section><section class="tabletSection" id="tabletSec2"><h3 style="background:#d9f7ed">💻 ② 上課中：專心學習、輕觸操作</h3><div class="tabletRulesGrid"><article class="tabletRuleItem"><span class="tabletRuleNo">05</span><div><b>只開指定內容</b><p>只使用老師指定的 App 或網站；不得自行看影片、玩遊戲、拍照錄影或瀏覽無關網頁。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">06</span><div><b>輕點輕滑</b><p>用手指輕觸操作，不用力敲打、連續猛點，也不拿筆尖或硬物戳螢幕。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">07</span><div><b>平板不離桌</b><p>未經老師同意，不拿著平板走動、奔跑或換位置；需要移動先鎖定畫面並雙手拿穩。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">08</span><div><b>遇到問題先舉手</b><p>操作卡住或畫面異常，先停止操作、舉手等候，可小聲提醒老師，不大聲喊叫。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">09</span><div><b>尊重同學</b><p>不搶拿或擅自碰觸別人的平板，不刪改他人作品，不隨意播放聲音干擾課堂。</p></div></article></div></section><section class="tabletSection" id="tabletSec3"><h3 style="background:#fff0dc">🛡️ ③ 安全與健康：保護自己，也保護資料</h3><div class="tabletRulesGrid"><article class="tabletRuleItem"><span class="tabletRuleNo">10</span><div><b>保護個資與帳號</b><p>不公開姓名、座號、密碼、照片或聯絡方式；不替別人登入，也不儲存自己的密碼在公用平板。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">11</span><div><b>小心網路內容</b><p>不點陌生連結、廣告或可疑下載，不回覆陌生訊息；看到不適當內容立即告知老師。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">12</span><div><b>拍照先取得同意</b><p>老師允許且有學習需要時才拍照或錄影；不偷拍、惡搞或傳播同學的影像。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">13</span><div><b>維持良好姿勢</b><p>將平板放穩、保持適當觀看距離，不趴著看；眼睛疲勞時依老師指示休息、望遠。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">14</span><div><b>保持乾燥清潔</b><p>不在平板旁放飲料和食物；手髒或手濕時先清潔擦乾，避免液體流入設備。</p></div></article></div></section><section class="tabletSection" id="tabletSec4"><h3 style="background:#efe7ff">🔌 ④ 下課後：正確登出、歸位充電</h3><div class="tabletRulesGrid"><article class="tabletRuleItem"><span class="tabletRuleNo">15</span><div><b>聽到停止立刻停</b><p>老師宣布停止使用後，先停止操作，不拖延或繼續遊戲。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">16</span><div><b>登出並整理畫面</b><p>依老師指示儲存學習成果、登出個人帳號，關閉使用中的 App。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">17</span><div><b>依號碼歸還</b><p>確認設備編號，依原來位置放回充電車；保護蓋朝上、朝右。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">18</span><div><b>不要跨到隔壁</b><p>保護蓋與平板不可跨進隔壁槽位，避免卡住或壓到其他設備。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">19</span><div><b>充電線插妥</b><p>在老師指導下確認平板放穩、充電接頭正確插入，不硬扯電線。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">20</span><div><b>回座安靜等候</b><p>平板歸還後回座位安靜等待，直到全班完成。</p></div></article></div></section><section class="tabletSection" id="tabletEmergency"><h3 style="background:#ffe4e4">🚨 發生狀況怎麼辦？</h3><table class="tabletIncident"><tbody><tr><th>摔落、破裂、進水</th><td>立刻停止使用，告訴老師；不自行開機測試或修理。</td></tr><tr><th>畫面異常或出現廣告</th><td>不要亂點，舉手請老師協助。</td></tr><tr><th>帳號忘記登出</th><td>立即向老師報告，請老師協助處理。</td></tr><tr><th>設備或充電線有異味、發熱</th><td>停止觸碰與充電，立刻通知老師。</td></tr></tbody></table><p class="tabletNotice">班級提醒｜違反使用規範時，依教師課堂管理規定提醒、扣點或暫停使用。設備損壞應立即通報，後續責任依學校規定處理。</p></section><section class="tabletSection" id="tabletPhotos"><h3 style="background:#dceeff">📷 平板怎麼拿、怎麼放、怎麼充電？</h3><p class="tabletMuted">以下照片保留自原始《平板使用規則》，請依學校設備實際狀況及老師指示操作。</p><div class="tabletPhotosGrid"><article class="tabletPhoto"><img src="tablet_photo_1.jpg" alt="領取後先平放" loading="lazy"><div><b>01 領取後先平放</b><p>平板先放在桌面上，等老師宣布開始。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_2.jpg" alt="正確立起保護套" loading="lazy"><div><b>02 正確立起保護套</b><p>使用保護套支架，確認支撐穩固。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_3.jpg" alt="核對設備編號" loading="lazy"><div><b>03 核對設備編號</b><p>按座號或老師指定號碼領取、歸還。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_4.jpg" alt="歸還時先平放" loading="lazy"><div><b>04 歸還時先平放</b><p>停止操作、登出後，依序整理平板。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_5.jpg" alt="放回正確槽位" loading="lazy"><div><b>05 放回正確槽位</b><p>對準對應的充電槽，保護蓋朝上朝右。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_6.jpg" alt="不跨隔壁並充電" loading="lazy"><div><b>06 不跨隔壁並充電</b><p>保護蓋不壓隔壁設備；插妥充電線。</p></div></article></div></section><div class="tabletPledge">🌈 我會遵守：輕拿輕放｜專心學習｜安全上網｜準時歸還</div><div class="tabletActions"><button type="button" class="btn outline" onclick="window.print()">🖨️ 列印守則</button><button type="button" class="btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ 回到頁首</button></div></div>`;}
-function render(){if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();cloudRenderQuickClasses();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');root.innerHTML=({seats:renderSeats,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();hookView()}
+function render(){if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();cloudRenderQuickClasses();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');root.innerHTML=({seats:renderSeats,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();hookView()}
+const labGroupOrder=[2,3,4,0,1];
+const labRoleColumns=['組長','副組長','器材長 1／器材長','器材長 2','習作長','清潔長'];
+function labRoles(count){
+ return count===6?labRoleColumns.map((role,i)=>i===2?'器材長 1':role):
+  [labRoleColumns[0],labRoleColumns[1],'器材長',labRoleColumns[4],labRoleColumns[5]].slice(0,count);
+}
+function labAssignments(seats,people,previous){
+ const byId=new Map(people.map(s=>[s.id,s]));
+ return labGroupOrder.map((seatGroup,index)=>{
+  const members=seats.slice(seatGroup*6,seatGroup*6+6)
+   .map(id=>byId.get(id)).filter(Boolean).sort((a,b)=>a.no-b.no);
+  const last=previous?.groups.find(g=>g.number===index+1);
+  const sameGroup=last?.members.length===members.length&&members.every(s=>last.members.some(m=>m.id===s.id));
+  const offset=sameGroup&&members.length?(last.offset+1)%members.length:0;
+  const roles=labRoles(members.length);
+  return {number:index+1,offset,members:members.map((s,i)=>({
+   id:s.id,no:s.no,name:s.name,role:roles[(i+offset)%roles.length]
+  }))};
+ });
+}
+function labSheets(){return Array.isArray(cls().labDutySheets)?cls().labDutySheets:[]}
+function renderLabDuty(){
+ const dates=(cls().scheduleLessons||[]).filter(x=>String(x.type).includes('實驗')&&x.topic&&isoDate(x.date));
+ const sheets=labSheets();
+ return `<section class="panel"><div class="panelHead"><h2>${esc(classDisplay(cl))}｜實驗工作分配</h2></div>
+ <p class="hint">依首頁的實驗分組分配工作。成員相同的組別，每新增一次實驗就輪換一個職務。每項實驗各存一張 A4 表。</p>
+ <form id="labDutyForm" class="actions">
+ <label>實驗日期 <input id="labDutyDate" type="date" value="${esc($('sessionDate').value)}" required></label>
+ <label>實驗名稱 <input id="labDutyTopic" type="text" list="labDutyTopics" maxlength="100" required></label>
+ <datalist id="labDutyTopics">${[...new Set(dates.map(x=>x.topic))].map(topic=>`<option value="${esc(topic)}"></option>`).join('')}</datalist>
+ <button type="submit" class="btn">建立分工表</button></form>
+ <div id="labDutyStatus" class="hint" role="status"></div>
+ ${sheets.slice().reverse().map(sheet=>`<details><summary>${esc(sheet.date)}　${esc(sheet.topic)}</summary>
+ <div style="overflow-x:auto">${labDutyTable(sheet)}</div><div class="actions"><button type="button" class="btn outline" data-print-lab="${esc(sheet.id)}">列印這項實驗（A4）</button></div></details>`).join('')}
+ ${sheets.length?'':'<p class="hint">目前尚無實驗分工表。</p>'}</section>`;
+}
+function labDutyTable(sheet){
+ const columns=['組別',...labRoleColumns];
+ return `<table class="labDutyTable"><thead><tr>${columns.map(role=>`<th scope="col">${role}</th>`).join('')}</tr></thead>
+ <tbody>${sheet.groups.map(group=>`<tr><th scope="row">第${group.number}組</th>${labRoleColumns.map(role=>{
+  const member=group.members.find(s=>s.role===role||(role===labRoleColumns[2]&&['器材長','器材長 1'].includes(s.role)));
+  return `<td>${member?`<span>${esc(member.no)} 號</span><br>${esc(member.name)}`:'—'}</td>`;
+ }).join('')}</tr>`).join('')}</tbody></table>`;
+}
+function printLabDuty(sheet){
+ const page=window.open('','_blank','width=1100,height=760');
+ if(!page){$('labDutyStatus').textContent='瀏覽器已封鎖列印視窗。請允許彈出視窗後再試。';return}
+ page.opener=null;
+ page.document.open();
+ page.document.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>${esc(sheet.topic)}｜實驗工作分配</title>
+ <style>@page{size:A4 landscape;margin:13mm}body{font:15px system-ui,"Microsoft JhengHei",sans-serif;color:#111;margin:0}
+ h1{font-size:25px;margin:0 0 8px}p{margin:0 0 15px}table{width:100%;table-layout:fixed;border-collapse:collapse}
+ th,td{border:1px solid #444;text-align:center;padding:9px 5px;overflow-wrap:anywhere}tr{break-inside:avoid}
+ th:first-child{width:9%}td{height:46px}button{margin:16px 0}@media print{button{display:none}}</style></head>
+ <body><h1>${esc(sheet.topic)}｜實驗工作分配</h1><p>${esc(classDisplay(cl))}　實驗日期 ${esc(sheet.date)}</p>
+ ${labDutyTable(sheet)}<button type="button" onclick="window.print()">列印／另存 PDF</button></body></html>`);
+ page.document.close();
+ page.focus();
+}
+function bindLabDuty(){
+ $('labDutyForm').onsubmit=e=>{
+  e.preventDefault();
+  const topic=$('labDutyTopic').value.trim(),date=isoDate($('labDutyDate').value),status=$('labDutyStatus');
+  if(!topic||!date){status.textContent='請輸入實驗名稱及日期。';return}
+  const sheets=labSheets();
+  if(sheets.some(s=>s.topic===topic&&s.date===date)){status.textContent='這項實驗已有分工表，請展開下方同日期、同名稱的紀錄。';return}
+  if(sheets.length&&date<sheets[sheets.length-1].date){status.textContent='請依實驗日期順序建立分工表，讓輪調順序和上課順序一致。';return}
+  const seats=layoutMap('lab'),assigned=new Set(seats.filter(Boolean));
+  const unassigned=students().filter(s=>!assigned.has(s.id));
+  if(!assigned.size||unassigned.length){
+   status.textContent=unassigned.length?'請先在首頁的實驗分組安排這些學生的座位：'+unassigned.map(s=>s.no+'號').join('、'):'目前沒有可分配的學生。';
+   return;
+  }
+  const sheet={id:uid(),topic,date,groups:labAssignments(seats,students(),sheets[sheets.length-1])};
+  cls().labDutySheets=[...sheets,sheet];save();render();
+  const newest=document.querySelector('[data-print-lab]');newest.closest('details').open=true;
+  $('labDutyStatus').textContent='已建立 '+topic+' 的分工表。';
+ };
+ document.querySelectorAll('[data-print-lab]').forEach(button=>button.onclick=()=>{
+  const sheet=labSheets().find(s=>s.id===button.dataset.printLab);if(sheet)printLabDuty(sheet);
+ });
+}
+
 function renderSeats(){
  const arr=layoutMap(layout),date=$('sessionDate').value;
  const cells=arr.map((sid,i)=>{const s=student(sid);if(!s)return `<button class="seat empty" data-seat="${i}" data-sid=""><small>空位</small></button>`;
@@ -289,7 +372,7 @@ function renderSeats(){
  const lessons=(Array.isArray(cls().scheduleLessons)?cls().scheduleLessons:[]).filter(x=>x.date===date);
  const seatMarkup=layout==='lab'?labGroups():`<div class="seatstage">講 台 ／ 黑 板</div><div class="seats">${cells}</div>`;
  const templateControls=layout==='lab'?`<button class="btn small ${editLabTemplate?'danger':'outline'}" id="templateEdit">${editLabTemplate?'完成編輯模板':'編輯共用模板'}</button>${editLabTemplate?'<button class="btn small outline" id="templateReset">還原 PDF 原始座位</button>':''}`:'';
- return `${renderQuickLinks()}<div class="gridMain"><section class="panel"><div class="panelHead"><h2>▦ ${esc(classDisplay(cl))}座位表</h2><div class="row"><div class="switch"><button data-layout="normal" class="${layout==='normal'?'active':''}">一般座位</button><button data-layout="lab" class="${layout==='lab'?'active':''}">實驗分組</button></div><button class="btn small outline" id="seatEdit" ${editLabTemplate?'disabled':''}>${editSeats?'完成調整':'調整本班座位'}</button>${templateControls}</div></div>${seatMarkup}<p class="hint">${editLabTemplate?'共用模板編輯：依序點選兩個位置，就會交換座號，並同步套用到 501～507 班。若有自訂本班實驗座位，修改共用模板會清除該排列。':editSeats?'拖曳學生卡片交換座位；只影響目前班級，不影響七班共用模板。':layout==='lab'?'實驗座位依第一至第五組分區，每組六席；黑板在上方；前排由左至右為第三、第二、第一組，後排由左至右為第五、第四組。點選姓名可查看所屬組別及學生紀錄。':'點選學生姓名可查看詳細資料；黃色表示有待追蹤項目，紅色表示當日缺席。'}</p></section><div><section class="panel"><div class="panelHead"><h2>當日課程</h2><span class="pill">${esc(date)}</span></div>${lessons.length?lessons.map(x=>`<div class="lesson ${x.rush?'rush':''}"><span class="pill ${x.rush?'warn':''}">${esc(x.period)} ${x.rush?'需趕課':esc(x.type)}</span><h3>${esc(x.topic)}</h3></div>`).join(''):'<div class="emptymsg">這一天沒有預載授課進度<br>可切換日期或進入教學進度查看</div>'}<div class="actions"><button class="btn small soft" data-goto="tasks">建立習作／考試</button><button class="btn small outline" data-goto="attendance">當日點名</button></div></section><section class="panel"><div class="panelHead"><h2>需要處理</h2><button class="btn small outline" data-goto="attention">查看全部</button></div>${attentionList(5)}</section></div></div>`;
+ return `${renderQuickLinks()}<div class="gridMain"><section class="panel"><div class="panelHead"><h2>▦ ${esc(classDisplay(cl))}座位表</h2><div class="row"><div class="switch"><button data-layout="normal" class="${layout==='normal'?'active':''}">一般座位</button><button data-layout="lab" class="${layout==='lab'?'active':''}">實驗分組</button></div><button class="btn small outline" id="seatEdit" ${editLabTemplate?'disabled':''}>${editSeats?'完成調整':'調整本班座位'}</button>${templateControls}</div></div>${seatMarkup}${layout==='lab'?'<div class="actions"><button type="button" class="btn outline" data-goto="labDuty">實驗工作分配</button></div>':''}<p class="hint">${editLabTemplate?'共用模板編輯：依序點選兩個位置，就會交換座號，並同步套用到 501～507 班。若有自訂本班實驗座位，修改共用模板會清除該排列。':editSeats?'拖曳學生卡片交換座位；只影響目前班級，不影響七班共用模板。':layout==='lab'?'實驗座位依第一至第五組分區，每組六席；黑板在上方；前排由左至右為第三、第二、第一組，後排由左至右為第五、第四組。點選姓名可查看所屬組別及學生紀錄。':'點選學生姓名可查看詳細資料；黃色表示有待追蹤項目，紅色表示當日缺席。'}</p></section><div><section class="panel"><div class="panelHead"><h2>當日課程</h2><span class="pill">${esc(date)}</span></div>${lessons.length?lessons.map(x=>`<div class="lesson ${x.rush?'rush':''}"><span class="pill ${x.rush?'warn':''}">${esc(x.period)} ${x.rush?'需趕課':esc(x.type)}</span><h3>${esc(x.topic)}</h3></div>`).join(''):'<div class="emptymsg">這一天沒有預載授課進度<br>可切換日期或進入教學進度查看</div>'}<div class="actions"><button class="btn small soft" data-goto="tasks">建立習作／考試</button><button class="btn small outline" data-goto="attendance">當日點名</button></div></section><section class="panel"><div class="panelHead"><h2>需要處理</h2><button class="btn small outline" data-goto="attention">查看全部</button></div>${attentionList(5)}</section></div></div>`;
 }
 function attentionList(limit){
  const records=cls().results.filter(x=>['未繳交','待訂正','未完成','未交','缺考','待補考','補考未完成'].includes(x.status))
@@ -603,7 +686,7 @@ function renderClassManager(){
  <p class="hint">每位教師帳號獨立設定班級。原本 501～507 保留；更改班名不會改變雲端資料代碼、名單或獎懲紀錄。停用只隱藏班級，資料會保留，可再次啟用。</p>
  <form id="addClassForm" class="row" style="margin:14px 0 20px"><label for="newClassName"><b>新增班級名稱：</b></label><input id="newClassName" name="name" placeholder="例如 701、六甲、科學社" maxlength="35" required><button class="btn" type="submit">＋ 新增班級</button></form>
  <div class="tablewrap"><table><thead><tr><th>班級名稱</th><th>學生數</th><th>狀態</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table></div></section>
- <section class="panel"><h2>班級學生名單與座位</h2><p class="hint">新增或切換班級後，請進入「學生名單」新增／CSV 匯入學生；進入「座位表總覽」可調整一般座位與實驗座位。全站共用五組實驗桌模板；各班可以自行交換學生座位。新班級從空名單開始。</p><div class="actions"><button class="btn outline" type="button" id="manageStudents">管理目前班級學生</button><button class="btn outline" type="button" id="manageSeats">管理目前班級座位</button></div></section>`;
+ <section class="panel"><h2>班級學生名單與座位</h2><p class="hint">新增或切換班級後，請進入「學生名單」新增／CSV 匯入學生；進入「首頁」可調整一般座位與實驗座位。全站共用五組實驗桌模板；各班可以自行交換學生座位。新班級從空名單開始。</p><div class="actions"><button class="btn outline" type="button" id="manageStudents">管理目前班級學生</button><button class="btn outline" type="button" id="manageSeats">管理目前班級座位</button></div></section>`;
 }
 function hookClassManager(){
  $('addClassForm').onsubmit=e=>{
@@ -636,7 +719,7 @@ function hookClassManager(){
  $('manageSeats').onclick=()=>{view='seats';render()};
 }
 function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
-function hookView(){if(view==='contact'){contactBind();return}if(view==='seats'){$('editQuickLinks').onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings)}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='seats'){
+function hookView(){if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){$('editQuickLinks').onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings)}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='seats'){
  document.querySelectorAll('[data-layout]').forEach(b=>b.onclick=()=>{layout=b.dataset.layout;editSeats=false;editLabTemplate=false;templatePicked=null;render()});$('seatEdit').onclick=()=>{editSeats=!editSeats;render()};
  if(layout==='lab'){$('templateEdit').onclick=()=>{if(!editLabTemplate){if(!confirm('進入七班共用模板編輯？交換座號會同步套用七班，並清除各班個別實驗座位排列；所有學生紀錄保留。'))return;editSeats=false;}editLabTemplate=!editLabTemplate;templatePicked=null;render()};if(editLabTemplate){$('templateReset').onclick=resetLabTemplate;document.querySelectorAll('[data-template-index]').forEach(b=>b.onclick=()=>swapTemplateCell(Number(b.dataset.templateIndex)));}}
  document.querySelectorAll('.seat:not(.templateSeat)').forEach(b=>{b.onclick=()=>{if(editSeats)return;let id=b.dataset.sid;if(id)openStudent(id)};b.ondragstart=e=>{if(!editSeats){e.preventDefault();return}e.dataTransfer.setData('text/plain',b.dataset.seat)};b.ondragover=e=>{if(editSeats){e.preventDefault();b.classList.add('dragover')}};b.ondragleave=()=>b.classList.remove('dragover');b.ondrop=e=>{e.preventDefault();b.classList.remove('dragover');let from=Number(e.dataTransfer.getData('text/plain'));let target=Number(b.dataset.seat);if(!Number.isInteger(from)||from<0)return;let a=layoutMap(layout);[a[from],a[target]]=[a[target],a[from]];setSeat(layout,a);render()}})
@@ -747,7 +830,7 @@ function contactDailyPoints(date,code=cl){
 // After explicit publication by a teacher, keep the shared view up to date.
 // Never create a new public entry or expose a date that the teacher has not opted in to share.
 let contactPointsSyncQueue=Promise.resolve();
-function contactQueuePointsSync(code,date){
+function contactQueuePointsSync(code,date,fillMissingSeats=false){
  if(!cloudReady||cloudBlocked||!/^\d{4}-\d{2}-\d{2}$/.test(date||''))return;
  contactPointsSyncQueue=contactPointsSyncQueue.then(async()=>{
   try{
@@ -759,7 +842,20 @@ function contactQueuePointsSync(code,date){
    if(!entry)return;
    const parsed=contactSplitPoints(entry.reminders);
    if(!parsed.published)return;
-   const points=contactDailyPoints(date,code);
+   const current=contactDailyPoints(date,code);
+   let points=current;
+   if(fillMissingSeats){
+    let repaired=false;
+    points=parsed.points.map(point=>{
+     if(!point||point.no||point.seatNo||point.seat_no)return point;
+     const matches=current.filter(item=>item.name===point.name&&item.delta===Number(point.delta)&&item.reason===(point.reason||''));
+     const seats=new Set(matches.map(item=>item.no).filter(Boolean));
+     if(seats.size!==1)return point;
+     repaired=true;
+     return {...point,no:seats.values().next().value};
+    });
+    if(!repaired)return;
+   }
    const reminders=parsed.reminders+(parsed.reminders?'\n':'')+CONTACT_POINT_START+'\n'+JSON.stringify(points)+'\n'+CONTACT_POINT_END;
    await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({
     p_class_code:code,p_entry_date:date,p_lesson:entry.lesson||'',p_homework:entry.homework||'',p_reminders:contactPackClassName(reminders,code)
@@ -767,28 +863,15 @@ function contactQueuePointsSync(code,date){
   }catch(err){console.error('FunDesk 加扣點同步到聯絡簿失敗：',err);const msg=$('contactStatus');if(msg&&view==='contact'&&cl===code)contactStatus('⚠️ 加扣點同步失敗：'+cloudErr(err),true)}
  });
 }
-function contactPointPreview(){
- const preview=$('contactPointPublishPreview');if(!preview)return;
- const date=contactSafeDate($('contactDate').value),items=contactDailyPoints(date);
- const entry=(contactCache[cl]?.entries||[]).find(e=>e.entry_date===date);
- const approved=contactSplitPoints(entry?.reminders).published;
- preview.textContent=date+' 有 '+items.length+' 筆加扣點紀錄 · '+(approved?'已開啟自動同步（閱讀頁預設隱藏）':'尚未公開同步；請先勾選並發布本日期的聯絡簿')+(($('sessionDate')?.value||'')!==date?'。注意：課堂表現目前選擇 '+$('sessionDate').value+'，日期不同的點數不會顯示在此頁。':'');
-}
 function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);return u.href}
 function renderContact(){
  const date=contactChosenDate||today(),code=cl;
  return `<div class="contactShell"><section class="panel contactForm"><div class="panelHead"><div><small class="chalkEyebrow">FUNDESK · 我們的班級小黑板</small><h2>📒 ${esc(classDisplay(code))}聯絡簿</h2></div><span class="chalkCat" aria-hidden="true">/\\_/\\<br>( •ᴗ• ) ♡</span></div>
- <p class="contactMuted">選擇上課日期，輸入今天的教學內容、作業與提醒，再按「發布／儲存」。同一日期重新儲存會更新原內容。</p>
+ <p class="contactMuted">選擇上課日期，輸入今天的教學內容、考試預告與重要記事，再按「發布／儲存」。同一日期重新儲存會更新原內容。</p>
  <label for="contactDate">聯絡簿日期（臺灣時間）</label><input type="date" id="contactDate" value="${contactHtmlDate(date)}">
  <label for="contactLesson">📘 今日課程</label><textarea id="contactLesson" maxlength="3000" placeholder="例如：自然課第3單元，認識北極星"></textarea>
- <label for="contactHomework">✏️ 回家作業</label><textarea id="contactHomework" maxlength="3000" placeholder="例如：習作第20～21頁；下次上課前完成"></textarea>
- <label for="contactReminder">📢 重要提醒</label><textarea id="contactReminder" maxlength="3000" placeholder="例如：下次帶星座盤、彩色筆"></textarea>
- <section style="padding:14px;margin:12px 0;border:1px solid #b5cfe9;border-radius:12px;background:#f0f7ff">
- <h3>⭐ 在聯絡簿顯示 FunDesk 加扣點紀錄</h3>
- <p class="contactMuted">本頁只能顯示 FunDesk「課堂表現」已記錄的點數，不能在聯絡簿另外加扣分。首次勾選並發布後，這個班級、日期的後續點數會自動同步。</p>
- <label><input type="checkbox" id="contactPublishPoints"> 將當日學生姓名、加扣分和原因發布到聯絡簿</label>
- <p class="contactMuted">⚠️ 閱讀連結免登入；任何持有網址的人都能讀取已發布紀錄。閱讀頁的「隱藏」按鈕只用於投影遮蔽，不能保護個資。請先確認符合學校的資料使用規定。</p>
- <div id="contactPointPublishPreview" class="contactMuted"></div><div class="actions"><button type="button" class="btn outline" id="contactSyncPoints">🔄 同步當日加扣點到聯絡簿</button></div><p class="contactMuted">先確認班級與日期。首次公開具名紀錄會請老師確認；之後該日期新增加扣點會自動更新，閱讀頁仍預設隱藏。</p></section>
+ <label for="contactHomework">✏️ 考試預告</label><textarea id="contactHomework" maxlength="3000" placeholder="例如：下週二考第三單元，範圍為課本第30～45頁"></textarea>
+ <label for="contactReminder">📢 重要記事</label><textarea id="contactReminder" maxlength="3000" placeholder="例如：下次帶星座盤、彩色筆"></textarea>
  <div class="actions"><button type="button" class="btn" id="contactSave">💾 發布／儲存聯絡簿</button><button type="button" class="btn outline" id="contactReload">↻ 重新讀取雲端</button></div>
  <p class="contactStatus" id="contactStatus" role="status">載入中…</p></section>
  <aside><section class="panel contactShare"><h2>🔗 ${esc(classDisplay(code))}專屬閱讀網址</h2><p class="contactMuted">每班都有不同連結。學生免登入，只能看此連結對應班級的聯絡簿，不能修改。</p>
@@ -802,8 +885,7 @@ function contactDirty(){
  const entry=(contactCache[cl]?.entries||[]).find(e=>e.entry_date===contactChosenDate)||{};
  const old=contactSplitPoints(entry.reminders);
  const now=contactFields();
- return now.lesson!==(entry.lesson||'')||now.homework!==(entry.homework||'')||now.reminders!==old.reminders||
- !!$('contactPublishPoints')?.checked!==old.published;
+ return now.lesson!==(entry.lesson||'')||now.homework!==(entry.homework||'')||now.reminders!==old.reminders;
 }
 function contactSelect(date,force=false){
  if(!force&&contactDirty()&&!confirm('目前有未儲存的修改，確定切換日期並捨棄修改？'))return false;
@@ -813,8 +895,6 @@ function contactSelect(date,force=false){
  $('contactLesson').value=entry.lesson||'';
  $('contactHomework').value=entry.homework||'';
  $('contactReminder').value=parsed.reminders;
- $('contactPublishPoints').checked=parsed.published;
- contactPointPreview();
  contactStatus(entry.updated_at?'已載入 '+contactChosenDate+' 的紀錄':'此日期尚未發布，可開始填寫');return true;
 }
 function contactFill(data,code){
@@ -823,6 +903,12 @@ function contactFill(data,code){
  const url=contactCache[code].token?contactViewerUrl(contactCache[code].token):'';
  $('contactLink').value=url||'尚未建立專屬連結';$('contactCopy').disabled=!url;$('contactOpen').disabled=!url;
  const entries=contactCache[code].entries;
+ for(const entry of entries){
+  const {points}=contactSplitPoints(entry.reminders);
+  if(points.some(p=>p&&!p.no&&!p.seatNo&&!p.seat_no)&&contactDailyPoints(entry.entry_date,code).length){
+   contactQueuePointsSync(code,entry.entry_date,true);
+  }
+ }
  $('contactList').innerHTML=entries.length?entries.map(e=>`<button type="button" data-contact-date="${esc(e.entry_date)}">📒 ${esc(e.entry_date)}　<small>${esc((e.lesson||e.homework||e.reminders||'').slice(0,26))}</small></button>`).join(''):'<p class="contactMuted">尚未發布任何聯絡簿。</p>';
  document.querySelectorAll('[data-contact-date]').forEach(b=>b.onclick=()=>contactSelect(b.dataset.contactDate));
  contactSelect(contactChosenDate||today(),true);
@@ -834,27 +920,21 @@ async function contactLoad(code=cl){if(!cloudReady||!cloudSession){contactStatus
 }
 async function contactSave(){if(contactBusy)return;if(!cloudReady){contactStatus('請登入教師雲端',true);return}
  const code=cl,date=contactSafeDate($('contactDate').value),fields=contactFields();
- const shouldPublishPoints=$('contactPublishPoints').checked;
- const points=shouldPublishPoints?contactDailyPoints(date):[];
- if(shouldPublishPoints&&!contactSplitPoints((contactCache[cl]?.entries||[]).find(e=>e.entry_date===date)?.reminders).published){
-  if(!confirm('確定要發布個別學生姓名、加扣分與原因嗎？任何持有本班聯絡簿網址的人都能看到，即使閱讀頁顯示為隱藏。'))return;
- }
+ const points=contactDailyPoints(date,code);
+ const alreadyPublished=contactSplitPoints((contactCache[code]?.entries||[]).find(e=>e.entry_date===date)?.reminders).published;
+ const shouldPublishPoints=alreadyPublished||(points.length>0&&confirm('要一併發布當日加扣點紀錄（座號、姓名和原因）嗎？持有聯絡簿網址的人可讀取。選擇取消仍會發布已填寫的聯絡簿內容。'));
  if(shouldPublishPoints){
   fields.reminders+= '\n'+CONTACT_POINT_START+'\n'+JSON.stringify(points)+'\n'+CONTACT_POINT_END;
  }
  if(![fields.lesson,fields.homework,fields.reminders].some(x=>x.trim())){contactStatus('請至少填寫一個欄位再發布',true);return}
  contactBusy=true;$('contactSave').disabled=true;contactStatus('正在發布到雲端…');
  try{await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({p_class_code:code,p_entry_date:date,p_lesson:fields.lesson,p_homework:fields.homework,p_reminders:contactPackClassName(fields.reminders,code)})});
-  if(view==='contact'&&cl===code){const refreshed=await contactLoad(code);if(view==='contact'&&cl===code&&refreshed)contactStatus('✅ '+classDisplay(code)+' 已發布到雲端！加扣點已包含在此日期聯絡簿，學生網頁約 20 秒內自動更新。')}}catch(e){contactStatus('❌ 儲存失敗：'+cloudErr(e),true)}finally{contactBusy=false;if($('contactSave'))$('contactSave').disabled=false}
+  if(view==='contact'&&cl===code){const refreshed=await contactLoad(code);if(view==='contact'&&cl===code&&refreshed)contactStatus('✅ '+classDisplay(code)+' 已發布到雲端，學生網頁約 20 秒內自動更新。')}}catch(e){contactStatus('❌ 儲存失敗：'+cloudErr(e),true)}finally{contactBusy=false;if($('contactSave'))$('contactSave').disabled=false}
 }
 function contactBind(){
  contactChosenDate=today();
  $('contactDate').onchange=e=>{const next=e.target.value;if(!contactSelect(next))e.target.value=contactChosenDate};
  $('contactSave').onclick=contactSave;
- $('contactSyncPoints').onclick=()=>{
-  $('contactPublishPoints').checked=true;
-  contactSave(); // contactSave requests teacher approval when first publishing names.
- };
  $('contactReload').onclick=()=>{if(contactDirty()&&!confirm('重新讀取會捨棄未儲存的修改，是否繼續？'))return;contactLoad()};
  $('contactCopy').onclick=async()=>{const url=$('contactLink').value;try{await navigator.clipboard.writeText(url);contactStatus('✅ 已複製班級專屬網址')}catch{ $('contactLink').select();contactStatus('請按 Ctrl+C 複製網址')}};
  $('contactOpen').onclick=()=>window.open($('contactLink').value,'_blank','noopener,noreferrer');
@@ -902,7 +982,7 @@ async function cloudRefresh(){
 function cloudLoginForm(error=''){
  document.body.classList.add('cloud-locked');$('cloudGate').hidden=false;
  const showError=error?`<div class="cloudError">${esc(error)}</div>`:'';
- cloudGateMessage(`<div class="cloudNote">本裝置已啟用教師安全鎖：離開請按「立即上鎖」，閒置 3 分鐘自動上鎖；重新開啟需輸入教師帳號密碼。</div>${showError}
+ cloudGateMessage(`${showError}
  <form id="cloudLoginForm"><label>教師電子郵件</label><input id="cloudEmail" type="email" autocomplete="username" required placeholder="teacher@example.edu.tw"><label>教師密碼</label><input id="cloudPassword" type="password" autocomplete="current-password" required placeholder="Supabase Auth 帳號密碼"><button type="submit">登入並同步我的班級</button></form>
  `);
  $('cloudLoginForm').onsubmit=async e=>{e.preventDefault();const email=$('cloudEmail').value.trim(),password=$('cloudPassword').value;const b=e.target.querySelector('button');b.disabled=true;b.textContent='登入中…';try{
@@ -960,7 +1040,6 @@ async function cloudInitialize(useLocal){
  cloudUnlock();
 }
 function cloudUnlock(){
- lockLastActivity=Date.now();
  $('cloudGate').hidden=true;document.body.classList.remove('cloud-locked');
  cloudStatus('✅ 雲端已同步');
  render();
@@ -990,12 +1069,12 @@ function cloudQueueSave(){
 // Never replace local unsaved data with a remote snapshot.
 let remotePollBusy=false;
 async function cloudPollRemotePoints(){
- if(remotePollBusy||!cloudReady||cloudBlocked||lockInProgress||cloudOutstanding>0||document.hidden)return;
+ if(remotePollBusy||!cloudReady||cloudBlocked||cloudOutstanding>0||document.hidden)return;
  remotePollBusy=true;
  try{
   await cloudQueue;
   if(!cloudReady||cloudBlocked||cloudOutstanding>0)return;
-  const rows=await cloudGetAll();if(!Array.isArray(rows))return;
+  const rows=await cloudGetAll();if(!cloudReady||cloudBlocked||cloudOutstanding>0||!Array.isArray(rows))return;
   let changed=false,pending=false;
   for(const row of rows){
    const code=row.class_code,revision=Number(row.revision||0);
@@ -1003,7 +1082,14 @@ async function cloudPollRemotePoints(){
    const localSerialized=JSON.stringify(cloudPayload(code));
    if(localSerialized!==cloudSnapshots[code]){pending=true;continue}
    if(!Array.isArray(row.payload?.students))continue;
+   const previousPoints=db.classes[code].points||[];
+   const nextPoints=row.payload.points||[];
+   const pointsOn=(items,date)=>JSON.stringify(items.filter(p=>p.date===date));
+   const changedDates=new Set([...previousPoints,...nextPoints].map(p=>p.date));
    db.classes[code]=row.payload;
+   for(const date of changedDates){
+    if(pointsOn(previousPoints,date)!==pointsOn(nextPoints,date))contactQueuePointsSync(code,date);
+   }
    cloudSnapshots[code]=JSON.stringify(row.payload);cloudRevisions[code]=revision;
    changed=true;
   }
@@ -1022,48 +1108,17 @@ async function cloudBoot(){
  const requested=new URL(location.href).searchParams.get('class');if(requested&&/^[A-Za-z0-9_-]{1,40}$/.test(requested))cl=requested;
  cloudRenderQuickClasses();
  $('cloudLogout').onclick=cloudLogout;
- $('cloudLockNow').onclick=()=>teacherLockNow('手動上鎖');
  const sess=sessionStorage.getItem('fundesk_cloud_session');
  if(sess){try{cloudSession=JSON.parse(sess);await cloudLoad();return}catch(err){cloudSession=null;sessionStorage.removeItem('fundesk_cloud_session');cloudLoginForm(cloudErr(err));return}}
  cloudLoginForm();
 }
-// Teacher workstation protection: lock closes the client authentication session.
-// A lock overlay is displayed immediately, even while cloud writes finish.
-let lockLastActivity=Date.now(),lockInProgress=false;
-const LOCK_IDLE_MS=3*60*1000;
-async function teacherLockNow(reason='手動上鎖'){
- if(lockInProgress||!cloudReady)return;
- lockInProgress=true;
- document.body.classList.add('cloud-locked');
- $('cloudGate').hidden=false;
- cloudGateMessage('<h2>🔒 正在保護教師資料</h2><p>請勿操作，正在確認雲端資料是否已同步。</p>');
- if(cloudOutstanding>0){try{await cloudQueue}catch{}}
- if(cloudBlocked||cloudOutstanding>0){
-  cloudGateMessage('<h2>⚠️ 資料尚未同步，畫面已鎖住</h2><p>為避免遺失尚未儲存的資料，請先下載 JSON 備份；在完成備份之前不會清除目前記憶體資料。</p><button type="button" id="lockBackup">下載緊急 JSON 備份</button><button type="button" class="secondary" id="lockRetry">重新嘗試同步</button>');
-  const exportBtn=$('lockBackup');if(exportBtn)exportBtn.onclick=()=>backup();
-  const retryBtn=$('lockRetry');if(retryBtn)retryBtn.onclick=async()=>{
-    cloudBlocked=false;lockInProgress=false;
-    try{await cloudQueueSave();if(!cloudBlocked)return teacherLockNow('同步完成後上鎖');}catch{}
-    teacherLockNow('同步失敗');
-  };
-  lockInProgress=false;return;
- }
- cloudSession=null;cloudReady=false;db=makeState();cloudSnapshots={};cloudRevisions={};
+async function cloudLogout(){
+ if(!confirm('確定登出教師雲端？'))return;
+ await cloudQueue;
+ if(cloudBlocked){alert('雲端儲存尚未完成，請先在資料管理下載備份。');return}
  sessionStorage.removeItem('fundesk_cloud_session');
- document.querySelectorAll('#content, #stats, #modalContent').forEach(el=>el.replaceChildren());
- $('modal').classList.add('hidden');
- cloudStatus('🔒 已上鎖');
- cloudLoginForm();
- const body=$('cloudGateBody');if(body){body.insertAdjacentHTML('afterbegin','<div class="cloudNote" style="font-size:15px;color:#174775;font-weight:800;margin:0 0 12px">🔒 '+(reason==='閒置自動上鎖'?'閒置 3 分鐘，FunDesk 已自動上鎖。':'FunDesk 已上鎖。')+'請重新登入教師帳號。</div>');}
- lockInProgress=false;
+ location.reload();
 }
-function cloudLogout(){
- if(!confirm('確定離開這台電腦並鎖住 FunDesk？重新開啟必須輸入教師帳號及密碼。'))return;
- teacherLockNow('手動上鎖');
-}
-// Keep activity detection lightweight and do not save authentication secrets in localStorage.
-['pointerdown','keydown','touchstart'].forEach(eventType=>document.addEventListener(eventType,()=>{if(cloudReady&&!lockInProgress)lockLastActivity=Date.now()},{passive:true}));
-setInterval(()=>{if(cloudReady&&!lockInProgress&&Date.now()-lockLastActivity>=LOCK_IDLE_MS)teacherLockNow('閒置自動上鎖');},5000);
 window.addEventListener('beforeunload',e=>{if(cloudOutstanding>0||cloudBlocked){e.preventDefault();e.returnValue='雲端可能尚未儲存，請先備份';}});
 
 loadQuestionBank();
