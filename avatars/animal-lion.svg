@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="可愛獅子頭像">
+<path d="M100 18L116 31L137 19L146 37L171 33L172 56L192 72L183 91L192 115L175 130L174 152L150 153L139 178L117 167L98 184L82 167L60 177L48 154L24 152L25 130L8 115L17 91L8 73L28 57L28 34L53 37L65 19L83 31Z" fill="#D57A3E" stroke="#9F5739" stroke-width="3"/>
+<path d="M24 194Q26 147 74 143H126Q174 147 176 194Z" fill="#F8BC63" stroke="#9D6859" stroke-width="3"/>
+<path d="M78 146Q100 169 122 146Q134 168 139 194H61Q65 168 78 146Z" fill="#FFF2DC"/>
+<circle cx="50" cy="56" r="22" fill="#D9783B" stroke="#955136" stroke-width="3"/><circle cx="50" cy="55" r="11" fill="#F2B1AA"/><g transform="translate(200 0) scale(-1 1)"><circle cx="50" cy="56" r="22" fill="#D9783B" stroke="#955136" stroke-width="3"/><circle cx="50" cy="55" r="11" fill="#F2B1AA"/></g>
+<ellipse cx="100" cy="102" rx="65" ry="67" fill="#F8BC63" stroke="#8E6659" stroke-width="3"/>
+<path d="M91 47q8-20 18-1" fill="none" stroke="#D58B46" stroke-width="9" stroke-linecap="round"/>
+<path d="M50 119Q72 108 100 120Q128 108 150 119Q146 151 100 157Q54 151 50 119Z" fill="#FFF2DC" opacity=".94"/>
+<ellipse cx="74" cy="96" rx="15" ry="19" fill="#FFF"/><ellipse cx="126" cy="96" rx="15" ry="19" fill="#FFF"/><ellipse cx="74" cy="98" rx="11.5" ry="15" fill="#4B2D28"/><ellipse cx="126" cy="98" rx="11.5" ry="15" fill="#4B2D28"/>
+<circle cx="78" cy="91" r="5" fill="#FFF"/><circle cx="130" cy="91" r="5" fill="#FFF"/>
+<path d="M59 73Q73 64 84 73M116 73Q128 64 141 73" stroke="#71514C" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+<ellipse cx="57" cy="122" rx="11" ry="7" fill="#F5A1AA" opacity=".68"/><ellipse cx="143" cy="122" rx="11" ry="7" fill="#F5A1AA" opacity=".68"/>
+<path d="M100 116l-8 4Q100 132 108 120Z" fill="#7F4F37" stroke="#B46E67" stroke-width="1.5"/><path d="M100 125v8m0 0Q89 147 80 134m20-1q11 14 20 1" stroke="#8C544A" stroke-width="3.3" stroke-linecap="round" fill="none"/>
+</svg>
