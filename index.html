@@ -922,7 +922,7 @@ function contactQueuePointsSync(code,date,fillMissingSeats=false){
   }catch(err){console.error('FunDesk 加扣點同步到聯絡簿失敗：',err);const msg=$('contactStatus');if(msg&&view==='contact'&&cl===code)contactStatus('⚠️ 加扣點同步失敗：'+cloudErr(err),true)}
  });
 }
-function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);u.searchParams.set('v','reply-direct-1');return u.href}
+function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);u.searchParams.set('v','reply-delete-1');return u.href}
 function renderContact(){
  const date=contactChosenDate||today(),code=cl;
  return `<div class="contactShell"><section class="panel contactForm"><div class="panelHead"><div><small class="chalkEyebrow">FUNDESK · 我們的班級小黑板</small><h2>📒 ${esc(classDisplay(code))}聯絡簿</h2></div><span class="chalkCat" aria-hidden="true">/\\_/\\<br>( •ᴗ• ) ♡</span></div>
@@ -994,9 +994,28 @@ async function contactSave(){if(contactBusy)return;if(!cloudReady){contactStatus
  try{await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({p_class_code:code,p_entry_date:date,p_lesson:fields.lesson,p_homework:fields.homework,p_reminders:contactPackClassName(fields.reminders,code)})});
   if(view==='contact'&&cl===code){const refreshed=await contactLoad(code);if(view==='contact'&&cl===code&&refreshed)contactStatus('✅ '+classDisplay(code)+' 已發布到雲端，學生網頁約 20 秒內自動更新。')}}catch(e){contactStatus('❌ 儲存失敗：'+cloudErr(e),true)}finally{contactBusy=false;if($('contactSave'))$('contactSave').disabled=false}
 }
-let contactReplyRequest=0;
+let contactReplyRequest=0,contactReplyDeleting=false;
+async function contactDeleteReply(button){
+ if(contactReplyDeleting||!confirm('確定刪除這則導師回應？'))return;
+ const code=cl,date=contactChosenDate;
+ contactReplyDeleting=true;button.disabled=true;
+ ++contactReplyRequest;
+ try{
+  const result=await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_reply_delete',{
+   method:'POST',body:JSON.stringify({p_class_code:code,p_entry_date:date,p_request_id:button.dataset.deleteReply})
+  });
+  if(result?.ok!==true)throw Error('刪除失敗');
+  button.closest('article')?.remove();
+  if(view==='contact'&&cl===code&&contactChosenDate===date)contactStatus('已刪除導師回應。');
+ }catch(err){
+  if(view==='contact'&&cl===code&&contactChosenDate===date)contactStatus(
+   /PGRST202|HTTP 404/.test(String(err?.message))?'請先執行 contact_replies_delete.sql，啟用回應刪除。':'刪除失敗，請再試一次。',true);
+ }finally{
+  contactReplyDeleting=false;button.disabled=false;contactRefreshReplies();
+ }
+}
 async function contactRefreshReplies(){
- if(view!=='contact'||!cloudReady||!$('contactReplies'))return;
+ if(view!=='contact'||!cloudReady||!$('contactReplies')||contactReplyDeleting)return;
  const code=cl,date=contactChosenDate,request=++contactReplyRequest;
  const list=$('contactReplies');
  try{
@@ -1008,6 +1027,7 @@ async function contactRefreshReplies(){
   const timestamp=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',dateStyle:'short',timeStyle:'short'});
   list.innerHTML=items.map(item=>`<article style="padding:8px 0;border-top:1px solid currentColor">
    <b>${esc(item.author_name)}</b> <small>${esc(timestamp.format(new Date(item.created_at)))}</small>
+   <button type="button" class="btn small outline" data-delete-reply="${esc(item.request_id)}">刪除回應</button>
    <div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(item.message)}</div></article>`).join('')||'目前沒有導師回應。';
  }catch(err){
   if(request!==contactReplyRequest||!list.isConnected)return;
@@ -1017,6 +1037,7 @@ async function contactRefreshReplies(){
 }
 setInterval(()=>{if(!document.hidden&&view==='contact')contactRefreshReplies()},20000);
 function contactBind(){
+ $('contactReplies').onclick=e=>{const button=e.target.closest('[data-delete-reply]');if(button)contactDeleteReply(button);};
  contactChosenDate=today();
  $('contactDate').onchange=e=>{const next=e.target.value;if(!contactSelect(next))e.target.value=contactChosenDate};
  $('contactSave').onclick=contactSave;
