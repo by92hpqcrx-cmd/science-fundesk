@@ -19,20 +19,22 @@ body.notebookViewer .pointToolbar .pointToggle{color:#143c2b}
 #replyPanel .btn{margin-top:12px}
 @media print{#replyPanel{display:none!important}}
 </style></head><body class="notebookViewer"><header><div class="wrap"><small>FUNDESK · 我們的班級小黑板</small><div class="chalkDoodle" aria-hidden="true">✧　 /\_/\<br>　( •ᴗ• )　☆<br>　 / づ♡</div><h1 id="classTitle">📒 班級聯絡簿</h1><p>自然科課程紀錄 · 考試預告 · 重要記事</p></div></header>
-<main><div class="bar"><span id="status" role="status">正在連線…</span><button class="btn" id="refresh" type="button">↻ 立即更新</button></div><p class="notice" id="pointScreenNote">🔒 學生加扣點紀錄預設隱藏。給導師查看時可按「顯示」；投影到電腦大螢幕前請按「隱藏」。此按鈕不提供帳號權限保護。</p><div id="pointToolbar" class="pointToolbar"><button id="toggleAllPoints" class="pointToggle" type="button" aria-expanded="false" aria-controls="latest history">👁 顯示加扣點紀錄</button><p>預設隱藏，僅在此頁面按鈕展開；投影前請按「隱藏」。已發布的資料並非保密資料。</p><p id="pointEmpty" class="pointNotice" hidden>目前沒有已發布的加扣點紀錄。老師發布當日加扣點後，「課堂表現」新增的紀錄會自動同步。</p></div><section class="entry" id="replyPanel" hidden><h2>💬 導師回應</h2>
+<main><div class="bar"><span id="status" role="status">正在連線…</span><button class="btn" id="refresh" type="button">↻ 立即更新</button></div><p class="notice" id="pointScreenNote">🔒 學生加扣點紀錄預設隱藏。給導師查看時可按「顯示」；投影到電腦大螢幕前請按「隱藏」。此按鈕不提供帳號權限保護。</p><div id="pointToolbar" class="pointToolbar"><button id="toggleAllPoints" class="pointToggle" type="button" aria-expanded="false" aria-controls="latest history">👁 顯示加扣點紀錄</button><p>預設隱藏，僅在此頁面按鈕展開；投影前請按「隱藏」。已發布的資料並非保密資料。</p><p id="pointEmpty" class="pointNotice" hidden>目前沒有已發布的加扣點紀錄。老師發布當日加扣點後，「課堂表現」新增的紀錄會自動同步。</p></div><div id="latest"></div><section class="entry" id="replyPanel" hidden><details id="replyDetails"><summary>💬 導師回應</summary>
  <form id="replyForm">
  <label for="replyDate">聯絡簿日期</label><select id="replyDate" required></select>
+ <div id="replyCodeField"><label for="replyCode">導師回應碼</label><input id="replyCode" type="password" maxlength="64" autocomplete="off" spellcheck="false" required><p>回應碼由科任老師提供。</p></div>
  <label for="replyAuthor">導師稱呼</label><input id="replyAuthor" maxlength="40" required>
  <label for="replyText">回應內容</label><textarea id="replyText" maxlength="1000" required></textarea>
  <button class="btn" id="replySend" type="submit">送出回應</button>
- <p id="replyStatus" role="status"></p></form></section><div id="latest"></div><h2 class="historyTitle">📅 過往聯絡簿</h2><div id="history"></div><p class="foot">此連結可閱讀老師發布的內容，包括老師選擇公開的學生加扣點紀錄。加扣點預設隱藏，但網址持有人仍可取得資料。頁面約每 20 秒自動更新。</p></main>
+ <p id="replyStatus" role="status"></p></form></details></section><h2 class="historyTitle">📅 過往聯絡簿</h2><div id="history"></div><p class="foot">此連結可閱讀老師發布的內容，包括老師選擇公開的學生加扣點紀錄。加扣點預設隱藏，但網址持有人仍可取得資料。頁面約每 20 秒自動更新。</p></main>
 <script>
 (()=>{'use strict';
 const API_URL='https://ayvwsexnxvjjcrbtyoof.supabase.co';
 const KEY='sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L';
 const pageUrl=new URL(location.href);
 const token=pageUrl.searchParams.get('t')||'';
-const replyToken=new URLSearchParams(pageUrl.hash.slice(1)).get('reply')||'';
+const initialReplyCode=new URLSearchParams(pageUrl.hash.slice(1)).get('reply')||'';
+const validReplyCode=code=>/^[0-9a-f]{64}$/.test(code);
 const el=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const stamp=t=>t?new Date(t).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false}):'';
@@ -68,9 +70,13 @@ function article(e){
  const parsed=splitPoints(e.reminders);
  return `<article class="entry"><h2>${esc(e.entry_date)}</h2><div class="date">最後更新：${esc(stamp(e.updated_at))}</div>${sections({...e,reminders:parsed.reminders})}${pointPanel(parsed.points,parsed.published)}</article>`;
 }
+if(validReplyCode(initialReplyCode)){
+ el('replyCode').value=initialReplyCode;
+ el('replyCodeField').hidden=true;
+ el('replyDetails').open=true;
+}
 let replyPending=null,replyBusy=false;
 function replySetDates(entries){
- if(!/^[0-9a-f]{64}$/.test(replyToken))return;
  const select=el('replyDate'),previous=select.value;
  if(replyBusy)return;
  select.replaceChildren(...entries.map(entry=>new Option(entry.entry_date,entry.entry_date)));
@@ -82,13 +88,15 @@ el('replyForm').onsubmit=async event=>{
  const date=el('replyDate').value,author=el('replyAuthor').value.trim(),message=el('replyText').value.trim();
  const status=el('replyStatus');
  if(!date||!author||!message){status.textContent='請選擇日期並填寫導師稱呼及回應。';return}
- const signature=JSON.stringify([date,author,message]);
+ const replyCode=el('replyCode').value.trim();
+ if(!validReplyCode(replyCode)){status.textContent='請輸入科任老師提供的導師回應碼。';return}
+ const signature=JSON.stringify([date,author,message,replyCode]);
  if(replyPending?.signature!==signature)replyPending={signature,id:crypto.randomUUID()};
  replyBusy=true;el('replySend').disabled=true;status.textContent='正在送出…';
  try{
   const response=await fetch(API_URL+'/rest/v1/rpc/fundesk_contact_reply_submit',{
    method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},
-   body:JSON.stringify({p_token:token,p_reply_token:replyToken,p_entry_date:date,p_request_id:replyPending.id,p_author:author,p_message:message})
+   body:JSON.stringify({p_token:token,p_reply_token:replyCode,p_entry_date:date,p_request_id:replyPending.id,p_author:author,p_message:message})
   });
   const result=await response.json();
   if(!response.ok||result?.ok!==true)throw Error(result?.code==='PGRST202'?'導師回應尚未啟用。':result?.message||'送出失敗，請重試。');
