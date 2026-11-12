@@ -25,7 +25,7 @@ button:disabled{opacity:.5;cursor:default}.primary{background:#215dc2;color:whit
 .hidden{display:none!important}#login{max-width:530px;margin:42px auto}#selectedCount{font-weight:800}
 @media(max-width:550px){.actions{grid-template-columns:repeat(2,minmax(0,1fr))}#students{grid-template-columns:repeat(3,minmax(0,1fr))}.student{padding:9px 4px}header{flex-wrap:wrap}}
 </style></head>
-<body><header><h1>📱 FunDesk 課堂表現遙控器</h1><button id="logout" class="secondary hidden">🔒 登出／上鎖</button></header>
+<body><header><h1>📱 FunDesk 課堂表現遙控器</h1><button id="logout" class="secondary hidden">🚪 登出</button></header>
 <main>
 <section id="login" class="panel"><h2>教師登入</h2><p class="note">使用與 FunDesk 電腦版相同的教師電子郵件及密碼。此頁不會儲存密碼；請勿把平板交給學生使用。</p>
 <form id="loginForm"><label>電子郵件<input id="email" type="email" autocomplete="username" required></label><label>密碼<input id="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit">登入並載入班級</button></form></section>
@@ -49,7 +49,7 @@ const $=id=>document.getElementById(id);
 const esc=x=>String(x??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const today=()=>{const a=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Taipei",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()).map(x=>[x.type,x.value]));return a.year+"-"+a.month+"-"+a.day};
 const behaviors=[["🙋 主動發言",1],["👂 專心上課",1],["📝 筆記認真",2],["💻 平板使用優良",2],["🔬 實驗表現",2],["🤝 合作良好",2],["📚 未帶課習",-1],["💭 上課分心",-1],["⏰ 上課遲到",-1],["🗣️ 干擾上課",-1],["🎮 平板違規",-2]];
-let session=null,rows=[],meta={},selection=new Set(),saving=false,lastAction=Date.now(),classCode="";
+let session=null,rows=[],meta={},selection=new Set(),saving=false,classCode="";
 function status(s,type=""){const e=$("status");e.textContent=s;e.className="status "+type}
 async function api(path,options={},auth=false,retry=true){
  const headers={apikey:KEY,...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})};
@@ -91,10 +91,10 @@ async function reload(silent=false){
  $("classes").value=classCode;draw();
  if(!silent)status("✅ 已載入 "+valid.length+" 班學生資料。","ok");
 }
-function lock(){
+function logout(){
  session=null;rows=[];selection.clear();classCode="";
  $("app").classList.add("hidden");$("login").classList.remove("hidden");$("logout").classList.add("hidden");
- $("password").value="";status("🔒 已上鎖，請重新登入。");
+ $("password").value="";status("已登出，請重新登入。");
 }
 $("date").value=today();
 $("loginForm").onsubmit=async event=>{
@@ -102,11 +102,11 @@ $("loginForm").onsubmit=async event=>{
  try{
   session=await api("/auth/v1/token?grant_type=password",{method:"POST",body:JSON.stringify({email:$("email").value.trim(),password:$("password").value})},true);
   await reload();
-  $("password").value="";$("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");lastAction=Date.now();
+  $("password").value="";$("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");
  }catch(err){session=null;status("登入或載入失敗："+err.message,"error")}
  finally{b.disabled=false}
 };
-$("logout").onclick=lock;
+$("logout").onclick=logout;
 $("reload").onclick=()=>reload().catch(err=>status("讀取失敗："+err.message,"error"));
 $("classes").onchange=chooseClass;
 $("selectAll").onclick=()=>{selection=new Set(people().map(x=>x.id));draw()};
@@ -149,7 +149,5 @@ async function addPoints(delta){
  finally{saving=false;document.querySelectorAll("[data-delta]").forEach(x=>x.disabled=false)}
 }
 document.querySelectorAll("[data-delta]").forEach(b=>b.onclick=()=>addPoints(Number(b.dataset.delta)));
-["pointerdown","keydown","touchstart"].forEach(type=>document.addEventListener(type,()=>{if(session)lastAction=Date.now()},{passive:true}));
-setInterval(()=>{if(session&&Date.now()-lastAction>10*60*1000)lock()},5000);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&session&&!saving)reload(true).catch(()=>{})});
 </script></body></html>
