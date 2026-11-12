@@ -160,8 +160,8 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 #replyNoticeClose:hover{background:#edd8f2}
 #replyNoticeClose:focus-visible{outline:2px solid #654272;outline-offset:3px}
 @media print{#replyNotice{display:none!important}}
-</style></head><body class="cloud-locked">
-<div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><h1>🔐 自然科任 FunDesk</h1><p>七班快速入口 · 教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
+</style><link rel="stylesheet" href="./fundesk-light.css?v=1"></head><body class="cloud-locked">
+<div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><img class="fundeskScene" src="./fundesk-science-garden.webp" width="780" height="520" alt="" decoding="async"><h1>🔐 自然科任 FunDesk</h1><p>七班快速入口 · 教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
  <div role="status" aria-live="polite"><h2 id="replyNoticeTitle">💬 收到導師回應</h2>
  <p id="replyNoticeMeta"></p><div id="replyNoticeMessage" tabindex="0"></div></div>
@@ -177,7 +177,7 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
  <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attention">▤　待追蹤清單 <i id="sidebarPending"></i></button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試</button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="correction">☑　作業訂正</button><button data-view="board">▣　作業播放表</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　我的班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
  <div class="sidebarFoot">教師登入後存取雲端學生紀錄<br><strong>使用公用電腦後請登出</strong><br></div>
  </aside>
- <main class="main"><header class="topbar"><div><div class="eyebrow">SCIENCE CLASSROOM · 115-1</div><h1 id="pageTitle">首頁</h1><p id="pageSub">點選座位即可查看學生紀錄並進行課堂操作</p></div><div class="topActions"><label>紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" class="btn outline">↓ 備份</button></div></header>
+ <main class="main"><header class="topbar"><div><div class="eyebrow">SCIENCE CLASSROOM · 115-1</div><h1 id="pageTitle">首頁</h1><p id="pageSub">點選座位即可查看學生紀錄並進行課堂操作</p></div><img class="fundeskScene" src="./fundesk-science-garden.webp" width="780" height="520" alt="" decoding="async"><div class="topActions"><label>紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" class="btn outline">↓ 備份</button></div></header>
  <div id="stats" class="stats"></div><div id="content"></div></main>
 </div>
 <div id="siteError" hidden role="alert" style="position:fixed;right:14px;bottom:14px;z-index:9999;background:#fff2f2;color:#9a1a1a;border:2px solid #d04444;border-radius:10px;padding:12px;max-width:440px;font-size:14px;"></div><div id="modal" class="modal hidden"><div class="shade" data-close="true"></div><section class="dialog"><button class="close" data-close="true">×</button><div id="modalContent"></div></section></div>
@@ -408,7 +408,7 @@ function printLabDuty(sheet){
  th,td{border:1px solid #444;text-align:center;padding:9px 5px;overflow-wrap:anywhere}tr{break-inside:avoid}
  th:first-child{width:9%}td{height:46px}button{margin:16px 0}@media print{button{display:none}}</style></head>
  <body><h1>${esc(sheet.topic)}｜實驗工作分配</h1><p>${esc(classDisplay(cl))}　實驗日期 ${esc(sheet.date)}</p>
- ${labDutyTable(sheet)}<button type="button" onclick="window.print()">列印／另存 PDF</button></body></html>`);
+ ${labDutyTable(sheet)}<button type="button" onclick="window.print()">列印／另存 PDF</button><\/body><\/html>`);
  page.document.close();
  page.focus();
 }
@@ -956,7 +956,7 @@ function renderContact(){
  <section class="panel contactHistory"><h2>📅 已發布日期</h2><div id="contactList">讀取中…</div></section>
 </aside></div>`;
 }
-function contactStatus(message,err=false){const e=$('contactStatus');if(e){e.textContent=message;e.style.color=err?'#ffb5ae':'#c4eedc'}}
+function contactStatus(message,err=false){const e=$('contactStatus');if(e){e.textContent=message;e.style.color=err?'#97304c':'#245b48'}}
 function contactFields(){return {lesson:$('contactLesson')?.value||'',homework:$('contactHomework')?.value||'',reminders:$('contactReminder')?.value||''}}
 function contactDirty(){
  const entry=(contactCache[cl]?.entries||[]).find(e=>e.entry_date===contactChosenDate)||{};
