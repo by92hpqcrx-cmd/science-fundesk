@@ -17,6 +17,13 @@ body.notebookViewer .pointToolbar .pointToggle{color:#143c2b}
 #replyPanel input,#replyPanel select,#replyPanel textarea{box-sizing:border-box;width:100%;font:inherit;padding:8px;border:1px solid #7b9989;border-radius:8px;color:#18372d;background:#fff}
 #replyPanel textarea{min-height:95px;resize:vertical}
 #replyPanel .btn{margin-top:12px}
+#replyHistory{margin-top:14px}
+#replyHistory h3{margin-bottom:6px}
+#replyHistoryList{list-style:none;margin:0;padding:0}
+#replyHistoryList li{padding:8px 0;border-top:1px solid #c8d9d0}
+#replyHistoryList time{font-size:.9em}
+.replySent{margin-left:8px;color:#14513d;font-weight:700}
+.replyHistoryText{white-space:pre-wrap;overflow-wrap:anywhere}
 @media print{#replyPanel{display:none!important}}
 </style></head><body class="notebookViewer"><header><div class="wrap"><small>FUNDESK · 我們的班級小黑板</small><div class="chalkDoodle" aria-hidden="true">✧　 /\_/\<br>　( •ᴗ• )　☆<br>　 / づ♡</div><h1 id="classTitle">📒 班級聯絡簿</h1><p>自然科課程紀錄 · 考試預告 · 重要記事</p></div></header>
 <main><div class="bar"><span id="status" role="status">正在連線…</span><button class="btn" id="refresh" type="button">↻ 立即更新</button></div><p class="notice" id="pointScreenNote">🔒 學生加扣點紀錄預設隱藏。給導師查看時可按「顯示」；投影到電腦大螢幕前請按「隱藏」。此按鈕不提供帳號權限保護。</p><div id="pointToolbar" class="pointToolbar"><button id="toggleAllPoints" class="pointToggle" type="button" aria-expanded="false" aria-controls="latest history">👁 顯示加扣點紀錄</button><p>預設隱藏，僅在此頁面按鈕展開；投影前請按「隱藏」。已發布的資料並非保密資料。</p><p id="pointEmpty" class="pointNotice" hidden>目前沒有已發布的加扣點紀錄。老師發布當日加扣點後，「課堂表現」新增的紀錄會自動同步。</p></div><article id="latestEntry" class="entry"><div id="latest"></div>
@@ -25,6 +32,7 @@ body.notebookViewer .pointToolbar .pointToggle{color:#143c2b}
  <textarea id="replyText" maxlength="1000" required placeholder="輸入給科任老師的回應"></textarea>
  <button class="btn" id="replySend" type="submit">送出回應</button>
  <span id="replyStatus" role="status"></span>
+ <div id="replyHistory" hidden><h3>最近已傳送的回應</h3><ul id="replyHistoryList"></ul></div>
  </form></article><h2 class="historyTitle">📅 過往聯絡簿</h2><div id="history"></div><p class="foot">此連結可閱讀老師發布的內容，包括老師選擇公開的學生加扣點紀錄。加扣點預設隱藏，但網址持有人仍可取得資料。頁面約每 20 秒自動更新。</p></main>
 <script>
 (()=>{'use strict';
@@ -67,6 +75,35 @@ function article(e,wrapped=true){
  const parsed=splitPoints(e.reminders);
  return `${wrapped?'<article class="entry">':''}<h2>${esc(e.entry_date)}</h2><div class="date">最後更新：${esc(stamp(e.updated_at))}</div>${sections({...e,reminders:parsed.reminders})}${pointPanel(parsed.points,parsed.published)}${wrapped?'</article>':''}`;
 }
+const replyHistoryKey='fundesk_sent_replies_v1:'+token;
+let sentReplies=[];
+function readSentReplies(){
+ try{
+  const stored=JSON.parse(localStorage.getItem(replyHistoryKey)||'[]');
+  if(Array.isArray(stored))return stored.filter(item=>
+   item&&typeof item.id==='string'&&typeof item.message==='string'&&Number.isFinite(Date.parse(item.sentAt))
+  ).slice(0,5);
+ }catch{}
+ return sentReplies;
+}
+function renderSentReplies(){
+ el('replyHistory').hidden=!sentReplies.length;
+ el('replyHistoryList').innerHTML=sentReplies.map(item=>
+  `<li><time datetime="${esc(item.sentAt)}">${esc(stamp(item.sentAt))}</time><span class="replySent">已傳送</span>
+  <div class="replyHistoryText">${esc(item.message)}</div></li>`
+ ).join('');
+}
+function rememberSentReply(id,message){
+ sentReplies=[{id,message,sentAt:new Date().toISOString()},...readSentReplies().filter(item=>item.id!==id)].slice(0,5);
+ try{localStorage.setItem(replyHistoryKey,JSON.stringify(sentReplies));}catch{}
+ renderSentReplies();
+}
+if(/^[0-9a-f]{64}$/.test(token)){
+ sentReplies=readSentReplies();renderSentReplies();
+ window.addEventListener('storage',event=>{
+  if(event.key===replyHistoryKey||event.key===null){sentReplies=readSentReplies();renderSentReplies();}
+ });
+}
 let replyDate='';
 let replyPending=null,replyBusy=false;
 function replySetDates(entries){
@@ -88,6 +125,7 @@ el('replyPanel').onsubmit=async event=>{
   });
   const result=await response.json();
   if(!response.ok||result?.ok!==true)throw Error(result?.code==='PGRST202'?'免回應碼送出尚未啟用，請通知科任老師。':result?.message||'送出失敗，請重試。');
+  rememberSentReply(replyPending.id,message);
   if(el('replyText').value.trim()===message)el('replyText').value='';
   replyPending=null;status.textContent='回應已送出，FunDesk 教師端會自動更新。';
  }catch(error){status.textContent='未能確認送出：'+error.message;}
