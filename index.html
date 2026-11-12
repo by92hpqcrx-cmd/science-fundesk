@@ -185,13 +185,23 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 #replyNoticeClose{display:block;margin-left:auto;background:#f4e5f7;color:#41244c;border:1px solid #e4cce9;border-radius:999px;padding:10px 18px;font:inherit;font-weight:800;cursor:pointer}
 #replyNoticeClose:hover{background:#edd8f2}
 #replyNoticeClose:focus-visible{outline:2px solid #654272;outline-offset:3px}
+#replyNoticeForm{margin-top:12px}
+#replyNoticeForm[hidden]{display:none}
+#replyNoticeForm label{display:block;font-weight:700}
+#replyNoticeForm textarea{display:block;width:100%;margin:6px 0 9px}
+#replyNoticeStatus{font-size:15px}
 @media print{#replyNotice{display:none!important}}
 </style><link rel="stylesheet" href="./fundesk-light.css?v=2"><link rel="stylesheet" href="./fundesk-rps.css?v=2"><style>[data-att-reason-wrap][hidden]{display:none}[data-att-reason-wrap]{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}[data-att-reason]{width:min(240px,100%)}[data-attendance-editor]{gap:8px;min-width:105px}[data-att-status]{accent-color:#355fba}[data-attendance-editor]>label:first-child{white-space:nowrap}[data-attendance-editor] input[type=checkbox]{width:18px;height:18px;vertical-align:middle}</style><style>#redemptionSingle[hidden],#redemptionGroup[hidden]{display:none}#redemptionGroup{border:1px solid #c5dce9;border-radius:12px;padding:10px 14px}#redemptionGroup label{padding:5px}#redemptionStatus{color:#2b5573}</style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>七班快速入口 · 教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
  <div role="status" aria-live="polite"><h2 id="replyNoticeTitle">💬 收到導師回應</h2>
  <p id="replyNoticeMeta"></p><div id="replyNoticeMessage" tabindex="0"></div></div>
- <button id="replyNoticeClose" type="button">關閉通知</button>
+ <div class="actions"><button id="replyNoticeRespond" class="btn" type="button">回覆</button><button id="replyNoticeClose" type="button">關閉通知</button></div>
+ <form id="replyNoticeForm" hidden>
+  <label for="replyNoticeText">科任老師回覆（會顯示在班級聯絡簿）</label>
+  <textarea id="replyNoticeText" maxlength="1000" rows="3" required></textarea>
+  <button class="btn" type="submit">送出回覆</button><p id="replyNoticeStatus" role="status"></p>
+ </form>
 </aside>
 <div id="cloudStatus" class="cloudStatus" role="status" aria-live="polite">尚未登入雲端</div>
 <div class="shell">
@@ -1225,7 +1235,7 @@ function contactQueuePointsSync(code,date,fillMissingSeats=false){
   }catch(err){console.error('FunDesk 加扣點同步到聯絡簿失敗：',err);const msg=$('contactStatus');if(msg&&view==='contact'&&cl===code)contactStatus('⚠️ 加扣點同步失敗：'+cloudErr(err),true)}
  });
 }
-function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);u.searchParams.set('v','teacher-messages-1');return u.href}
+function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);u.searchParams.set('v','teacher-messages-direct-1');return u.href}
 function renderContact(){
  const date=contactChosenDate||today(),code=cl;
  return `<div class="contactShell"><section class="panel contactForm"><div class="panelHead"><div><small class="chalkEyebrow">FUNDESK · 我們的班級小黑板</small><h2>📒 ${esc(classDisplay(code))}聯絡簿</h2></div><span class="chalkCat" aria-hidden="true">/\\_/\\<br>( •ᴗ• ) ♡</span></div>
@@ -1237,12 +1247,12 @@ function renderContact(){
  <div id="contactReplyLabel" style="font-weight:700;margin-top:12px">💬 留言區</div>
  <div id="contactReplies" role="region" aria-labelledby="contactReplyLabel" aria-live="polite" style="min-height:3em;padding:10px 12px;margin:6px 0 12px;border:1px solid #84a696;border-radius:8px;overflow-wrap:anywhere">讀取中…</div>
  <label for="contactMessage">科任老師留言</label><textarea id="contactMessage" maxlength="1000" rows="3" placeholder="輸入給導師的留言"></textarea>
- <div class="actions"><button type="button" class="btn" id="contactMessageSend">送出留言</button><button type="button" class="btn outline" id="contactThreadCopy" disabled>複製導師留言連結</button></div>
+ <div class="actions"><button type="button" class="btn" id="contactMessageSend">送出留言</button></div>
  <p id="contactMessageStatus" role="status"></p>
  <div class="actions"><button type="button" class="btn" id="contactSave">💾 發布／儲存聯絡簿</button><button type="button" class="btn outline" id="contactReload">↻ 重新讀取雲端</button></div>
  <p class="contactStatus" id="contactStatus" role="status">載入中…</p></section>
- <aside><section class="panel contactShare"><h2>🔗 ${esc(classDisplay(code))}專屬閱讀網址</h2><p class="contactMuted">每班都有不同連結。學生免登入，只能看此連結對應班級的聯絡簿，不能修改。</p>
- <input type="text" readonly id="contactLink" aria-label="班級聯絡簿網址" value="讀取中…"><div class="actions"><button type="button" class="btn outline" id="contactCopy" disabled>複製網址</button><button type="button" class="btn outline" id="contactOpen" disabled>學生畫面 ↗</button></div><p class="contactMuted">連結請只提供該班學生與家長。取得網址的人都能閱讀該班聯絡簿，請勿放入姓名、成績等個資。</p></section>
+ <aside><section class="panel contactShare"><h2>🔗 ${esc(classDisplay(code))}專屬閱讀網址</h2><p class="contactMuted">每班都有不同連結。免登入即可閱讀該班的聯絡簿與留言。</p>
+ <input type="text" readonly id="contactLink" aria-label="班級聯絡簿網址" value="讀取中…"><div class="actions"><button type="button" class="btn outline" id="contactCopy" disabled>複製網址</button><button type="button" class="btn outline" id="contactOpen" disabled>學生畫面 ↗</button></div><p class="contactMuted">持有本班聯絡簿網址的人都可查看留言並以導師身分留言，請避免在留言中填寫個資。</p></section>
  <section class="panel contactHistory"><h2>📅 已發布日期</h2><div id="contactList">讀取中…</div></section>
 </aside></div>`;
 }
@@ -1331,12 +1341,6 @@ async function contactRefreshReplies(){
    method:'POST',body:JSON.stringify({p_class_code:code})
   });
   if(request!==contactReplyRequest||!list.isConnected||cl!==code)return;
-  const copy=$('contactThreadCopy');
-  if(/^[0-9a-f]{64}$/.test(data?.thread_token||'')){
-   const url=new URL(contactViewerUrl(contactCache[code].token));
-   url.hash=new URLSearchParams({thread:data.thread_token}).toString();
-   copy.dataset.url=url.href;copy.disabled=false;
-  }
   const items=Array.isArray(data?.messages)?data.messages:[];
   const timestamp=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',dateStyle:'short',timeStyle:'short'});
   list.innerHTML=items.map(item=>`<article style="padding:8px 0;border-top:1px solid #c5dfd2">
@@ -1348,6 +1352,11 @@ async function contactRefreshReplies(){
   list.textContent=/PGRST202|HTTP 404/.test(String(err?.message))?'請先執行 contact_messages.sql 啟用留言區。':'留言暫時無法讀取，稍後會重試。';
  }
 }
+function postContactMessage(code,date,message,id){
+ return cloudFetch('/rest/v1/rpc/fundesk_contact_messages',{method:'POST',body:JSON.stringify({
+  p_class_code:code,p_entry_date:date,p_request_id:id,p_message:message
+ })});
+}
 async function sendContactMessage(){
  const field=$('contactMessage'),button=$('contactMessageSend'),status=$('contactMessageStatus');
  const message=field.value.trim(),code=cl,date=contactChosenDate;
@@ -1358,9 +1367,7 @@ async function sendContactMessage(){
  if(contactMessagePending?.key!==key)contactMessagePending={key,id:crypto.randomUUID()};
  contactMessageBusy=true;button.disabled=true;status.textContent='正在送出…';
  try{
-  await cloudFetch('/rest/v1/rpc/fundesk_contact_messages',{method:'POST',body:JSON.stringify({
-   p_class_code:code,p_entry_date:date,p_request_id:contactMessagePending.id,p_message:message
-  })});
+  await postContactMessage(code,date,message,contactMessagePending.id);
   contactMessagePending=null;
   if(field.isConnected&&field.value.trim()===message)field.value='';
   status.textContent='留言已送出。';
@@ -1371,12 +1378,6 @@ async function sendContactMessage(){
 setInterval(()=>{if(!document.hidden&&view==='contact')contactRefreshReplies()},20000);
 function contactBind(){
  $('contactMessageSend').onclick=sendContactMessage;
- $('contactThreadCopy').onclick=async event=>{
-  const url=event.currentTarget.dataset.url;
-  if(!url)return;
-  try{await navigator.clipboard.writeText(url);$('contactMessageStatus').textContent='已複製導師專用留言連結。';}
-  catch{window.prompt('複製導師專用留言連結',url);}
- };
  $('contactReplies').onclick=e=>{const button=e.target.closest('[data-delete-reply]');if(button)contactDeleteReply(button);};
  contactChosenDate=today();
  $('contactDate').onchange=e=>{const next=e.target.value;if(!contactSelect(next))e.target.value=contactChosenDate};
@@ -1588,8 +1589,39 @@ function showReplyNotice(){
  const sent=new Date(item.created_at).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false});
  $('replyNoticeMeta').textContent=classDisplay(item.class_code)+'　·　'+sent;
  $('replyNoticeMessage').textContent=item.message;
+ $('replyNoticeForm').hidden=true;
+ $('replyNoticeText').value='';
+ $('replyNoticeStatus').textContent='';
  $('replyNotice').hidden=false;
 }
+let noticeReplyBusy=false,noticeReplyPending=null;
+$('replyNoticeRespond').onclick=()=>{
+ if(!replyNoticeCurrent)return;
+ $('replyNoticeForm').hidden=false;
+ $('replyNoticeText').focus();
+};
+$('replyNoticeForm').onsubmit=async event=>{
+ event.preventDefault();
+ const item=replyNoticeCurrent,field=$('replyNoticeText'),status=$('replyNoticeStatus');
+ const message=field.value.trim();
+ if(!item||noticeReplyBusy||!message)return;
+ const key=JSON.stringify([replyNoticeId(item),message]);
+ if(noticeReplyPending?.key!==key)noticeReplyPending={key,id:crypto.randomUUID()};
+ const button=event.currentTarget.querySelector('button[type="submit"]');
+ noticeReplyBusy=true;button.disabled=true;status.textContent='正在送出…';
+ try{
+  await postContactMessage(item.class_code,item.entry_date,message,noticeReplyPending.id);
+  noticeReplyPending=null;
+  if(replyNoticeCurrent===item){
+   if(field.value.trim()===message)field.value='';
+   status.textContent='回覆已送出。';
+  }
+  if(view==='contact'&&cl===item.class_code)contactRefreshReplies();
+ }catch(err){
+  if(replyNoticeCurrent===item)status.textContent=/PGRST202|HTTP 404/.test(String(err?.message))
+   ?'請先執行新版 contact_messages.sql。':'回覆未送出，請再試一次。';
+ }finally{noticeReplyBusy=false;button.disabled=false;}
+};
 $('replyNoticeClose').onclick=()=>{
  if(!replyNoticeCurrent)return;
  const seen=replyNoticeSeen();
