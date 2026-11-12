@@ -39,7 +39,8 @@ function pointPanel(points,published){
  if(!published)return '';
  const detail=points.length?points.map(p=>{
   const delta=Number(p.delta)||0;
-  return `<div class="pointRecord"><b>${esc(p.no)} 號 · ${esc(p.name)}　${delta>0?'+':''}${esc(delta)} 分</b><div class="pointReason">${esc(p.reason||'（無備註）')}</div></div>`;
+  const seatNo=(p.no!==undefined&&p.no!==null&&String(p.no).trim()!=='')?String(p.no).trim():'未提供';
+   return `<div class="pointRecord"><b>座號：${esc(seatNo)}　姓名：${esc(p.name||'未提供')}　${delta>0?'+':''}${esc(delta)} 分</b><div class="pointReason">原因：${esc(p.reason||'（無備註）')}</div></div>`;
  }).join(''):'<p>本日無加扣點紀錄。</p>';
  return `<div class="pointPanel ${showPoints?'':'pointHidden'}"><h3>⭐ FunDesk 學生加扣點紀錄</h3><div class="pointDetails"><p class="pointNotice">含學生姓名與加扣分原因。持有聯絡簿網址的人可取得已發布資料，投影前請隱藏。</p>${detail}</div></div>`;
 }
