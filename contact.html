@@ -32,8 +32,6 @@ const API_URL='https://ayvwsexnxvjjcrbtyoof.supabase.co';
 const KEY='sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L';
 const pageUrl=new URL(location.href);
 const token=pageUrl.searchParams.get('t')||'';
-const initialReplyCode=new URLSearchParams(pageUrl.hash.slice(1)).get('reply')||'';
-const validReplyCode=code=>/^[0-9a-f]{64}$/.test(code);
 const el=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const stamp=t=>t?new Date(t).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false}):'';
@@ -69,7 +67,7 @@ function article(e,wrapped=true){
  const parsed=splitPoints(e.reminders);
  return `${wrapped?'<article class="entry">':''}<h2>${esc(e.entry_date)}</h2><div class="date">最後更新：${esc(stamp(e.updated_at))}</div>${sections({...e,reminders:parsed.reminders})}${pointPanel(parsed.points,parsed.published)}${wrapped?'</article>':''}`;
 }
-let replyCode=validReplyCode(initialReplyCode)?initialReplyCode:'',replyDate='';
+let replyDate='';
 let replyPending=null,replyBusy=false;
 function replySetDates(entries){
  if(!replyBusy&&!el('replyText').value.trim())replyDate=entries[0]?.entry_date||'';
@@ -80,21 +78,19 @@ el('replyPanel').onsubmit=async event=>{
  const date=replyDate,author='導師',message=el('replyText').value.trim();
  const status=el('replyStatus');
  if(!date||!message){status.textContent='請填寫回應。';return}
- if(!validReplyCode(replyCode))replyCode=(window.prompt('請輸入科任老師提供的導師回應碼')||'').trim();
- if(!validReplyCode(replyCode)){status.textContent='請輸入科任老師提供的導師回應碼。';return}
- const signature=JSON.stringify([date,author,message,replyCode]);
+ const signature=JSON.stringify([date,author,message]);
  if(replyPending?.signature!==signature)replyPending={signature,id:crypto.randomUUID()};
  replyBusy=true;el('replySend').disabled=true;status.textContent='正在送出…';
  try{
-  const response=await fetch(API_URL+'/rest/v1/rpc/fundesk_contact_reply_submit',{
+  const response=await fetch(API_URL+'/rest/v1/rpc/fundesk_contact_reply_submit_open',{
    method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},
-   body:JSON.stringify({p_token:token,p_reply_token:replyCode,p_entry_date:date,p_request_id:replyPending.id,p_author:author,p_message:message})
+   body:JSON.stringify({p_token:token,p_entry_date:date,p_request_id:replyPending.id,p_author:author,p_message:message})
   });
   const result=await response.json();
-  if(!response.ok||result?.ok!==true)throw Error(result?.code==='PGRST202'?'導師回應尚未啟用。':result?.message||'送出失敗，請重試。');
+  if(!response.ok||result?.ok!==true)throw Error(result?.code==='PGRST202'?'免回應碼送出尚未啟用，請通知科任老師。':result?.message||'送出失敗，請重試。');
   if(el('replyText').value.trim()===message)el('replyText').value='';
   replyPending=null;status.textContent='回應已送出，FunDesk 教師端會自動更新。';
- }catch(error){if(/無效/.test(error.message))replyCode='';status.textContent='未能確認送出：'+error.message;}
+ }catch(error){status.textContent='未能確認送出：'+error.message;}
  finally{replyBusy=false;el('replySend').disabled=false;}
 };
 el('toggleAllPoints').onclick=()=>{showPoints=!showPoints;updatePointsToggle()};
