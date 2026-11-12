@@ -149,8 +149,21 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 @media(max-width:560px){.tabletHero{padding:18px}.tabletHeroEmoji{display:none}.tabletIntro{font-size:15px}.tabletPhotosGrid{grid-template-columns:1fr}.tabletRuleItem b{font-size:16px}}
 @media print{.sidebar,.topbar,.stats,.cloudStatus,.tabletNav,.tabletActions{display:none!important}.shell,.main{display:block!important;margin:0!important;width:100%!important}.tabletSection{break-inside:avoid}.tabletGuide{max-width:none}}
 </style>
-<link rel="stylesheet" href="notebook.css?v=20261112"><style>.labDutyTable{width:100%;min-width:590px;border-collapse:collapse}.labDutyTable th,.labDutyTable td{border:1px solid var(--line);text-align:center;padding:9px}.labDutyTable th{background:var(--bg)}#labDutyForm input{max-width:100%}#labDutyForm label{display:grid;gap:4px}#labDutyStatus{margin:8px 0}.labDutyCard{margin:8px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px}.labDutyCard summary{cursor:pointer;font-weight:700}.labDutyCard .tablewrap{margin-top:10px}</style></head><body class="cloud-locked">
+<link rel="stylesheet" href="notebook.css?v=20261112"><style>.labDutyTable{width:100%;min-width:590px;border-collapse:collapse}.labDutyTable th,.labDutyTable td{border:1px solid var(--line);text-align:center;padding:9px}.labDutyTable th{background:var(--bg)}#labDutyForm input{max-width:100%}#labDutyForm label{display:grid;gap:4px}#labDutyStatus{margin:8px 0}.labDutyCard{margin:8px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px}.labDutyCard summary{cursor:pointer;font-weight:700}.labDutyCard .tablewrap{margin-top:10px}</style><style>
+#replyNotice{position:fixed;right:clamp(12px,3vw,32px);bottom:clamp(12px,4vh,42px);z-index:100000;width:min(560px,calc(100vw - 24px));padding:clamp(18px,4vw,30px);border:2px solid #9bd5ba;border-radius:24px;background:#173a32;color:#f4fff9;box-shadow:0 14px 48px #102e3090}
+#replyNotice[hidden]{display:none}
+#replyNotice h2{font-size:clamp(23px,4vw,32px);margin:0 0 6px;color:#fff}
+#replyNoticeMeta{margin:0;color:#c3e9d9;font-size:15px}
+#replyNoticeMessage{font-size:clamp(18px,3vw,24px);line-height:1.5;margin:14px 0;white-space:pre-wrap;overflow-wrap:anywhere;max-height:42vh;overflow:auto}
+#replyNoticeClose{display:block;margin-left:auto;background:#e5fff1;color:#153a2d;border:0;border-radius:12px;padding:10px 18px;font:inherit;font-weight:800;cursor:pointer}
+@media print{#replyNotice{display:none!important}}
+</style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><h1>🔐 自然科任 FunDesk</h1><p>七班快速入口 · 教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
+<aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
+ <div role="status" aria-live="polite"><h2 id="replyNoticeTitle">💬 收到導師回應</h2>
+ <p id="replyNoticeMeta"></p><div id="replyNoticeMessage" tabindex="0"></div></div>
+ <button id="replyNoticeClose" type="button">關閉通知</button>
+</aside>
 <div id="cloudStatus" class="cloudStatus" role="status" aria-live="polite">尚未登入雲端</div>
 <div class="shell">
  <aside class="sidebar"><div class="brand"><span class="brandmark">✦</span><div><b>自然科任 FunDesk</b><small>五年級科任教學工作台</small></div></div>
@@ -1149,6 +1162,7 @@ function cloudUnlock(){
  $('cloudGate').hidden=true;document.body.classList.remove('cloud-locked');
  cloudStatus('✅ 雲端已同步');
  render();
+ pollReplyNotices();
 }
 function cloudQueueSave(){
  if(!cloudReady||cloudBlocked)return Promise.resolve();
@@ -1226,6 +1240,57 @@ async function cloudLogout(){
  location.reload();
 }
 window.addEventListener('beforeunload',e=>{if(cloudOutstanding>0||cloudBlocked){e.preventDefault();e.returnValue='雲端可能尚未儲存，請先備份';}});
+
+const replyNoticeDismissed=new Map();
+let replyNoticeBusy=false,replyNoticeQueue=[],replyNoticeCurrent=null,replyNoticeNextCheck=0;
+const replyNoticeKey=()=> 'fundesk_reply_notices_v1:'+String(cloudSession?.user?.id||'session');
+const replyNoticeId=item=>JSON.stringify([item.class_code,item.entry_date,item.request_id]);
+function replyNoticeSeen(){
+ const key=replyNoticeKey();
+ if(!replyNoticeDismissed.has(key)){
+  let saved=[];
+  try{const value=JSON.parse(localStorage.getItem(key)||'[]');if(Array.isArray(value))saved=value;}catch{}
+  replyNoticeDismissed.set(key,new Set(saved));
+ }
+ return replyNoticeDismissed.get(key);
+}
+function showReplyNotice(){
+ if(replyNoticeCurrent||!replyNoticeQueue.length)return;
+ replyNoticeCurrent=replyNoticeQueue.shift();
+ const item=replyNoticeCurrent;
+ const sent=new Date(item.created_at).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false});
+ $('replyNoticeMeta').textContent=classDisplay(item.class_code)+'　·　'+sent;
+ $('replyNoticeMessage').textContent=item.message;
+ $('replyNotice').hidden=false;
+}
+$('replyNoticeClose').onclick=()=>{
+ if(!replyNoticeCurrent)return;
+ const seen=replyNoticeSeen();
+ seen.add(replyNoticeId(replyNoticeCurrent));
+ try{localStorage.setItem(replyNoticeKey(),JSON.stringify([...seen].slice(-200)));}catch{}
+ replyNoticeCurrent=null;
+ $('replyNotice').hidden=true;
+ showReplyNotice();
+ if(!$('replyNotice').hidden)$('replyNoticeClose').focus();
+};
+async function pollReplyNotices(){
+ if(replyNoticeBusy||!cloudReady||!cloudSession||document.hidden||Date.now()<replyNoticeNextCheck)return;
+ replyNoticeBusy=true;
+ try{
+  const items=await cloudFetch('/rest/v1/rpc/fundesk_contact_reply_notifications',{method:'POST',body:'{}'});
+  if(!Array.isArray(items))return;
+  const seen=replyNoticeSeen(),active=replyNoticeCurrent&&replyNoticeId(replyNoticeCurrent);
+  replyNoticeQueue=items.filter(item=>{
+   const id=replyNoticeId(item);
+   return id!==active&&!seen.has(id)&&typeof item.message==='string';
+  });
+  showReplyNotice();
+ }catch(error){
+  if(/PGRST202|HTTP 404/.test(String(error?.message)))replyNoticeNextCheck=Date.now()+60000;
+ }finally{replyNoticeBusy=false;}
+}
+setInterval(pollReplyNotices,3000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollReplyNotices()});
 
 loadQuestionBank();
 cloudBoot();
