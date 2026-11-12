@@ -754,7 +754,7 @@ function bindNewFeatures(){
   document.querySelectorAll('[data-exam-remove]').forEach(b=>b.onclick=()=>{if(!confirm('確定刪除這筆考程？'))return;cls().examSchedule=cls().examSchedule.filter(x=>x.id!==b.dataset.examRemove);save();render()});
  }
 }
-function renderStudents(){return `<section class="panel"><div class="panelHead"><h2>學生名單 · ${esc(classDisplay(cl))}</h2><div class="row"><button class="btn small outline" id="importCsvBtn">匯入 CSV 名單</button><button class="btn small outline" data-csv="students">匯出 CSV</button><button class="btn small soft" id="addStudent">＋ 新增學生</button></div></div><p class="hint">目前示範資料不是真實學生；可按「匯入 CSV 名單」替換。格式：座號,姓名（例如 1,王小明）。支援 Excel 常見的 UTF-8、Big5／ANSI、UTF-16 CSV；匯入前會預覽中文姓名。請先備份，只有同座號且同姓名才保留原紀錄。</p><div class="tablewrap"><table><thead><tr><th>座號</th><th>姓名</th><th>待追蹤</th><th>點數</th><th>操作</th></tr></thead><tbody>${[...students()].sort((a,b)=>a.no-b.no).map(s=>`<tr><td>${s.no}</td><td class="studentName">${esc(s.name)}</td><td>${pending(s.id).length}</td><td>${ptotal(s.id)}</td><td><button class="btn small outline" data-open="${s.id}">個人紀錄</button></td></tr>`).join('')}</tbody></table></div></section>`}
+function renderStudents(){return `<section class="panel"><div class="panelHead"><h2>學生名單 · ${esc(classDisplay(cl))}</h2><div class="row"><button class="btn small outline" id="importCsvBtn">匯入 CSV 名單</button><button class="btn small outline" data-csv="students">匯出 CSV</button><button class="btn small soft" id="addStudent">＋ 新增學生</button></div></div><p class="hint">目前示範資料不是真實學生；可按「匯入 CSV 名單」替換。格式：座號,姓名（例如 1,王小明）。支援 Excel 常見的 UTF-8、Big5／ANSI、UTF-16 CSV；匯入前會預覽中文姓名。請先備份，只有同座號且同姓名才保留原紀錄。</p><div class="tablewrap"><table><thead><tr><th>座號</th><th>姓名</th><th>待追蹤</th><th>點數</th><th>操作</th></tr></thead><tbody>${[...students()].sort((a,b)=>a.no-b.no).map(s=>`<tr><td>${s.no}</td><td class="studentName">${esc(s.name)}</td><td>${pending(s.id).length}</td><td>${ptotal(s.id)}</td><td><div class="row"><button class="btn small outline" data-open="${esc(s.id)}">個人紀錄</button><button type="button" class="btn small danger" data-delete-student="${esc(s.id)}" aria-label="刪除 ${esc(s.name)}"><img src="data:image/webp;base64,UklGRnYCAABXRUJQVlA4WAoAAAAQAAAAKwAAHAAAQUxQSO0AAAABgLrtv/HnzLbNqGRVK64t/dps2/oHtrbKuOo121uyrXM+43nf75QjYgLYP9VLU1ZVU50b+C2C9/DpWfR3GMLD9OTE7BMGybSsfPbRZ2dp4TyFdTdLmtTR9d1nfrC4srx0zh+31kaTCcJuAAiOT7kAcBmgXhc454JLo0S9ZgiuUCBDPftuKBBPNWbqsaB7yGHPmhG6HSgZ16XQnVfSy0j7lJTQNIILqUSadAguKW79aKIfIYNNOxr3Q7kRbRr9ZQiZHkY8BC6TQ9UiF0OVBoiPXAhc+FJZDQt8+diqTcWM4zOLigrz8nM1YVrsXwoAVlA4IGIBAAAwBwCdASosAB0APlUkjUSjoiEVXAb8OAVEtgBeusShgMKz0wD0AOk7vwBjgi/Djn6MoXDwHqEvtbZ/h6tUzTMOJuAA/vyjDZxprC7elMF9Jt2omHL7zyDtg7bZAzGPBdTwX8uy7B3XJr6RJ7eu1zT8HCx+R4wmgo7Eo6E+V4v/w5/Yvj2L5DtuT3raEr8mNOaYv89v+1RPv8Qea7TCHhLmpZhNyj4EVejRlOfTdK8fHd2TL4HwDnc/9vonuMgfjfebL5PVEw53r2Gmh1bC03FgTsHo/J3+fleTsmuJ8UH69Q6bQk0ZXmHE7/i5wc5G0dW++ckzOmc1sqEEAPwsYjD38xXLc7YsfgPLL/E7UfoMhpbXRrFCifTVTHTH3zCzGzlNO4mu0gabxRWsWh3N2vMBYuQaLrBxPigkYZGEWraBHSSP93jnEah7q8bRo+2qi66BS7ZeXnONo3A9p/z1WoAAAAA=" width="18" height="18" alt="" style="vertical-align:middle;margin-right:3px">刪除</button></div></td></tr>`).join('')}</tbody></table></div></section>`}
 function renderTools(){return `${renderExamClock()}<div class="twoCols"><section class="panel"><h2>◴ 倒數計時</h2><p class="hint">實驗操作、習作書寫與考試都可使用；切換功能頁仍繼續計時。</p><div id="timerShow" class="toolDisplay">${toMMSS(timerSeconds)}</div><div class="actions"><button class="btn small outline" data-time="300">5 分鐘</button><button class="btn small outline" data-time="600">10 分鐘</button><button class="btn small outline" data-time="1200">20 分鐘</button><button class="btn small" id="timerStart">開始／暫停</button><button class="btn small outline" id="timerReset">重設</button></div></section><section class="panel"><h2>♙ 隨機抽學生</h2><p class="hint">從目前 ${classDisplay(cl)}名單中隨機選取</p><div class="toolDisplay" id="randomShow">？</div><div class="actions"><button class="btn" id="pickStudent">抽一位學生</button></div></section></div><section class="panel"><h2>本節課操作建議</h2><p class="hint">實驗結束 → 當堂書寫習作 → 將還沒寫完的學生記為「未完成」 → 下次補完改成「已補交」；單元考請針對請假者標「缺考／待補考」，補考後再改「補考完成」。</p></section>`}
 function renderClassManager(){
  const active=activeCodes();
@@ -819,7 +819,13 @@ if(view==='schedule'){
  $('planCsvFile').onchange=async e=>{await scheduleImportCsv(e.target.files[0]);e.target.value=''};
 }
 if(view==='classes')hookClassManager();
-if(view==='students'){$('importCsvBtn').onclick=()=>$('csvImport').click();$('addStudent').onclick=()=>openAddStudent()}
+if(view==='students'){
+ $('importCsvBtn').onclick=()=>$('csvImport').click();
+ $('addStudent').onclick=()=>openAddStudent();
+ document.querySelectorAll('[data-delete-student]').forEach(button=>{
+  button.onclick=()=>removeStudent(button.dataset.deleteStudent);
+ });
+}
 if(view==='settings'){$('exportJson').onclick=backup;$('importJson').onclick=()=>$('jsonImport').click();$('resetClass').onclick=()=>{if(prompt(`要重設 ${classDisplay(cl)}所有學生、出勤、習作、考試、點數，請輸入班級數字 ${cl}`)===cl){db.classes[cl]=freshClass();save();render()}}}
 if(view==='tools'){document.querySelectorAll('[data-time]').forEach(b=>b.onclick=()=>setTimer(Number(b.dataset.time)));$('timerStart').onclick=toggleTimer;$('timerReset').onclick=()=>setTimer(300);$('pickStudent').onclick=()=>{if(!students().length)return;let s=students()[Math.floor(Math.random()*students().length)];$('randomShow').textContent=s.no+'號 '+s.name};updateCountdown()}
 bindNewFeatures();
@@ -833,6 +839,29 @@ function openStudent(id){studentId=id;let s=student(id);if(!s)return;let abs=cls
  document.querySelectorAll('[data-delta]').forEach(b=>b.onclick=()=>{let delta=Number(b.dataset.delta);cls().points.push({sid:id,date:$('sessionDate').value,delta,reason:$('pointReason').value.trim()||'課堂表現'});save();contactQueuePointsSync(cl,$('sessionDate').value);openStudent(id);statCards()});
  document.querySelectorAll('[data-student-task]').forEach(e=>e.onchange=()=>{let tid=e.dataset.studentTask,rec=taskResult(tid,id);if(rec)rec.status=e.value;else cls().results.push({sid:id,taskId:tid,status:e.value,note:''});save();openStudent(id);statCards()});
  $('saveStudentNote').onclick=()=>{s.notes=$('studentNote').value;save();alert('備註已儲存')};}
+function removeStudent(id){
+ const target=student(id);
+ if(!target)return;
+ if(!cloudReady||cloudBlocked){
+  alert('目前無法同步雲端，請恢復同步後再刪除學生。');
+  return;
+ }
+ if(!confirm(`確定刪除 ${classDisplay(cl)} ${target.no} 號 ${target.name}？\n此學生的出勤、作業／考試登記及點數會一併移除。已發布的聯絡簿和已儲存的實驗分工表仍會保留。`))return;
+ const current=cls();
+ current.students=current.students.filter(item=>item.id!==id);
+ current.attendance=current.attendance.filter(item=>item.sid!==id);
+ current.results=current.results.filter(item=>item.sid!==id);
+ current.points=current.points.filter(item=>item.sid!==id);
+ current.seats.normal=(current.seats.normal||[]).map(sid=>sid===id?null:sid);
+ current.seats.lab=(current.seats.lab||[]).map(sid=>sid===id?null:sid);
+ pointSelection.delete(id);
+ quizPicked.delete(id);
+ if(quizList.at(-1)?.sid===id){currentQuestion=null;gameAnswered=false;}
+ quizList=quizList.filter(item=>item.sid!==id);
+ if(studentId===id)studentId=null;
+ save();
+ render();
+}
 function openAddStudent(){let no=prompt('新增學生的座號',String(students().length+1));if(no===null)return;no=Number(no);if(!Number.isInteger(no)||no<1||students().some(s=>s.no===no))return alert('請輸入尚未使用的正整數座號');let name=prompt('學生姓名');if(!name||!name.trim())return;students().push({id:uid(),no,name:name.trim(),notes:''});save();render()}
 function download(name,text,type='text/plain;charset=utf-8'){let blob=new Blob([text],{type}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},800)}
 function backup(){download('FunDesk_所有班級備份_'+today()+'.json',JSON.stringify(db,null,2),'application/json')}
