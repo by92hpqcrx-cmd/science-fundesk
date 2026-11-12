@@ -150,12 +150,15 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 @media print{.sidebar,.topbar,.stats,.cloudStatus,.tabletNav,.tabletActions{display:none!important}.shell,.main{display:block!important;margin:0!important;width:100%!important}.tabletSection{break-inside:avoid}.tabletGuide{max-width:none}}
 </style>
 <link rel="stylesheet" href="notebook.css?v=20261112"><style>.labDutyTable{width:100%;min-width:590px;border-collapse:collapse}.labDutyTable th,.labDutyTable td{border:1px solid var(--line);text-align:center;padding:9px}.labDutyTable th{background:var(--bg)}#labDutyForm input{max-width:100%}#labDutyForm label{display:grid;gap:4px}#labDutyStatus{margin:8px 0}.labDutyCard{margin:8px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px}.labDutyCard summary{cursor:pointer;font-weight:700}.labDutyCard .tablewrap{margin-top:10px}</style><style>
-#replyNotice{position:fixed;right:clamp(12px,3vw,32px);bottom:clamp(12px,4vh,42px);z-index:100000;width:min(560px,calc(100vw - 24px));padding:clamp(18px,4vw,30px);border:2px solid #9bd5ba;border-radius:24px;background:#173a32;color:#f4fff9;box-shadow:0 14px 48px #102e3090}
+#replyNotice{position:fixed;right:clamp(14px,3vw,34px);bottom:clamp(18px,4vh,44px);z-index:100000;width:min(560px,calc(100vw - 28px));padding:clamp(18px,4vw,30px);border:2px solid #e9d9ef;border-radius:30px 30px 12px 30px;background:#fff;color:#352940;box-shadow:0 16px 44px #47315830;font-family:ui-rounded,"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif}
+#replyNotice::after{content:"";position:absolute;right:18px;bottom:-8px;width:14px;height:14px;transform:rotate(45deg);background:#fff;border-right:2px solid #e9d9ef;border-bottom:2px solid #e9d9ef;border-radius:0 0 4px 0;pointer-events:none}
 #replyNotice[hidden]{display:none}
-#replyNotice h2{font-size:clamp(23px,4vw,32px);margin:0 0 6px;color:#fff}
-#replyNoticeMeta{margin:0;color:#c3e9d9;font-size:15px}
-#replyNoticeMessage{font-size:clamp(18px,3vw,24px);line-height:1.5;margin:14px 0;white-space:pre-wrap;overflow-wrap:anywhere;max-height:42vh;overflow:auto}
-#replyNoticeClose{display:block;margin-left:auto;background:#e5fff1;color:#153a2d;border:0;border-radius:12px;padding:10px 18px;font:inherit;font-weight:800;cursor:pointer}
+#replyNotice h2{font-size:clamp(23px,4vw,32px);margin:0 0 7px;color:#382645;font-weight:850;letter-spacing:.03em}
+#replyNoticeMeta{margin:0;color:#594864;font-size:15px}
+#replyNoticeMessage{font-size:clamp(18px,3vw,24px);line-height:1.55;margin:14px 0;padding:12px 15px;border-radius:17px;background:#faf4fc;color:#30243b;white-space:pre-wrap;overflow-wrap:anywhere;max-height:42vh;overflow:auto}
+#replyNoticeClose{display:block;margin-left:auto;background:#f4e5f7;color:#41244c;border:1px solid #e4cce9;border-radius:999px;padding:10px 18px;font:inherit;font-weight:800;cursor:pointer}
+#replyNoticeClose:hover{background:#edd8f2}
+#replyNoticeClose:focus-visible{outline:2px solid #654272;outline-offset:3px}
 @media print{#replyNotice{display:none!important}}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><h1>🔐 自然科任 FunDesk</h1><p>七班快速入口 · 教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
