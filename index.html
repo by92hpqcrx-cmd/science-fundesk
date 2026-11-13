@@ -115,6 +115,7 @@
 .studentAvatarInline{display:inline-flex;align-items:center;gap:8px}
 .studentAvatarInline .avatarMini{width:38px;height:38px}
 @media(max-width:620px){.personCard .avatarMini{width:45px;height:45px}.quizCandidateAvatar .avatarCandidate{width:54px;height:54px}}
+.contactHeaderMeta{display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:14px;color:#285b52}.contactHeaderMeta strong{border-radius:999px;background:#e6f6ed;border:1px solid #b9dccd;padding:4px 11px;color:#27644a}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -1184,8 +1185,38 @@ const contactSafeDate=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x:today();
 const contactHtmlDate=x=>esc(x||'');
 const CONTACT_POINT_START='[FunDesk積點START]',CONTACT_POINT_END='[FunDesk積點END]';
  const CONTACT_CLASS_START='[FunDesk班名START]',CONTACT_CLASS_END='[FunDesk班名END]';
- function contactStripClassName(text){const v=String(text||''),a=v.indexOf(CONTACT_CLASS_START),b=v.indexOf(CONTACT_CLASS_END,a+CONTACT_CLASS_START.length);return a<0||b<0?v:(v.slice(0,a)+v.slice(b+CONTACT_CLASS_END.length)).trim()}
- function contactPackClassName(text,code){const clean=contactStripClassName(text);return clean+(clean?'\n':'')+CONTACT_CLASS_START+String(classDisplay(code)).slice(0,35)+CONTACT_CLASS_END;}
+const CONTACT_PLACE_START='[FunDesk上課地點START]',CONTACT_PLACE_END='[FunDesk上課地點END]';
+function contactWeeklyPlace(code,date){
+ const fixed=String(date||'').replaceAll('/','-');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(fixed))return '原班教室';
+ const monday=new Date(fixed+'T12:00:00');if(Number.isNaN(monday.getTime()))return '原班教室';
+ monday.setDate(monday.getDate()-(monday.getDay()+6)%7);
+ const fmt=x=>[x.getFullYear(),String(x.getMonth()+1).padStart(2,'0'),String(x.getDate()).padStart(2,'0')].join('-');
+ const from=fmt(monday),end=new Date(monday);end.setDate(end.getDate()+6);const through=fmt(end);
+ const own=db.classes[code]?.scheduleLessons;
+ let lessons=Array.isArray(own)&&own.length?own:window.SCIENCE_SCHEDULE?.[code]||[];
+ if(!lessons.length){
+  const name=className(code),match=/^五年([一二三四五六七])班$/.exec(name);
+  if(match)lessons=window.SCIENCE_SCHEDULE?.[String(501+'一二三四五六七'.indexOf(match[1]))]||[];
+ }
+ return lessons.some(x=>{
+  const d=String(x.date||'').replaceAll('/','-');
+  return d>=from&&d<=through&&!/停課/.test(String(x.type||''))&&(/實驗|實作/.test(String(x.type||''))||/【實驗】|【實作】/.test(String(x.topic||'')));
+ })?'自然教室':'原班教室';
+}
+function contactStripClassName(text){
+ return String(text||'').replace(/\[FunDesk班名START\][\s\S]*?\[FunDesk班名END\]/g,'').replace(/\[FunDesk上課地點START\][\s\S]*?\[FunDesk上課地點END\]/g,'').trim();
+}
+function contactPackClassName(text,code,date){
+ const clean=contactStripClassName(text),place=contactWeeklyPlace(code,date);
+ return clean+(clean?'\n':'')+CONTACT_CLASS_START+String(classDisplay(code)).slice(0,35)+CONTACT_CLASS_END+'\n'+CONTACT_PLACE_START+place+CONTACT_PLACE_END;
+}
+function contactUpdatePlaceHeader(){
+ const date=contactChosenDate||today(),place=contactWeeklyPlace(cl,date);
+ const d=$('contactHeaderDate'),p=$('contactHeaderPlace');
+ if(d)d.textContent='日期：'+date;
+ if(p)p.textContent='本周上課地點:'+place;
+}
 function contactSplitPoints(text){
  const v=String(text||''),a=v.indexOf(CONTACT_POINT_START),b=v.indexOf(CONTACT_POINT_END,a+CONTACT_POINT_START.length);
  if(a<0||b<0)return {reminders:contactStripClassName(v),points:[],published:false};
@@ -1230,7 +1261,7 @@ function contactQueuePointsSync(code,date,fillMissingSeats=false){
    }
    const reminders=parsed.reminders+(parsed.reminders?'\n':'')+CONTACT_POINT_START+'\n'+JSON.stringify(points)+'\n'+CONTACT_POINT_END;
    await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({
-    p_class_code:code,p_entry_date:date,p_lesson:entry.lesson||'',p_homework:entry.homework||'',p_reminders:contactPackClassName(reminders,code)
+    p_class_code:code,p_entry_date:date,p_lesson:entry.lesson||'',p_homework:entry.homework||'',p_reminders:contactPackClassName(reminders,code,date)
    })});
   }catch(err){console.error('FunDesk 加扣點同步到聯絡簿失敗：',err);const msg=$('contactStatus');if(msg&&view==='contact'&&cl===code)contactStatus('⚠️ 加扣點同步失敗：'+cloudErr(err),true)}
  });
@@ -1238,7 +1269,7 @@ function contactQueuePointsSync(code,date,fillMissingSeats=false){
 function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);u.searchParams.set('v','teacher-messages-names-1');return u.href}
 function renderContact(){
  const date=contactChosenDate||today(),code=cl;
- return `<div class="contactShell"><section class="panel contactForm"><div class="panelHead"><div><small class="chalkEyebrow">FUNDESK · 我們的班級小黑板</small><h2>📒 ${esc(classDisplay(code))}聯絡簿</h2></div><span class="chalkCat" aria-hidden="true">/\\_/\\<br>( •ᴗ• ) ♡</span></div>
+ return `<div class="contactShell"><section class="panel contactForm"><div class="panelHead"><div><small class="chalkEyebrow">FUNDESK · 我們的班級小黑板</small><h2>📒 ${esc(classDisplay(code))}聯絡簿</h2><div class="contactHeaderMeta"><span id="contactHeaderDate">日期：${esc(date)}</span><strong id="contactHeaderPlace">本周上課地點:${esc(contactWeeklyPlace(code,date))}</strong></div></div><span class="chalkCat" aria-hidden="true">/\\_/\\<br>( •ᴗ• ) ♡</span></div>
  <p class="contactMuted">選擇上課日期，輸入今天的教學內容、考試預告與重要記事，再按「發布／儲存」。同一日期重新儲存會更新原內容。</p>
  <label for="contactDate">聯絡簿日期（臺灣時間）</label><input type="date" id="contactDate" value="${contactHtmlDate(date)}">
  <label for="contactLesson">📘 今日課程</label><textarea id="contactLesson" maxlength="3000" placeholder="例如：自然課第3單元，認識北極星"></textarea>
@@ -1281,6 +1312,7 @@ function contactSelect(date,force=false){
  }
  contactChosenDate=contactSafeDate(date);const entry=(contactCache[cl]?.entries||[]).find(e=>e.entry_date===contactChosenDate)||{};
  $('contactDate').value=contactChosenDate;
+ contactUpdatePlaceHeader();
  $('contactReplies').textContent='正在讀取 '+contactChosenDate+' 的回應…';
  const parsed=contactSplitPoints(entry.reminders);
  $('contactLesson').value=entry.lesson||'';
@@ -1320,7 +1352,7 @@ async function contactSave(){if(contactBusy)return;if(!cloudReady){contactStatus
  }
  if(![fields.lesson,fields.homework,fields.reminders].some(x=>x.trim())){contactStatus('請至少填寫一個欄位再發布',true);return}
  contactBusy=true;$('contactSave').disabled=true;contactStatus('正在發布到雲端…');
- try{await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({p_class_code:code,p_entry_date:date,p_lesson:fields.lesson,p_homework:fields.homework,p_reminders:contactPackClassName(fields.reminders,code)})});
+ try{await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({p_class_code:code,p_entry_date:date,p_lesson:fields.lesson,p_homework:fields.homework,p_reminders:contactPackClassName(fields.reminders,code,date)})});
   if(view==='contact'&&cl===code){const refreshed=await contactLoad(code);if(view==='contact'&&cl===code&&refreshed)contactStatus('✅ '+classDisplay(code)+' 已發布到雲端，學生網頁約 20 秒內自動更新。')}}catch(e){contactStatus('❌ 儲存失敗：'+cloudErr(e),true)}finally{contactBusy=false;if($('contactSave'))$('contactSave').disabled=false}
 }
 let contactReplyRequest=0,contactReplyDeleting=false;
