@@ -117,6 +117,7 @@
 @media(max-width:620px){.personCard .avatarMini{width:45px;height:45px}.quizCandidateAvatar .avatarCandidate{width:54px;height:54px}}
 .contactHeaderMeta{display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:14px;color:#285b52}.contactHeaderMeta strong{border-radius:999px;background:#e6f6ed;border:1px solid #b9dccd;padding:4px 11px;color:#27644a}
 .pointActionSections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}.pointActionSection{border:1px solid #c7dfd5;border-radius:14px;padding:12px;background:#f7fcfa;display:flex;flex-direction:column;gap:8px}.pointActionSection:last-child{background:#fff8f7;border-color:#efd1ce}.pointActionSection h3{margin:0}.pointActionSection select{width:100%;min-width:0}.pointQuickEight{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}@media(max-width:700px){.pointActionSections{grid-template-columns:1fr}.pointQuickEight{grid-template-columns:repeat(2,minmax(0,1fr))}}.contactTitleRow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.contactTitleRow h2{margin:0}.contactTitleRow #contactHeaderPlace{display:inline-block;font-size:clamp(19px,2vw,25px);font-weight:900;line-height:1.5;color:#185b4b;background:#e1f6ec;border:2px solid #91cbb3;border-radius:12px;padding:6px 14px;white-space:normal}
+.schedulePlacePanel{margin:12px 0 16px;border:2px solid #a6d5c3;border-radius:16px;background:#effaf5;padding:14px 16px}.schedulePlaceTop{display:flex;align-items:center;gap:8px 15px;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.schedulePlaceTop strong{font-size:clamp(18px,2vw,23px);color:#195c47}.schedulePlaceTop span{font-size:12px;color:#55746b}.schedulePlacePanel label{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:700}.schedulePlacePanel select{min-width:180px}.schedulePlacePanel .hint{margin:10px 0 0}@media(max-width:620px){.schedulePlacePanel{padding:12px}.schedulePlacePanel select{width:100%}}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -687,6 +688,7 @@ function renderSchedule(){
  <p class="hint">每位老師可為自己管理的班級新增、調整與完成課程；資料保存在該老師的雲端班級紀錄，與學生名單及題庫分開。不會自動匯入其他老師的課表。</p>
  <div class="scheduleClassLinks">${scheduleClassesOverview()}</div>
  <div class="scheduleMetrics"><div><b>${completed} / ${all.length}</b><small>已完成／總節數</small></div><div><b>${all.length?Math.round(100*completed/all.length):0}%</b><small>完成率</small></div><div><b>${rush}</b><small>需趕課節次</small></div></div>
+ <div class="schedulePlacePanel"><div class="schedulePlaceTop"><strong>📍 第${teachingWeekInfo(monday).week} 週｜本周上課地點：${esc(contactWeeklyPlace(cl,monday))}</strong><span>${db.classes[cl]?.weeklyLocationOverrides?.[monday]?'老師手動設定':'依教師帳號及單／雙週自動排定'}</span></div><div class="actions"><label for="schedulePlaceSelect">手動更改本週地點 <select id="schedulePlaceSelect"><option value="" ${!db.classes[cl]?.weeklyLocationOverrides?.[monday]?'selected':''}>依單／雙週自動安排</option><option value="自然教室" ${db.classes[cl]?.weeklyLocationOverrides?.[monday]==='自然教室'?'selected':''}>自然教室</option><option value="原班教室" ${db.classes[cl]?.weeklyLocationOverrides?.[monday]==='原班教室'?'selected':''}>原班教室</option></select></label><button type="button" class="btn small" id="schedulePlaceSave">儲存教室設定</button></div><p class="hint">${isOppositeClassroomAccount()?'uie508：單週原班教室、雙週自然教室':'目前教師：單週自然教室、雙週原班教室'}。此設定適用您管理的所有班級；既有已發布連絡簿需重新儲存該日期，公開頁才會更新。</p></div>
  <div class="scheduleToolbar"><button class="btn small outline" data-plan-shift="-7">← 上週</button><strong>${esc(monday)}～${esc(sunday)}</strong><button class="btn small outline" data-plan-shift="7">下週 →</button><button class="btn small soft" id="planToday">回本週</button><input id="scheduleJumpDate" type="date" value="${esc(monday)}" title="跳到指定週"></div>
  <div class="actions"><button class="btn" id="planAdd">＋ 新增一節課</button><button class="btn small outline" id="planImportTemplate">匯入七班示範課表</button><button class="btn small outline" id="planExportCsv">匯出本班 CSV</button><button class="btn small outline" id="planImportCsv">匯入 CSV</button><input id="planCsvFile" hidden type="file" accept=".csv,text/csv"></div>
  <div id="scheduleEditor" hidden style="margin:14px 0;padding:15px;border:1px solid #bcd6e9;border-radius:14px;background:#f2f9ff"></div>
@@ -1067,6 +1069,11 @@ function hookView(){if(view==='redemption')bindRedemption();if(view==='rps')bind
 });
 if(view==='tasks'){$('newTask').onsubmit=e=>{e.preventDefault();let o=Object.fromEntries(new FormData(e.target));cls().tasks.push({id:uid(),type:o.type,date:o.date,title:o.title.trim(),note:o.note||''});save();render()};document.querySelectorAll('[data-task]').forEach(b=>b.onclick=()=>taskDetails(b.dataset.task))}
 if(view==='schedule'){
+ $('schedulePlaceSave').onclick=()=>{
+  const value=$('schedulePlaceSelect')?.value||'';
+  setWeeklyClassroomPlace(schedMonday(scheduleAnchor||$('sessionDate').value||today()),value);
+  render();
+ };
  document.querySelectorAll('[data-schedule-class]').forEach(b=>b.onclick=()=>{scheduleAnchor='';changeClass(b.dataset.scheduleClass)});
  document.querySelectorAll('[data-plan-done]').forEach(b=>b.onchange=()=>{const x=scheduleLessons().find(x=>scheduleKey(x)===b.dataset.planDone);if(!x)return;x.done=b.checked;save();render()});
  document.querySelectorAll('[data-plan-edit]').forEach(b=>b.onclick=()=>openScheduleEditor(b.dataset.planEdit));
@@ -1189,23 +1196,40 @@ const contactHtmlDate=x=>esc(x||'');
 const CONTACT_POINT_START='[FunDesk積點START]',CONTACT_POINT_END='[FunDesk積點END]';
  const CONTACT_CLASS_START='[FunDesk班名START]',CONTACT_CLASS_END='[FunDesk班名END]';
 const CONTACT_PLACE_START='[FunDesk上課地點START]',CONTACT_PLACE_END='[FunDesk上課地點END]';
-function contactWeeklyPlace(code,date){
+// 第12週始於 2026-11-16，向前一週為第11週；依教學週次單雙週輪替。
+function teachingWeekInfo(date){
  const fixed=String(date||'').replaceAll('/','-');
- if(!/^\d{4}-\d{2}-\d{2}$/.test(fixed))return '原班教室';
- const monday=new Date(fixed+'T12:00:00');if(Number.isNaN(monday.getTime()))return '原班教室';
- monday.setDate(monday.getDate()-(monday.getDay()+6)%7);
- const fmt=x=>[x.getFullYear(),String(x.getMonth()+1).padStart(2,'0'),String(x.getDate()).padStart(2,'0')].join('-');
- const from=fmt(monday),end=new Date(monday);end.setDate(end.getDate()+6);const through=fmt(end);
- const own=db.classes[code]?.scheduleLessons;
- let lessons=Array.isArray(own)&&own.length?own:window.SCIENCE_SCHEDULE?.[code]||[];
- if(!lessons.length){
-  const name=className(code),match=/^五年([一二三四五六七])班$/.exec(name);
-  if(match)lessons=window.SCIENCE_SCHEDULE?.[String(501+'一二三四五六七'.indexOf(match[1]))]||[];
+ const day=/^\d{4}-\d{2}-\d{2}$/.test(fixed)?new Date(fixed+'T12:00:00'):new Date(today()+'T12:00:00');
+ if(Number.isNaN(day.getTime()))return {monday:today(),week:12};
+ day.setDate(day.getDate()-(day.getDay()+6)%7);
+ const monday=[day.getFullYear(),String(day.getMonth()+1).padStart(2,'0'),String(day.getDate()).padStart(2,'0')].join('-');
+ const anchor=new Date('2026-11-16T12:00:00');
+ const week=12+Math.round((day-anchor)/604800000);
+ return {monday,week};
+}
+function isOppositeClassroomAccount(){
+ return String(cloudSession?.user?.email||'').trim().toLowerCase().split('@')[0]==='uie508';
+}
+function weeklyClassroomDefault(date){
+ const odd=Math.abs(teachingWeekInfo(date).week)%2===1;
+ return odd!==isOppositeClassroomAccount()?'自然教室':'原班教室';
+}
+function contactWeeklyPlace(code,date){
+ const {monday}=teachingWeekInfo(date);
+ const override=db.classes?.[code]?.weeklyLocationOverrides?.[monday];
+ return override==='自然教室'||override==='原班教室'?override:weeklyClassroomDefault(date);
+}
+function setWeeklyClassroomPlace(date,value){
+ const {monday}=teachingWeekInfo(date);
+ if(value!==''&&value!=='自然教室'&&value!=='原班教室')return;
+ // 在目前教師專屬雲端資料的所有班級記錄同一個週次設定。
+ for(const code of CLASSES){
+  const group=db.classes?.[code];if(!group)continue;
+  if(!group.weeklyLocationOverrides||typeof group.weeklyLocationOverrides!=='object'||Array.isArray(group.weeklyLocationOverrides))group.weeklyLocationOverrides={};
+  if(value)group.weeklyLocationOverrides[monday]=value;
+  else delete group.weeklyLocationOverrides[monday];
  }
- return lessons.some(x=>{
-  const d=String(x.date||'').replaceAll('/','-');
-  return d>=from&&d<=through&&!/停課/.test(String(x.type||''))&&(/實驗|實作/.test(String(x.type||''))||/【實驗】|【實作】/.test(String(x.topic||'')));
- })?'自然教室':'原班教室';
+ save();
 }
 function contactStripClassName(text){
  return String(text||'').replace(/\[FunDesk班名START\][\s\S]*?\[FunDesk班名END\]/g,'').replace(/\[FunDesk上課地點START\][\s\S]*?\[FunDesk上課地點END\]/g,'').trim();
