@@ -118,6 +118,30 @@
 .contactHeaderMeta{display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:14px;color:#285b52}.contactHeaderMeta strong{border-radius:999px;background:#e6f6ed;border:1px solid #b9dccd;padding:4px 11px;color:#27644a}
 .pointActionSections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}.pointActionSection{border:1px solid #c7dfd5;border-radius:14px;padding:12px;background:#f7fcfa;display:flex;flex-direction:column;gap:8px}.pointActionSection:last-child{background:#fff8f7;border-color:#efd1ce}.pointActionSection h3{margin:0}.pointActionSection select{width:100%;min-width:0}.pointQuickEight{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}@media(max-width:700px){.pointActionSections{grid-template-columns:1fr}.pointQuickEight{grid-template-columns:repeat(2,minmax(0,1fr))}}.contactTitleRow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.contactTitleRow h2{margin:0}.contactTitleRow #contactHeaderPlace{display:inline-block;font-size:clamp(19px,2vw,25px);font-weight:900;line-height:1.5;color:#185b4b;background:#e1f6ec;border:2px solid #91cbb3;border-radius:12px;padding:6px 14px;white-space:normal}
 .schedulePlacePanel{margin:12px 0 16px;border:2px solid #a6d5c3;border-radius:16px;background:#effaf5;padding:14px 16px}.schedulePlaceTop{display:flex;align-items:center;gap:8px 15px;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.schedulePlaceTop strong{font-size:clamp(18px,2vw,23px);color:#195c47}.schedulePlaceTop span{font-size:12px;color:#55746b}.schedulePlacePanel label{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:700}.schedulePlacePanel select{min-width:180px}.schedulePlacePanel .hint{margin:10px 0 0}@media(max-width:620px){.schedulePlacePanel{padding:12px}.schedulePlacePanel select{width:100%}}
+
+/* FunDesk 動態教室：全班／跨班頭像漫遊 */
+.movingRoomPanel{overflow:hidden;background:#fff;border:1px solid #dce9f3;border-radius:22px;padding:15px;box-shadow:0 10px 28px #23406a12}
+.movingRoomToolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.movingRoomToolbar select{min-width:160px;max-width:260px;padding:10px;border:1px solid #b6cbdc;border-radius:10px;background:white;font:inherit}
+.movingRoomToolbar .roomCount{font-size:13px;color:#55728b;margin-right:auto}
+.movingRoomStage{height:clamp(440px,64vh,800px);position:relative;isolation:isolate;overflow:hidden;border-radius:17px;border:6px solid #e0bb83;background:linear-gradient(#e9f8ff 0 64%,#e4c69c 64% 100%);box-shadow:inset 0 0 35px #5d6b732b}
+.movingRoomWall{position:absolute;inset:0 0 36%;background:repeating-linear-gradient(0deg,#f8f2df 0 35px,#f2ead5 36px 37px);pointer-events:none}
+.movingRoomBoard{position:absolute;top:5%;left:22%;width:56%;height:25%;border:11px solid #a7784e;border-radius:8px;background:#286958;box-shadow:0 8px 0 #73533e, inset 0 0 16px #123a2b66;display:grid;place-items:center;color:#eafff0;font-size:clamp(16px,2vw,30px);font-weight:850;text-align:center;pointer-events:none}
+.movingRoomWindow{position:absolute;left:3%;top:8%;width:15%;height:30%;border:8px solid #f6ffff;background:linear-gradient(140deg,#b8e9ff 20%,#dcf8ff 70%);box-shadow:0 2px 9px #455c7066;pointer-events:none}
+.movingRoomWindow:after{content:'';position:absolute;inset:48% 0 auto;border-top:6px solid #fff}
+.movingRoomClock{position:absolute;right:8%;top:9%;width:50px;height:50px;border-radius:50%;border:6px solid white;background:#fff9e0;box-shadow:0 2px 7px #0003;pointer-events:none}
+.movingRoomClock:after{content:'🕒';position:absolute;inset:0;display:grid;place-items:center;font-size:28px}
+.movingRoomDesk{position:absolute;bottom:12%;width:18%;height:10%;border-radius:50% 50% 12px 12px;background:#c79664;border-bottom:10px solid #87613d;opacity:.55;pointer-events:none}
+.movingRoomDesk.d1{left:13%}.movingRoomDesk.d2{left:42%}.movingRoomDesk.d3{left:71%}
+.movingRoomFloor{position:absolute;bottom:0;width:100%;height:36%;background:repeating-linear-gradient(90deg,transparent 0 12%,#a77c5530 12.2% 12.45%),repeating-linear-gradient(0deg,transparent 0 22%,#ac865b30 22.2% 22.55%);pointer-events:none}
+.roomWalker{position:absolute;top:0;left:0;width:76px;display:flex;flex-direction:column;align-items:center;gap:1px;background:transparent;border:0;cursor:pointer;z-index:2;will-change:transform;touch-action:manipulation}
+.roomWalker img,.roomWalker .roomFallback{width:58px;height:58px;object-fit:contain;border-radius:50%;background:#ffffffd9;border:3px solid #fff;box-shadow:0 3px 8px #31495a55}
+.roomWalker .roomFallback{display:grid;place-items:center;font-size:30px}
+.roomWalker .roomName{font-size:12px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#183e54;background:#fffffff0;border:1px solid #d5e4ef;border-radius:8px;padding:2px 5px;font-weight:800;box-shadow:0 2px 4px #1232}
+.roomWalker:hover,.roomWalker:focus-visible{z-index:10;filter:drop-shadow(0 0 5px #fff)}.roomWalker:focus-visible{outline:3px solid #ffb100;outline-offset:3px;border-radius:12px}
+.roomWalker.roomPicked .roomName{background:#ffedaf}
+.roomHelp{font-size:12px;color:#61798b;padding:9px 3px 0}
+@media(max-width:680px){.movingRoomStage{height:65vh;min-height:420px}.roomWalker{width:62px}.roomWalker img,.roomWalker .roomFallback{width:47px;height:47px}.roomWalker .roomName{font-size:10px}}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -213,7 +237,7 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
  <div class="fastClasses" id="fastClasses"><b>班級快速入口</b><div id="fastClassLinks"></div></div>
  <button type="button" id="cloudLogout" class="sidebarCloudLogout">🚪 登出雲端</button>
  <div class="mini">115學年度 · 第一學期<br>課程：神祕的天空／燃燒與生鏽</div>
- <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attention">▤　待追蹤清單 <i id="sidebarPending"></i></button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試</button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="redemption">🎁　積點兌換</button><button data-view="correction">☑　作業訂正</button><button data-view="board">▣　作業播放表</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　我的班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
+ <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attention">▤　待追蹤清單 <i id="sidebarPending"></i></button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試</button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="redemption">🎁　積點兌換</button><button data-view="correction">☑　作業訂正</button><button data-view="board">▣　作業播放表</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="classroom">🏫　動態教室</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　我的班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
  <div class="sidebarFoot">教師登入後存取雲端學生紀錄<br><strong>使用公用電腦後請登出</strong><br></div>
  </aside>
  <main class="main"><header class="topbar"><div><div class="eyebrow">SCIENCE CLASSROOM · 115-1</div><h1 id="pageTitle">首頁</h1><p id="pageSub">點選座位即可查看學生紀錄並進行課堂操作</p></div><span class="fundeskSticker" id="pageSticker" data-scene="explore" aria-hidden="true"></span><div class="topActions"><label>紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" class="btn outline">↓ 備份</button></div></header>
@@ -293,7 +317,7 @@ const classDisplay=c=>/^\d+$/.test(className(c))?className(c)+' 班':className(c
 const classOptions=()=>activeCodes().map(c=>`<option value="${esc(c)}">${esc(classDisplay(c))}</option>`).join('');
 const syncClassOptions=()=>{const sel=$('classSelect');sel.innerHTML=classOptions();if(activeCodes().includes(cl))sel.value=cl};
 const time={1:'08:50–09:30',2:'09:40–10:20',3:'10:35–11:15',4:'11:25–12:05',5:'13:20–14:00',6:'14:10–14:50',7:'15:00–15:40'};
-const titles={seats:'首頁',rps:'課間小遊戲',labDuty:'實驗工作分配',attention:'待追蹤清單',attendance:'出勤紀錄',tasks:'習作／實驗／考試',schedule:'我的教學進度',contact:'班級聯絡簿',points:'課堂表現',redemption:'積點兌換',correction:'作業訂正',board:'作業播放表',quiz:'抽籤問答',students:'學生名單',tools:'課堂小工具',tabletRules:'平板使用守則',classes:'我的班級管理',settings:'資料管理'};
+const titles={seats:'首頁',rps:'課間小遊戲',labDuty:'實驗工作分配',attention:'待追蹤清單',attendance:'出勤紀錄',tasks:'習作／實驗／考試',schedule:'我的教學進度',contact:'班級聯絡簿',points:'課堂表現',redemption:'積點兌換',correction:'作業訂正',board:'作業播放表',quiz:'抽籤問答',students:'學生名單',classroom:'動態教室',tools:'課堂小工具',tabletRules:'平板使用守則',classes:'我的班級管理',settings:'資料管理'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>{let parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());let v=Object.fromEntries(parts.map(x=>[x.type,x.value]));return `${v.year}-${v.month}-${v.day}`};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -421,10 +445,10 @@ function renderTabletRules(){return `<div class="tabletGuide"><div class="tablet
 const pageScenes={
  seats:'explore',rps:'friends',labDuty:'friends',attention:'rabbit',attendance:'notes',
  tasks:'cat',schedule:'plants',contact:'notes',points:'rabbit',redemption:'cat',
- correction:'cat',board:'plants',quiz:'explore',students:'friends',
+ correction:'cat',board:'plants',quiz:'explore',students:'friends',classroom:'friends',
  tools:'cat',tabletRules:'friends',classes:'rabbit',settings:'plants'
 };
-function render(){if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();cloudRenderQuickClasses();$('pageTitle').textContent=titles[view];$('pageSticker').dataset.scene=pageScenes[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');root.innerHTML=({seats:renderSeats,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();hookView()}
+function render(){if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();cloudRenderQuickClasses();$('pageTitle').textContent=titles[view];$('pageSticker').dataset.scene=pageScenes[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');if(view==='classroom'&&root.querySelector('#movingClassroom')){refreshMovingClassroomCards();return}if(root.querySelector('#movingClassroom'))stopMovingClassroom();root.innerHTML=({seats:renderSeats,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,classroom:renderClassroom,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();hookView()}
 const labGroupOrder=[2,3,4,0,1];
 const labRoleColumns=['組長','副組長','器材長 1／器材長','器材長 2','習作長','清潔長'];
 function labRoles(count){
@@ -1025,6 +1049,111 @@ function bindNewFeatures(){
   document.querySelectorAll('[data-exam-remove]').forEach(b=>b.onclick=()=>{if(!confirm('確定刪除這筆考程？'))return;cls().examSchedule=cls().examSchedule.filter(x=>x.id!==b.dataset.examRemove);save();render()});
  }
 }
+
+/* 動態教室 - 使用同一份雲端 db，名片開關時不重建走動場景。 */
+let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='all',roomOriginalClass=null,roomCardClass=null,roomObserver=null;
+const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
+function renderClassroom(){
+ const codes=roomClassCodes();
+ return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 學生漫遊教室</strong><select id="roomClassFilter" aria-label="選擇漫遊班級"><option value="all">全部班級（${codes.length} 班）</option>${codes.map(code=>`<option value="${esc(code)}">${esc(classDisplay(code))}</option>`).join('')}</select><span class="roomCount" id="roomCount"></span><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button></div>
+ <div class="movingRoomStage" id="movingClassroom" aria-label="可點選移動中的學生頭像查看學生名片">
+ <div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">FunDesk 快樂自然教室 🌱</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div></div><p class="roomHelp">點選學生頭像開啟原本的學生名片；關閉名片後，所有學生會繼續走動。可切換單班，或暫停以方便點選。</p></section>`;
+}
+function roomPeople(){
+ const codes=roomFilter==='all'?roomClassCodes():roomClassCodes().filter(code=>code===roomFilter);
+ return codes.flatMap(code=>(db.classes[code]?.students||[]).map(s=>({code,s})));
+}
+function stopMovingClassroom(){
+ if(roomAnimation)cancelAnimationFrame(roomAnimation);
+ roomAnimation=0;roomWalkers=[];roomLastTick=0;
+ if(roomObserver){roomObserver.disconnect();roomObserver=null}
+ if(roomCardClass!==null)restoreClassroomSelection();
+ roomOriginalClass=null;
+}
+function roomBounds(){
+ const el=$('movingClassroom');
+ return {w:Math.max(1,(el?.clientWidth||900)-84),h:Math.max(1,(el?.clientHeight||560)-100)};
+}
+function populateMovingRoom(){
+ const root=$('roomWalkers');if(!root)return;
+ root.replaceChildren();roomWalkers=[];
+ const people=roomPeople(),size=roomBounds();
+ $('roomCount').textContent=`目前 ${people.length} 位學生在教室裡`;
+ const fragment=document.createDocumentFragment();
+ for(const {code,s} of people){
+  const el=document.createElement('button');el.type='button';el.className='roomWalker';el.title=`${classDisplay(code)} ${s.no} 號 ${s.name}`;
+  el.setAttribute('aria-label',el.title);
+  const url=studentAvatarPath(s);
+  if(url){const img=document.createElement('img');img.src=url;img.alt='';img.loading='lazy';img.onerror=()=>{img.replaceWith(roomFallback())};el.appendChild(img)}
+  else el.appendChild(roomFallback());
+  const name=document.createElement('span');name.className='roomName';name.textContent=`${roomFilter==='all'?classDisplay(code).replace('五年','').replace('班','')+'·':''}${s.no} ${s.name}`;el.appendChild(name);
+  el.onclick=()=>openMovingRoomStudent(code,s.id,el);
+  fragment.appendChild(el);
+  const angle=Math.random()*Math.PI*2,speed=12+Math.random()*22;
+  roomWalkers.push({el,code,sid:s.id,x:Math.random()*size.w,y:Math.random()*size.h,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,t:2+Math.random()*4});
+ }
+ root.appendChild(fragment);
+ roomWalkers.forEach(w=>w.el.style.transform=`translate3d(${w.x}px,${w.y}px,0)`);
+}
+function roomFallback(){const span=document.createElement('span');span.className='roomFallback';span.textContent='🙂';return span}
+function refreshMovingClassroomCards(){
+ if(view!=='classroom'||!$('movingClassroom'))return;
+ for(const w of roomWalkers){
+  const s=db.classes[w.code]?.students?.find(x=>x.id===w.sid);
+  if(!s)continue;
+  const src=studentAvatarPath(s),image=w.el.querySelector('img');
+  if(image&&src&&image.getAttribute('src')!==src)image.src=src;
+  if(!image&&src){const img=document.createElement('img');img.src=src;img.alt='';w.el.firstElementChild.replaceWith(img)}
+  w.el.title=`${classDisplay(w.code)} ${s.no} 號 ${s.name}`;
+  w.el.setAttribute('aria-label',w.el.title);
+  w.el.querySelector('.roomName').textContent=`${roomFilter==='all'?classDisplay(w.code).replace('五年','').replace('班','')+'·':''}${s.no} ${s.name}`;
+ }
+}
+function restoreClassroomSelection(){
+ if(roomCardClass===null)return;
+ roomCardClass=null;
+ if(roomOriginalClass!==null&&db.classes[roomOriginalClass]){
+  cl=roomOriginalClass;
+  syncClassOptions();statCards();
+ }
+ document.querySelectorAll('.roomPicked').forEach(x=>x.classList.remove('roomPicked'));
+}
+function openMovingRoomStudent(code,id,el){
+ if(!$('modal').classList.contains('hidden'))return;
+ if(roomOriginalClass===null)roomOriginalClass=cl;
+ roomCardClass=code;cl=code;
+ syncClassOptions();statCards();
+ el.classList.add('roomPicked');
+ openStudent(id);
+}
+function startMovingClassroom(){
+ const field=$('roomClassFilter');if(!field)return;
+ if(roomOriginalClass===null)roomOriginalClass=cl;
+ if(!roomClassCodes().includes(roomFilter))roomFilter='all';
+ field.value=roomFilter;
+ field.onchange=()=>{roomFilter=field.value;populateMovingRoom()};
+ $('roomShuffle').onclick=populateMovingRoom;
+ let paused=false;
+ $('roomMotionToggle').onclick=()=>{paused=!paused;$('roomMotionToggle').textContent=paused?'▶ 繼續移動':'⏸ 暫停移動'};
+ populateMovingRoom();
+ function animate(ts){
+  if(view!=='classroom'||!$('movingClassroom')){stopMovingClassroom();return}
+  const dt=Math.min(.05,Math.max(0,(ts-(roomLastTick||ts))/1000));roomLastTick=ts;
+  if(!paused&&dt){
+   const bound=roomBounds();
+   for(const w of roomWalkers){
+    w.t-=dt;if(w.t<=0){const a=Math.random()*Math.PI*2,spd=12+Math.random()*22;w.vx=Math.cos(a)*spd;w.vy=Math.sin(a)*spd;w.t=2+Math.random()*4}
+    w.x+=w.vx*dt;w.y+=w.vy*dt;
+    if(w.x<0||w.x>bound.w){w.vx*=-1;w.x=Math.max(0,Math.min(bound.w,w.x))}
+    if(w.y<0||w.y>bound.h){w.vy*=-1;w.y=Math.max(0,Math.min(bound.h,w.y))}
+    w.el.style.transform=`translate3d(${w.x.toFixed(1)}px,${w.y.toFixed(1)}px,0)`;
+   }
+  }
+  roomAnimation=requestAnimationFrame(animate);
+ }
+ roomAnimation=requestAnimationFrame(animate);
+}
+
 function renderStudents(){return `<section class="panel"><div class="panelHead"><h2>學生名單 · ${esc(classDisplay(cl))}</h2><div class="row"><button class="btn small outline" id="importCsvBtn">匯入 CSV 名單</button><button class="btn small outline" data-csv="students">匯出 CSV</button><button class="btn small soft" id="addStudent">＋ 新增學生</button></div></div><p class="hint">目前示範資料不是真實學生；可按「匯入 CSV 名單」替換。格式：座號,姓名（例如 1,王小明）。支援 Excel 常見的 UTF-8、Big5／ANSI、UTF-16 CSV；匯入前會預覽中文姓名。請先備份，只有同座號且同姓名才保留原紀錄。</p><div class="tablewrap"><table><thead><tr><th>座號</th><th>姓名</th><th>待追蹤</th><th>點數</th><th>操作</th></tr></thead><tbody>${[...students()].sort((a,b)=>a.no-b.no).map(s=>`<tr><td>${s.no}</td><td class="studentName"><span class="studentAvatarHeader">${avatarThumb(s)}<span>${esc(s.name)}</span></span></td><td>${pending(s.id).length}</td><td>${ptotal(s.id)}</td><td><div class="row"><button class="btn small outline" data-open="${esc(s.id)}">個人紀錄</button><button type="button" class="btn small danger" data-delete-student="${esc(s.id)}" aria-label="刪除 ${esc(s.name)}"><img src="data:image/webp;base64,UklGRnYCAABXRUJQVlA4WAoAAAAQAAAAKwAAHAAAQUxQSO0AAAABgLrtv/HnzLbNqGRVK64t/dps2/oHtrbKuOo121uyrXM+43nf75QjYgLYP9VLU1ZVU50b+C2C9/DpWfR3GMLD9OTE7BMGybSsfPbRZ2dp4TyFdTdLmtTR9d1nfrC4srx0zh+31kaTCcJuAAiOT7kAcBmgXhc454JLo0S9ZgiuUCBDPftuKBBPNWbqsaB7yGHPmhG6HSgZ16XQnVfSy0j7lJTQNIILqUSadAguKW79aKIfIYNNOxr3Q7kRbRr9ZQiZHkY8BC6TQ9UiF0OVBoiPXAhc+FJZDQt8+diqTcWM4zOLigrz8nM1YVrsXwoAVlA4IGIBAAAwBwCdASosAB0APlUkjUSjoiEVXAb8OAVEtgBeusShgMKz0wD0AOk7vwBjgi/Djn6MoXDwHqEvtbZ/h6tUzTMOJuAA/vyjDZxprC7elMF9Jt2omHL7zyDtg7bZAzGPBdTwX8uy7B3XJr6RJ7eu1zT8HCx+R4wmgo7Eo6E+V4v/w5/Yvj2L5DtuT3raEr8mNOaYv89v+1RPv8Qea7TCHhLmpZhNyj4EVejRlOfTdK8fHd2TL4HwDnc/9vonuMgfjfebL5PVEw53r2Gmh1bC03FgTsHo/J3+fleTsmuJ8UH69Q6bQk0ZXmHE7/i5wc5G0dW++ckzOmc1sqEEAPwsYjD38xXLc7YsfgPLL/E7UfoMhpbXRrFCifTVTHTH3zCzGzlNO4mu0gabxRWsWh3N2vMBYuQaLrBxPigkYZGEWraBHSSP93jnEah7q8bRo+2qi66BS7ZeXnONo3A9p/z1WoAAAAA=" width="18" height="18" alt="" style="vertical-align:middle;margin-right:3px">刪除</button></div></td></tr>`).join('')}</tbody></table></div></section>`}
 function renderTools(){return `${renderExamClock()}<div class="twoCols"><section class="panel"><h2>◴ 倒數計時</h2><p class="hint">實驗操作、習作書寫與考試都可使用；切換功能頁仍繼續計時。</p><div id="timerShow" class="toolDisplay">${toMMSS(timerSeconds)}</div><div class="actions"><button class="btn small outline" data-time="300">5 分鐘</button><button class="btn small outline" data-time="600">10 分鐘</button><button class="btn small outline" data-time="1200">20 分鐘</button><button class="btn small" id="timerStart">開始／暫停</button><button class="btn small outline" id="timerReset">重設</button></div></section><section class="panel"><h2>♙ 隨機抽學生</h2><p class="hint">從目前 ${classDisplay(cl)}名單中隨機選取</p><div class="toolDisplay" id="randomShow">？</div><div class="actions"><button class="btn" id="pickStudent">抽一位學生</button></div></section></div><section class="panel"><h2>本節課操作建議</h2><p class="hint">實驗結束 → 當堂書寫習作 → 將還沒寫完的學生記為「未完成」 → 下次補完改成「已補交」；單元考請針對請假者標「缺考／待補考」，補考後再改「補考完成」。</p></section>`}
 function renderClassManager(){
@@ -1071,7 +1200,7 @@ function hookClassManager(){
  $('manageSeats').onclick=()=>{view='seats';render()};
 }
 function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
-function hookView(){if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();$('editQuickLinks').onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings)}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='seats'){
+function hookView(){if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();$('editQuickLinks').onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings)}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='seats'){
  document.querySelectorAll('[data-layout]').forEach(b=>b.onclick=()=>{layout=b.dataset.layout;editSeats=false;editLabTemplate=false;templatePicked=null;render()});$('seatEdit').onclick=()=>{editSeats=!editSeats;render()};
  if(layout==='lab'){$('templateEdit').onclick=()=>{if(!editLabTemplate){if(!confirm('進入七班共用模板編輯？交換座號會同步套用七班，並清除各班個別實驗座位排列；所有學生紀錄保留。'))return;editSeats=false;}editLabTemplate=!editLabTemplate;templatePicked=null;render()};if(editLabTemplate){$('templateReset').onclick=resetLabTemplate;document.querySelectorAll('[data-template-index]').forEach(b=>b.onclick=()=>swapTemplateCell(Number(b.dataset.templateIndex)));}}
  document.querySelectorAll('.seat:not(.templateSeat)').forEach(b=>{b.onclick=()=>{if(editSeats)return;let id=b.dataset.sid;if(id)openStudent(id)};b.ondragstart=e=>{if(!editSeats){e.preventDefault();return}e.dataTransfer.setData('text/plain',b.dataset.seat)};b.ondragover=e=>{if(editSeats){e.preventDefault();b.classList.add('dragover')}};b.ondragleave=()=>b.classList.remove('dragover');b.ondrop=e=>{e.preventDefault();b.classList.remove('dragover');let from=Number(e.dataTransfer.getData('text/plain'));let target=Number(b.dataset.seat);if(!Number.isInteger(from)||from<0)return;let a=layoutMap(layout);[a[from],a[target]]=[a[target],a[from]];setSeat(layout,a);render()}})
@@ -1202,7 +1331,7 @@ $('jsonImport').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let 
   if(Array.isArray(o.labTemplate)&&o.labTemplate.length===5)db.labTemplate=o.labTemplate;
   if(!activeCodes().length)db.classMeta[CLASSES[0]].active=true;
   if(!activeCodes().includes(cl))cl=activeCodes()[0];save();render();alert('已套用備份；請確認右上角顯示「已同步」')}catch(err){alert('無法還原：'+err.message)}e.target.value=''};
-syncClassOptions();$('classSelect').onchange=e=>changeClass(e.target.value);$('sessionDate').value=today();$('sessionDate').onchange=()=>render();$('backupTop').onclick=backup;document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>$('modal').classList.add('hidden'));
+syncClassOptions();$('classSelect').onchange=e=>changeClass(e.target.value);$('sessionDate').value=today();$('sessionDate').onchange=()=>render();$('backupTop').onclick=backup;document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>{ $('modal').classList.add('hidden');restoreClassroomSelection() });
 
 
 // 班級聯絡簿（獨立公開資料表；絕不把教師班級記錄直接公開）
