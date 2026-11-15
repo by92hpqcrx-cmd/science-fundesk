@@ -159,14 +159,14 @@ body.roomFullscreen #modal{z-index:99999}
 .roomSpeedLabel{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:#37566c}
 .roomSpeedLabel select{border:1px solid #b6cbdc;border-radius:9px;background:#fff;padding:8px 14px;font:inherit}
 
-/* 左側工作選單排序：保留原有點擊區，獨立上下調整 */
-#nav .navMoveRow{display:flex;align-items:stretch;min-width:0;gap:3px}
-#nav .navMoveRow>button[data-view]{flex:1;min-width:0}
-#nav .navMoveControls{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
-#nav .navMoveBtn{background:#2b4061;color:#dde9fb;padding:0 6px;min-width:27px;flex:1;border:1px solid #435c7c;border-radius:5px;font-size:11px;justify-content:center;align-items:center;text-align:center}
-#nav .navMoveBtn:hover:not(:disabled){background:#56769f;color:white}
-#nav .navMoveBtn:disabled{opacity:.2;cursor:default}
-@media(max-width:730px){#nav .navMoveRow{flex:0 0 auto}#nav .navMoveControls{flex-direction:row}#nav .navMoveBtn{min-width:25px;padding:3px}}
+/* 左側選單長按拖曳排序：保留單擊選單功能 */
+#nav .navMoveRow{display:flex;min-width:0;position:relative;border-radius:10px}
+#nav .navMoveRow>button[data-view]{flex:1;min-width:0;width:100%}
+#nav .navMoveRow.navDragging{outline:2px dashed #a7d7ef;background:#365781;box-shadow:0 5px 14px #081e3d66;z-index:5}
+#nav .navMoveRow.navDragging>button{background:#476c99;color:#fff}
+#nav .navMoveRow.navDropBefore:before{content:'';position:absolute;top:-3px;height:4px;background:#f7ce82;left:4px;right:4px;border-radius:3px}
+#nav .navMoveRow.navDropAfter:after{content:'';position:absolute;bottom:-3px;height:4px;background:#f7ce82;left:4px;right:4px;border-radius:3px}
+#nav button[data-view]{user-select:none;-webkit-user-select:none}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -473,9 +473,10 @@ const pageScenes={
  correction:'cat',board:'plants',quiz:'explore',students:'friends',classroom:'friends',
  tools:'cat',tabletRules:'friends',classes:'rabbit',settings:'plants'
 };
-/* 教師個人化左側功能排序。按鈕上下調整，依登入帳號儲存到此瀏覽器。 */
+/* 長按 450 毫秒拖動選單，短點擊仍可正常切換頁面。
+   排序使用既有教師帳號專屬 localStorage，不改動原本功能資料。 */
 const navDefaultOrder=[...document.querySelectorAll('#nav button[data-view]')].map(b=>b.dataset.view);
-let navOrderLoadedFor='';
+let navOrderLoadedFor='',navDragState=null,navSuppressClickUntil=0,navSortingBound=false;
 function navOrderKey(){return 'fundesk_sidebar_order_v1:'+String(cloudSession?.user?.id||cloudSession?.user?.email||'guest')}
 function navStoredOrder(){
  let saved=[];try{saved=JSON.parse(localStorage.getItem(navOrderKey()))}catch{}
@@ -483,46 +484,119 @@ function navStoredOrder(){
  const valid=saved.filter((v,i)=>typeof v==='string'&&navDefaultOrder.includes(v)&&saved.indexOf(v)===i);
  return [...valid,...navDefaultOrder.filter(v=>!valid.includes(v))];
 }
+function navSaveOrder(){
+ const order=[...$('nav').querySelectorAll('.navMoveRow')].map(row=>row.dataset.navRow);
+ try{localStorage.setItem(navOrderKey(),JSON.stringify(order))}catch(error){console.warn('選單排序無法寫入瀏覽器',error)}
+}
 function syncNavOrder(){
  const nav=$('nav');if(!nav)return;
  const key=navOrderKey();
  if(navOrderLoadedFor===key)return;
  navOrderLoadedFor=key;
  if(!nav.querySelector('.navMoveRow')){
-  [...nav.querySelectorAll('button[data-view]')].forEach(b=>{
-   const wrap=document.createElement('div');wrap.className='navMoveRow';wrap.dataset.navRow=b.dataset.view;
-   b.parentNode.insertBefore(wrap,b);wrap.appendChild(b);
-   const controls=document.createElement('span');controls.className='navMoveControls';
-   for(const [dir,label,symbol] of [[-1,'向上移動','▲'],[1,'向下移動','▼']]){
-    const move=document.createElement('button');move.type='button';move.className='navMoveBtn';
-    move.textContent=symbol;move.title=label;move.setAttribute('aria-label',label+'：'+b.textContent.trim());
-    move.onclick=()=>moveNavEntry(b.dataset.view,dir);controls.appendChild(move);
-   }
-   wrap.appendChild(controls);
+  [...nav.querySelectorAll('button[data-view]')].forEach(button=>{
+   const row=document.createElement('div');
+   row.className='navMoveRow';row.dataset.navRow=button.dataset.view;
+   button.parentNode.insertBefore(row,button);row.appendChild(button);
   });
  }
+ // 移除之前版本產生的上下箭頭。
+ nav.querySelectorAll('.navMoveControls').forEach(x=>x.remove());
  const rows=new Map([...nav.querySelectorAll('.navMoveRow')].map(row=>[row.dataset.navRow,row]));
  navStoredOrder().forEach(name=>{if(rows.has(name))nav.appendChild(rows.get(name))});
- updateNavMoveButtons();
+ if(!navSortingBound){navSortingBound=true;navBindLongPress()}
 }
-function updateNavMoveButtons(){
- const rows=[...$('nav').querySelectorAll('.navMoveRow')];
- rows.forEach((row,i)=>{
-  const buttons=row.querySelectorAll('.navMoveBtn');
-  if(buttons[0])buttons[0].disabled=i===0;
-  if(buttons[1])buttons[1].disabled=i===rows.length-1;
+function navBindLongPress(){
+ const nav=$('nav');
+ // 捕捉階段阻止拖動結束所產生的 click，以免誤開頁面。
+ nav.addEventListener('click',e=>{
+  if(Date.now()<navSuppressClickUntil){
+   e.preventDefault();e.stopImmediatePropagation();
+  }
+ },true);
+ const getRow=target=>target?.closest?.('.navMoveRow');
+ const begin=(row,x,y,type,id)=>{
+  if(!row||navDragState)return;
+  const state={row,startX:x,startY:y,x,y,type,id,active:false,timer:null,changed:false};
+  navDragState=state;
+  state.timer=setTimeout(()=>{
+   if(navDragState!==state)return;
+   state.active=true;
+   navSuppressClickUntil=Date.now()+1200;
+   row.classList.add('navDragging');
+   if(navigator.vibrate)navigator.vibrate(30);
+  },450);
+ };
+ const move=(x,y)=>{
+  const state=navDragState;if(!state)return;
+  state.x=x;state.y=y;
+  if(!state.active){
+   if(Math.hypot(x-state.startX,y-state.startY)>10)cancel();
+   return;
+  }
+  const rows=[...nav.querySelectorAll('.navMoveRow')].filter(row=>row!==state.row);
+  const hovered=rows.find(row=>{const r=row.getBoundingClientRect();return y>=r.top&&y<=r.bottom});
+  if(hovered){
+   const rect=hovered.getBoundingClientRect();
+   if(y<rect.top+rect.height/2)nav.insertBefore(state.row,hovered);
+   else nav.insertBefore(state.row,hovered.nextSibling);
+   state.changed=true;
+  }else if(rows.length){
+   const first=rows[0].getBoundingClientRect(),last=rows[rows.length-1].getBoundingClientRect();
+   if(y<first.top){nav.insertBefore(state.row,rows[0]);state.changed=true}
+   else if(y>last.bottom){nav.appendChild(state.row);state.changed=true}
+  }
+  // 長清單靠邊時小幅自動捲動。
+  const sidebar=nav.closest('.sidebar');
+  if(sidebar&&sidebar.scrollHeight>sidebar.clientHeight){
+   const r=sidebar.getBoundingClientRect();
+   if(y<r.top+55)sidebar.scrollTop-=12;
+   else if(y>r.bottom-55)sidebar.scrollTop+=12;
+  }
+ };
+ const finish=()=>{
+  const state=navDragState;if(!state)return;
+  clearTimeout(state.timer);
+  if(state.active){
+   state.row.classList.remove('navDragging');
+   navSuppressClickUntil=Date.now()+700;
+   if(state.changed)navSaveOrder();
+  }
+  navDragState=null;
+ };
+ const cancel=()=>{if(!navDragState)return;clearTimeout(navDragState.timer);navDragState.row.classList.remove('navDragging');navDragState=null};
+ nav.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='touch'||e.button!==0)return;
+  begin(getRow(e.target),e.clientX,e.clientY,'mouse',e.pointerId);
  });
-}
-function moveNavEntry(name,dir){
- const nav=$('nav'),rows=[...nav.querySelectorAll('.navMoveRow')];
- const i=rows.findIndex(r=>r.dataset.navRow===name),j=i+dir;
- if(i<0||j<0||j>=rows.length)return;
- const order=rows.map(row=>row.dataset.navRow);
- [order[i],order[j]]=[order[j],order[i]];
- const byName=new Map(rows.map(row=>[row.dataset.navRow,row]));
- order.forEach(view=>nav.appendChild(byName.get(view)));
- try{localStorage.setItem(navOrderKey(),JSON.stringify(order))}catch(error){console.warn('選單排序無法寫入瀏覽器',error)}
- updateNavMoveButtons();
+ window.addEventListener('pointermove',e=>{
+  if(navDragState?.type==='mouse'&&e.pointerId===navDragState.id)move(e.clientX,e.clientY);
+ });
+ window.addEventListener('pointerup',e=>{
+  if(navDragState?.type==='mouse'&&e.pointerId===navDragState.id)finish();
+ });
+ window.addEventListener('pointercancel',e=>{
+  if(navDragState?.type==='mouse'&&e.pointerId===navDragState.id)cancel();
+ });
+ nav.addEventListener('touchstart',e=>{
+  if(e.touches.length!==1)return;
+  const t=e.changedTouches[0];
+  begin(getRow(e.target),t.clientX,t.clientY,'touch',t.identifier);
+ },{passive:true});
+ document.addEventListener('touchmove',e=>{
+  const state=navDragState;if(!state||state.type!=='touch')return;
+  const t=[...e.changedTouches].find(t=>t.identifier===state.id);if(!t)return;
+  move(t.clientX,t.clientY);
+  if(navDragState?.active)e.preventDefault();
+ },{passive:false});
+ document.addEventListener('touchend',e=>{
+  const state=navDragState;if(state?.type==='touch'&&[...e.changedTouches].some(t=>t.identifier===state.id))finish();
+ });
+ document.addEventListener('touchcancel',e=>{
+  const state=navDragState;if(state?.type==='touch'&&[...e.changedTouches].some(t=>t.identifier===state.id))cancel();
+ });
+ window.addEventListener('blur',cancel);
+ nav.addEventListener('contextmenu',e=>{if(navDragState?.active)e.preventDefault()});
 }
 function render(){if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();syncNavOrder();cloudRenderQuickClasses();$('pageTitle').textContent=titles[view];$('pageSticker').dataset.scene=pageScenes[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');if(view==='classroom'&&root.querySelector('#movingClassroom')){refreshMovingClassroomCards();return}if(root.querySelector('#movingClassroom'))stopMovingClassroom();root.innerHTML=({seats:renderSeats,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,classroom:renderClassroom,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();hookView()}
 const labGroupOrder=[2,3,4,0,1];
