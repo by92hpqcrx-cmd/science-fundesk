@@ -103,18 +103,18 @@ function splitPoints(text){
  let points=[];try{const x=JSON.parse(v.slice(a+CONTACT_POINT_START.length,b).trim());if(Array.isArray(x))points=x}catch{}
  return {reminders:stripClassLabel((v.slice(0,a)+v.slice(b+CONTACT_POINT_END.length)).trim()),points,published:true};
 }
-function pointPanel(points,published){
+function pointPanel(points,published,entryDate){
  if(!published)return '';
  const detail=points.length?points.map(p=>{
   const delta=Number(p.delta)||0;
   const seatNo=String(p.no??p.seatNo??p.seat_no??'').trim()||'未提供';
-   return `<div class="pointRecord"><b>座號：${esc(seatNo)}　姓名：${esc(p.name||'未提供')}　${delta>0?'+':''}${esc(delta)} 分</b><div class="pointReason">原因：${esc(p.reason||'（無備註）')}</div></div>`;
+   return `<div class="pointRecord"><b>座號：${esc(seatNo)}　姓名：${esc(p.name||'未提供')}　${delta>0?'+':''}${esc(delta)} 分</b>${p.date&&p.date!==entryDate?`<div class="pointReason">記錄日期：${esc(p.date)}</div>`:''}<div class="pointReason">原因：${esc(p.reason||'（無備註）')}</div></div>`;
  }).join(''):'<p>本日無加扣點紀錄。</p>';
  return `<div class="pointPanel ${showPoints?'':'pointHidden'}"><h3>⭐ FunDesk 學生加扣點紀錄</h3><div class="pointDetails"><p class="pointNotice">含學生姓名與加扣分原因。持有聯絡簿網址的人可取得已發布資料，投影前請隱藏。</p>${detail}</div></div>`;
 }
 function article(e,wrapped=true){
  const parsed=splitPoints(e.reminders);
- return `${wrapped?'<article class="entry">':''}<h2>${esc(e.entry_date)}</h2><div class="date">最後更新：${esc(stamp(e.updated_at))}</div>${sections({...e,reminders:parsed.reminders})}${pointPanel(parsed.points,parsed.published)}${wrapped?'</article>':''}`;
+ return `${wrapped?'<article class="entry">':''}<h2>${esc(e.entry_date)}</h2><div class="date">最後更新：${esc(stamp(e.updated_at))}</div>${sections({...e,reminders:parsed.reminders})}${pointPanel(parsed.points,parsed.published,e.entry_date)}${wrapped?'</article>':''}`;
 }
 const hasThread=/^[0-9a-f]{64}$/.test(token);
 let threadBusy=false,threadRequest=0,threadPending=null;
