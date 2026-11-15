@@ -1264,33 +1264,41 @@ function contactQueuePointsSync(code,date,fillMissingSeats=false){
  if(!cloudReady||cloudBlocked||!/^\d{4}-\d{2}-\d{2}$/.test(date||''))return;
  contactPointsSyncQueue=contactPointsSyncQueue.then(async()=>{
   try{
-   // Save the teacher's point record first, before preparing its public snapshot.
    await cloudQueue;
    if(!cloudReady||cloudBlocked||!cloudSession)return;
    const data=await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_get',{method:'POST',body:JSON.stringify({p_class_code:code})});
-   const entry=(Array.isArray(data?.entries)?data.entries:[]).find(e=>e.entry_date===date);
+   const entries=Array.isArray(data?.entries)?data.entries:[];
+   // 必須先有教師發布的積點標記；絕不自動建立公開的日期。
+   const entry=entries.filter(e=>e.entry_date<=date&&contactSplitPoints(e.reminders).published)
+     .sort((a,b)=>b.entry_date.localeCompare(a.entry_date))[0];
    if(!entry)return;
    const parsed=contactSplitPoints(entry.reminders);
-   if(!parsed.published)return;
-   const current=contactDailyPoints(date,code);
-   let points=current;
+   const current=contactDailyPoints(date,code).map(p=>({...p,date}));
+   const oldPoints=Array.isArray(parsed.points)?parsed.points:[];
+   const sameDay=oldPoints.filter(p=>String(p.date||entry.entry_date)===date);
+   const keepOtherDates=oldPoints.filter(p=>String(p.date||entry.entry_date)!==date);
+   let same=current;
    if(fillMissingSeats){
-    let repaired=false;
-    points=parsed.points.map(point=>{
+    same=sameDay.map(point=>{
      if(!point||point.no||point.seatNo||point.seat_no)return point;
      const matches=current.filter(item=>item.name===point.name&&item.delta===Number(point.delta)&&item.reason===(point.reason||''));
      const seats=new Set(matches.map(item=>item.no).filter(Boolean));
-     if(seats.size!==1)return point;
-     repaired=true;
-     return {...point,no:seats.values().next().value};
+     return seats.size===1?{...point,no:seats.values().next().value}:point;
     });
-    if(!repaired)return;
+    if(JSON.stringify(same)===JSON.stringify(sameDay))return;
    }
+   const points=[...keepOtherDates,...same];
+   // 日期附於每筆紀錄；同一天的重試會覆蓋該日快照，不會重複累加。
    const reminders=parsed.reminders+(parsed.reminders?'\n':'')+CONTACT_POINT_START+'\n'+JSON.stringify(points)+'\n'+CONTACT_POINT_END;
+   const packed=contactPackClassName(reminders,code,entry.entry_date);
+   if(packed===String(entry.reminders||''))return;
    await cloudFetch('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({
-    p_class_code:code,p_entry_date:date,p_lesson:entry.lesson||'',p_homework:entry.homework||'',p_reminders:contactPackClassName(reminders,code,date)
+    p_class_code:code,p_entry_date:entry.entry_date,p_lesson:entry.lesson||'',p_homework:entry.homework||'',p_reminders:packed
    })});
-  }catch(err){console.error('FunDesk 加扣點同步到聯絡簿失敗：',err);const msg=$('contactStatus');if(msg&&view==='contact'&&cl===code)contactStatus('⚠️ 加扣點同步失敗：'+cloudErr(err),true)}
+  }catch(err){
+   console.error('FunDesk 加扣點同步到聯絡簿失敗：',err);
+   if(view==='contact'&&cl===code)contactStatus('⚠️ 加扣點同步失敗：'+cloudErr(err),true);
+  }
  });
 }
 function contactViewerUrl(token){const u=new URL('contact.html',location.href);u.search='';u.hash='';u.searchParams.set('t',token);u.searchParams.set('v','teacher-messages-names-1');return u.href}
