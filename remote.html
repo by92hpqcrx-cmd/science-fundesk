@@ -155,6 +155,36 @@ function applyBehavior(selectId,sign){const row=behaviors[Number($(selectId).val
 $("applyAddBehavior").onclick=()=>applyBehavior('pointAddBehavior',1);
 $("applyDeductBehavior").onclick=()=>applyBehavior('pointDeductBehavior',-1);
 $("giveCustomPoint").onclick=()=>{const d=Number($("customPoint").value);if(!Number.isInteger(d)||d===0||Math.abs(d)>100)return status('請輸入 -100 至 100 間的非零整數','error');addPoints(d)};
+const CONTACT_POINT_START='[FunDesk積點START]',CONTACT_POINT_END='[FunDesk積點END]';
+function contactPublishedSlice(text){
+ const raw=String(text||''),begin=raw.indexOf(CONTACT_POINT_START),end=raw.indexOf(CONTACT_POINT_END,begin+CONTACT_POINT_START.length);
+ if(begin<0||end<0)return null;
+ let points;try{points=JSON.parse(raw.slice(begin+CONTACT_POINT_START.length,end).trim())}catch{return null}
+ if(!Array.isArray(points))return null;
+ return {raw,begin,end,points};
+}
+// 只更新老師之前明確同意公開積點的聯絡簿；不新增公開日期或公開權限。
+async function syncPublishedContact(code,date,payload){
+ const data=await api('/rest/v1/rpc/fundesk_contact_teacher_get',{method:'POST',body:JSON.stringify({p_class_code:code})});
+ const entries=Array.isArray(data?.entries)?data.entries:[];
+ const eligible=entries.filter(e=>e.entry_date<=date&&contactPublishedSlice(e.reminders)).sort((a,b)=>b.entry_date.localeCompare(a.entry_date));
+ const entry=eligible[0];if(!entry)return '尚無已授權的加扣點聯絡簿，本次不公開';
+ const part=contactPublishedSlice(entry.reminders);
+ const students=new Map((payload.students||[]).map(st=>[st.id,st]));
+ const latest=(payload.points||[]).filter(p=>p.date===date&&p.kind!=='redemption'&&students.has(p.sid)).map(p=>{
+  const st=students.get(p.sid);
+  return {no:st.no,name:String(st.name||'').slice(0,25),delta:Number(p.delta)||0,reason:String(p.reason||'').slice(0,90),date};
+ });
+ // 舊版未含 date 的記錄屬於該聯絡簿原日期；避免其他日期重複累加。
+ const kept=part.points.filter(p=>String(p.date||entry.entry_date)!==date);
+ const combined=[...kept,...latest];
+ const revised=part.raw.slice(0,part.begin)+CONTACT_POINT_START+'\n'+JSON.stringify(combined)+'\n'+CONTACT_POINT_END+part.raw.slice(part.end+CONTACT_POINT_END.length);
+ if(revised===part.raw)return '聯絡簿已是最新';
+ await api('/rest/v1/rpc/fundesk_contact_teacher_save',{method:'POST',body:JSON.stringify({
+  p_class_code:code,p_entry_date:entry.entry_date,p_lesson:entry.lesson||'',p_homework:entry.homework||'',p_reminders:revised
+ })});
+ return '已同步至 '+entry.entry_date+' 已授權聯絡簿';
+}
 async function addPoints(delta,chosenReason=""){
  if(saving||!session)return;
  const ids=[...selection],name=className(classCode),date=$("date").value,reason=chosenReason||$("reason").value.trim()||"課堂表現";
@@ -175,7 +205,11 @@ async function addPoints(delta,chosenReason=""){
     const revision=await api("/rest/v1/rpc/fundesk_save_teacher_data",{method:"POST",body:JSON.stringify({p_class_code:classCode,p_payload:payload,p_expected_revision:Number(row.revision)||0})});
     if(typeof revision!=="number")throw Error("儲存回傳版本異常");
     const local=current();if(local){local.payload=payload;local.revision=revision}draw()
-    status("✅ 已同步到 "+name+"："+ids.length+" 人各 "+(delta>0?"+":"")+delta+" 分（"+reason+"）。\n老師電腦版會自動更新。","ok");
+    let contactResult='';try{contactResult=await syncPublishedContact(classCode,date,payload)}catch(contactError){
+     console.warn('班級聯絡簿同步失敗：',contactError);
+     contactResult='⚠️ 加扣點已存入教師資料庫，但聯絡簿同步失敗，請使用主程式檢查同步';
+    }
+    status("✅ 已同步到 "+name+"："+ids.length+" 人各 "+(delta>0?"+":"")+delta+" 分（"+reason+"）。\n"+contactResult+"\n老師電腦版會自動更新。",contactResult.startsWith("⚠️")?"error":"ok");
     return;
    }catch(err){
     if(attempt===3||!/revision|版本|conflict|409|400/i.test(String(err.message)))throw err;
