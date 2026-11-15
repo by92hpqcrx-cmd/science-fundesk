@@ -152,6 +152,12 @@ body.roomFullscreen .movingRoomToolbar{flex:0 0 auto}
 body.roomFullscreen .movingRoomStage{flex:1;min-height:0;height:auto}
 body.roomFullscreen .roomHelp{flex:0 0 auto}
 body.roomFullscreen #modal{z-index:99999}
+/* 動態教室：人物尺寸與舞台容量自動調整 */
+.movingRoomStage .roomWalker{width:calc(76px * var(--room-avatar-scale,1));min-height:calc(86px * var(--room-avatar-scale,1));gap:0;padding:0}
+.movingRoomStage .roomWalker img,.movingRoomStage .roomWalker .roomFallback{width:calc(58px * var(--room-avatar-scale,1));height:calc(58px * var(--room-avatar-scale,1));font-size:calc(30px * var(--room-avatar-scale,1));border-width:calc(3px * var(--room-avatar-scale,1))}
+.movingRoomStage .roomWalker .roomName{font-size:clamp(7px,calc(12px * var(--room-avatar-scale,1)),12px);padding:1px 2px;max-width:100%}
+.roomSpeedLabel{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:#37566c}
+.roomSpeedLabel select{border:1px solid #b6cbdc;border-radius:9px;background:#fff;padding:8px 14px;font:inherit}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -1061,11 +1067,11 @@ function bindNewFeatures(){
 }
 
 /* 動態教室 - 使用同一份雲端 db，名片開關時不重建走動場景。 */
-let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='',roomOriginalClass=null,roomCardClass=null,roomObserver=null;
+let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='',roomOriginalClass=null,roomCardClass=null,roomObserver=null,roomSpeed="medium";
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
 function renderClassroom(){
- return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 ${esc(classDisplay(cl))} · 動態教室</strong><span class="roomCount" id="roomCount"></span><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button></div>
- <div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">FunDesk 快樂自然教室 🌱</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div></div><p class="roomHelp">只顯示目前選取班級的學生。點選學生開啟名片，關閉後繼續移動；可暫停或使用全螢幕。</p></section>`;
+ return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 ${esc(classDisplay(cl))} · 動態教室</strong><span class="roomCount" id="roomCount"></span><label class="roomSpeedLabel" for="roomSpeedSelect">移動速度 <select id="roomSpeedSelect" aria-label="學生移動速度"><option value="slow">慢</option><option value="medium">中</option><option value="fast">快</option></select></label><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button></div>
+ <div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">FunDesk 快樂自然教室 🌱</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div></div><p class="roomHelp">只顯示目前選取班級的學生。頭像相遇會像撞球互相彈開；可調整移動速度、暫停或切換全螢幕，關閉學生名片後動畫持續。</p></section>`;
 }
 function roomPeople(){
  return (db.classes[cl]?.students||[]).map(s=>({code:cl,s}));
@@ -1079,17 +1085,31 @@ function stopMovingClassroom(){
  if(document.fullscreenElement===document.documentElement&&document.body.classList.contains('roomFullscreen'))document.exitFullscreen().catch(()=>{});
  document.body.classList.remove('roomFullscreen');
 }
-function roomBounds(){
- const el=$('movingClassroom');
- return {w:Math.max(1,(el?.clientWidth||900)-84),h:Math.max(1,(el?.clientHeight||560)-100)};
+const roomSpeedValue=()=>({slow:18,medium:42,fast:78}[roomSpeed]||42);
+function roomGeometry(count){
+ const stage=$('movingClassroom');
+ const width=stage?.clientWidth||900,height=stage?.clientHeight||560;
+ const cols=Math.max(1,Math.ceil(Math.sqrt(Math.max(1,count)*width/height)));
+ const rows=Math.max(1,Math.ceil(count/cols));
+ // 小畫面依班級人數縮放頭像，使學生仍能彼此分開。
+ const scale=Math.min(1,Math.max(.36,Math.min((width-20)/cols/88,(height-20)/rows/105)));
+ const itemWidth=76*scale,itemHeight=86*scale;
+ const maxX=Math.max(0,width-itemWidth-8),maxY=Math.max(0,height-itemHeight-8);
+ const radius=Math.min(46*scale,Math.min(width/cols,height/rows)*.46);
+ stage?.style.setProperty('--room-avatar-scale',String(scale));
+ return {width,height,cols,rows,maxX,maxY,radius,scale,itemWidth,itemHeight};
 }
+function roomBounds(){const geo=roomGeometry(roomWalkers.length);return {w:geo.maxX,h:geo.maxY}}
 function populateMovingRoom(){
  const root=$('roomWalkers');if(!root)return;
  root.replaceChildren();roomWalkers=[];
- const people=roomPeople(),size=roomBounds();
+ const people=roomPeople(),geo=roomGeometry(people.length);
  $('roomCount').textContent=`目前 ${people.length} 位學生在教室裡`;
+ // 預先將格子洗牌，確保初始位置分散且無交疊。
+ const cells=Array.from({length:geo.cols*geo.rows},(_,i)=>i);
+ for(let i=cells.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cells[i],cells[j]]=[cells[j],cells[i]]}
  const fragment=document.createDocumentFragment();
- for(const {code,s} of people){
+ for(const [i,{code,s}] of people.entries()){
   const el=document.createElement('button');el.type='button';el.className='roomWalker';el.title=`${classDisplay(code)} ${s.no} 號 ${s.name}`;
   el.setAttribute('aria-label',el.title);
   const url=studentAvatarPath(s);
@@ -1098,11 +1118,52 @@ function populateMovingRoom(){
   const name=document.createElement('span');name.className='roomName';name.textContent=`${s.no} ${s.name}`;el.appendChild(name);
   el.onclick=()=>openMovingRoomStudent(code,s.id,el);
   fragment.appendChild(el);
-  const angle=Math.random()*Math.PI*2,speed=12+Math.random()*22;
-  roomWalkers.push({el,code,sid:s.id,x:Math.random()*size.w,y:Math.random()*size.h,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,t:2+Math.random()*4});
+  const index=cells[i],row=Math.floor(index/geo.cols),col=index%geo.cols;
+  const cellW=geo.maxX/Math.max(1,geo.cols-1),cellH=geo.maxY/Math.max(1,geo.rows-1);
+  const x=geo.cols===1?geo.maxX/2:col*cellW;
+  const y=geo.rows===1?geo.maxY/2:row*cellH;
+  const angle=Math.random()*Math.PI*2,speed=roomSpeedValue();
+  roomWalkers.push({el,code,sid:s.id,x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:geo.radius});
  }
  root.appendChild(fragment);
  roomWalkers.forEach(w=>w.el.style.transform=`translate3d(${w.x}px,${w.y}px,0)`);
+}
+function advanceMovingRoom(dt){
+ const g=roomGeometry(roomWalkers.length),radius=g.radius,speed=roomSpeedValue();
+ // 方向固定到碰撞或撞牆時才改變；不會穿越同學頭像。
+ for(const w of roomWalkers){
+  w.r=radius;
+  const magnitude=Math.hypot(w.vx,w.vy)||1;
+  w.vx=w.vx/magnitude*speed;w.vy=w.vy/magnitude*speed;
+  w.x+=w.vx*dt;w.y+=w.vy*dt;
+  if(w.x<0){w.x=0;w.vx=Math.abs(w.vx)}
+  else if(w.x>g.maxX){w.x=g.maxX;w.vx=-Math.abs(w.vx)}
+  if(w.y<0){w.y=0;w.vy=Math.abs(w.vy)}
+  else if(w.y>g.maxY){w.y=g.maxY;w.vy=-Math.abs(w.vy)}
+ }
+ // 同質量彈性碰撞：沿兩人中心連線交換速度分量，並立即分開。
+ for(let pass=0;pass<3;pass++){
+  for(let i=0;i<roomWalkers.length;i++)for(let j=i+1;j<roomWalkers.length;j++){
+   const a=roomWalkers[i],b=roomWalkers[j];
+   let dx=b.x-a.x,dy=b.y-a.y,dist=Math.hypot(dx,dy),minDist=a.r+b.r;
+   if(dist>=minDist)continue;
+   if(dist<.0001){const theta=(i*17+j*31)*2.39996;dx=Math.cos(theta);dy=Math.sin(theta);dist=1}
+   const nx=dx/dist,ny=dy/dist;
+   const penetration=(minDist-dist)/2+.02;
+   a.x=Math.max(0,Math.min(g.maxX,a.x-nx*penetration));
+   a.y=Math.max(0,Math.min(g.maxY,a.y-ny*penetration));
+   b.x=Math.max(0,Math.min(g.maxX,b.x+nx*penetration));
+   b.y=Math.max(0,Math.min(g.maxY,b.y+ny*penetration));
+   if(pass===0){
+    const approach=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
+    if(approach<0){
+     a.vx+=approach*nx;a.vy+=approach*ny;
+     b.vx-=approach*nx;b.vy-=approach*ny;
+    }
+   }
+  }
+ }
+ for(const w of roomWalkers)w.el.style.transform=`translate3d(${w.x.toFixed(1)}px,${w.y.toFixed(1)}px,0)`;
 }
 function roomFallback(){const span=document.createElement('span');span.className='roomFallback';span.textContent='🙂';return span}
 function refreshMovingClassroomCards(){
@@ -1140,6 +1201,7 @@ function startMovingClassroom(){
  if(!$('movingClassroom'))return;
  if(roomOriginalClass===null)roomOriginalClass=cl;
  $('roomShuffle').onclick=populateMovingRoom;
+ const speedSelect=$('roomSpeedSelect');speedSelect.value=roomSpeed;speedSelect.onchange=()=>{roomSpeed=speedSelect.value};
  const fullscreenButton=$('roomFullscreenToggle');
  const updateFullscreenButton=()=>{const enabled=document.fullscreenElement===document.documentElement&&view==='classroom';document.body.classList.toggle('roomFullscreen',enabled);if(fullscreenButton.isConnected)fullscreenButton.textContent=enabled?'⛶ 退出全螢幕':'⛶ 全螢幕'};
  fullscreenButton.onclick=async()=>{
@@ -1156,16 +1218,7 @@ function startMovingClassroom(){
  function animate(ts){
   if(view!=='classroom'||!$('movingClassroom')){stopMovingClassroom();return}
   const dt=Math.min(.05,Math.max(0,(ts-(roomLastTick||ts))/1000));roomLastTick=ts;
-  if(!paused&&dt){
-   const bound=roomBounds();
-   for(const w of roomWalkers){
-    w.t-=dt;if(w.t<=0){const a=Math.random()*Math.PI*2,spd=12+Math.random()*22;w.vx=Math.cos(a)*spd;w.vy=Math.sin(a)*spd;w.t=2+Math.random()*4}
-    w.x+=w.vx*dt;w.y+=w.vy*dt;
-    if(w.x<0||w.x>bound.w){w.vx*=-1;w.x=Math.max(0,Math.min(bound.w,w.x))}
-    if(w.y<0||w.y>bound.h){w.vy*=-1;w.y=Math.max(0,Math.min(bound.h,w.y))}
-    w.el.style.transform=`translate3d(${w.x.toFixed(1)}px,${w.y.toFixed(1)}px,0)`;
-   }
-  }
+  if(!paused&&dt)advanceMovingRoom(dt);
   roomAnimation=requestAnimationFrame(animate);
  }
  roomAnimation=requestAnimationFrame(animate);
