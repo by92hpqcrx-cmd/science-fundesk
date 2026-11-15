@@ -255,7 +255,21 @@ function openLinkSettings(){
 const DEFAULT_LAB_TEMPLATE=[[14,29,19,9,4,24],[15,30,20,10,5,25],[11,26,16,6,1,21],[12,27,17,7,2,22],[13,28,18,8,3,23]];
 // 全班積點與作業訂正的基本設定（恢復原始版遺漏的常數）
 
-const STUDENT_AVATARS=[['girl-1','女生・馬尾'],['girl-2','女生・短髮'],['girl-3','女生・雙辮'],['girl-4','女生・眼鏡'],['girl-5','女生・丸子頭'],['boy-1','男生・短髮'],['boy-2','男生・眼鏡'],['boy-3','男生・捲髮'],['boy-4','男生・棒球帽'],['boy-5','男生・妹妹頭'],['animal-cat','動物・貓咪'],['animal-dog','動物・小狗'],['animal-rabbit','動物・兔子'],['animal-bear','動物・小熊'],['animal-panda','動物・熊貓'],['animal-fox','動物・狐狸'],['animal-lion','動物・獅子'],['animal-koala','動物・無尾熊'],['animal-tiger','動物・老虎'],['animal-frog','動物・青蛙']];
+const STUDENT_AVATARS=[['girl-1','女生・馬尾'],['girl-2','女生・短髮'],['girl-3','女生・雙辮'],['girl-4','女生・眼鏡'],['girl-5','女生・丸子頭'],['boy-1','男生・短髮'],['boy-2','男生・眼鏡'],['boy-3','男生・捲髮'],['boy-4','男生・棒球帽'],['boy-5','男生・妹妹頭'],['animal-cat','動物・貓咪'],['animal-dog','動物・小狗'],['animal-rabbit','動物・兔子'],['animal-bear','動物・小熊'],['animal-panda','動物・熊貓'],['animal-fox','動物・狐狸'],['animal-lion','動物・獅子'],['animal-koala','動物・無尾熊'],['animal-tiger','動物・老虎'],['animal-frog','動物・青蛙'],['zodiac-aries','星座・牡羊座'],['zodiac-taurus','星座・金牛座'],['zodiac-gemini','星座・雙子座'],['zodiac-cancer','星座・巨蟹座'],['zodiac-leo','星座・獅子座'],['zodiac-virgo','星座・處女座'],['zodiac-libra','星座・天秤座'],['zodiac-scorpio','星座・天蠍座'],['zodiac-sagittarius','星座・射手座'],['zodiac-capricorn','星座・摩羯座'],['zodiac-aquarius','星座・水瓶座'],['zodiac-pisces','星座・雙魚座']];
+// 不提前顯示尚未上傳的星座圖檔，避免 GitHub Pages 產生破圖按鈕。
+const availableZodiacAvatars=new Set();
+const loadZodiacAvatarAssets=()=>{
+ const names=["zodiac-aries","zodiac-taurus","zodiac-gemini","zodiac-cancer","zodiac-leo","zodiac-virgo","zodiac-libra","zodiac-scorpio","zodiac-sagittarius","zodiac-capricorn","zodiac-aquarius","zodiac-pisces"];
+ Promise.all(names.map(id=>new Promise(resolve=>{
+  const image=new Image();image.onload=()=>{availableZodiacAvatars.add(id);resolve(true)};
+  image.onerror=()=>resolve(false);
+  image.src='avatars/'+id+'.svg';
+ }))).then(()=>{
+  const picker=document.querySelector('.avatarPicker');
+  if(picker){const card=picker.closest('.modal,.panel,.studentDetail'); if(card){const visible=picker.querySelector('.avatarOptions');if(visible){const current=document.querySelector('.avatarPicker');if(current){current.querySelectorAll('[data-avatar-choice^="zodiac-"]').forEach(b=>{b.hidden=!availableZodiacAvatars.has(b.dataset.avatarChoice)})}}}}
+ }).catch(err=>console.warn('星座頭像檢查失敗',err));
+};
+loadZodiacAvatarAssets();
 const studentAvatarPath=s=>s&&STUDENT_AVATARS.some(([id])=>id===s.avatar)?'avatars/'+s.avatar+'.svg':'';
 const avatarWatermark=s=>{const src=studentAvatarPath(s);return src?'<span class="seatAvatarArt" style="background-image:url('+src+')" aria-hidden="true"></span>':''};
 const avatarThumb=s=>{const src=studentAvatarPath(s);return src?'<img class="studentAvatarThumb" src="'+src+'" alt="自選頭像">':'<span class="studentAvatarPlaceholder" aria-hidden="true">☺</span>'};
@@ -264,7 +278,7 @@ const avatarThumb=s=>{const src=studentAvatarPath(s);return src?'<img class="stu
 const avatarMini=(s,extra='')=>{const src=studentAvatarPath(s);return src?'<img class="avatarMini '+extra+'" src="'+src+'" alt="" aria-hidden="true">':''};
 const avatarNamed=(s,name)=>'<span class="avatarNamed">'+avatarMini(s)+'<span class="studentName">'+esc(name??s?.name??'')+'</span></span>';
 const quizCandidateMarkup=()=>{const last=quizList.at(-1);return last?'<span class="quizCandidateAvatar">'+avatarMini(student(last.sid),'avatarCandidate')+'<span>'+esc(last.label)+'</span></span>':'尚未選擇學生'};
-const avatarChooser=s=>'<section class="avatarPicker"><h3 class="sectionLabel">選擇學生頭像（人物／動物共 20 款）</h3><p class="hint">點選頭像立即儲存，座位表會顯示淡淡的頭像底圖。</p><div class="avatarOptions">'+STUDENT_AVATARS.map(([id,label],index)=>(index===10?'<div class="avatarGroupCaption">可愛動物頭像</div>':'')+'<button type="button" class="avatarOption '+(s.avatar===id?'chosen':'')+'" data-avatar-choice="'+id+'" aria-pressed="'+(s.avatar===id)+'" title="'+label+'"><img src="avatars/'+id+'.svg" alt="'+label+'"><small>'+label+'</small></button>').join('')+'</div><button type="button" class="btn small outline" id="clearStudentAvatar">不使用頭像</button></section>';
+const avatarChooser=s=>'<section class="avatarPicker"><h3 class="sectionLabel">選擇學生頭像（人物／動物／十二星座）</h3><p class="hint">點選頭像立即儲存，座位表會顯示淡淡的頭像底圖；星座選項會在圖片成功載入後顯示。</p><div class="avatarOptions">'+STUDENT_AVATARS.filter(([id])=>!id.startsWith('zodiac-')||availableZodiacAvatars.has(id)).map(([id,label],index)=>(index===10?'<div class="avatarGroupCaption">可愛動物頭像</div>':id==='zodiac-aries'?'<div class="avatarGroupCaption">十二星座頭像</div>':'')+'<button type="button" class="avatarOption '+(s.avatar===id?'chosen':'')+'" data-avatar-choice="'+id+'" aria-pressed="'+(s.avatar===id)+'" title="'+label+'"><img src="avatars/'+id+'.svg" alt="'+label+'"><small>'+label+'</small></button>').join('')+'</div><button type="button" class="btn small outline" id="clearStudentAvatar">不使用頭像</button></section>';
 const BEHAVIORS=[['主動發言',1,'🙋'],['專心上課',1,'👂'],['完成任務',2,'✏️'],['合作良好',2,'🤝'],['實驗表現',2,'🔬'],['主動服務',2,'⭐'],['筆記認真',2,'📝'],['平板使用優良',2,'💻'],['平時考100分',5,'💯'],['期中期末考100分',10,'🏅'],['習作字體工整（每次）',2,'✍️'],['習作書寫無錯誤（每次）',2,'✅'],['干擾上課',-1,'🗣️'],['任意走動',-1,'🚶'],['未帶課習',-1,'📚'],['上課分心',-1,'💭'],['上課遲到',-1,'⏰'],['不尊重同學',-2,'😠'],['實驗違規',-2,'⚠️'],['平板違規',-2,'🎮'],['在自然教室喧鬧',-1,'🔊'],['攜帶非學用品至教室',-1,'🎲'],['亂動課室物品',-1,'🧪'],['發言不舉手',-1,'✋'],['說髒話',-2,'🚫']];
 const CORRECTION_STATUSES=['未繳交','已繳交','待訂正','已完成'];
 const taskTypes=['習作','實驗','考試'];
