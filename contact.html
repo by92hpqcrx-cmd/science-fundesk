@@ -58,6 +58,9 @@ body.notebookViewer{margin:0;line-height:1.65;color:var(--ink);font-family:syste
 }
 .contactHeaderMeta{display:flex;gap:8px 16px;flex-wrap:wrap;align-items:center;margin-top:8px;font-weight:700;font-size:14px}.contactHeaderMeta strong{display:inline-block;background:#e0f4e9;color:#255b48;padding:5px 12px;border:1px solid #a5dac5;border-radius:999px}
 .contactTitleRow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.contactTitleRow h1{margin:0}.contactTitleRow #headerPlace{display:inline-block;font-size:clamp(19px,2vw,25px);line-height:1.5;font-weight:900;border:2px solid #90cbb1;border-radius:12px;padding:6px 14px;background:#e1f6ec;color:#185b4b;white-space:normal}
+
+.notebookDeleteMessage{background:#fff0ef;color:#993b3b;border:1px solid #e9b7b2;border-radius:9px;padding:5px 10px;margin-left:9px;cursor:pointer;font-size:13px;font-weight:700}
+.notebookDeleteMessage:disabled{opacity:.5;cursor:default}
 </style></head><body class="notebookViewer"><header><div class="wrap"><div><small>FUNDESK · 自然科</small><div class="contactTitleRow"><h1 id="classTitle">📒 班級聯絡簿</h1><strong id="headerPlace">本周上課地點：讀取中…</strong></div><p>自然科課程紀錄 · 考試預告 · 重要記事</p><div class="contactHeaderMeta"><span id="headerDate">日期：讀取中…</span></div></div><span class="fundeskSticker" data-scene="notes" aria-hidden="true"></span></div></header>
 <main><div class="bar"><span id="status" role="status">正在連線…</span><button class="btn" id="refresh" type="button">↻ 立即更新</button></div><p class="notice" id="pointScreenNote">🔒 學生加扣點紀錄預設隱藏。給導師查看時可按「顯示」；投影到電腦大螢幕前請按「隱藏」。此按鈕不提供帳號權限保護。</p><div id="pointToolbar" class="pointToolbar"><button id="toggleAllPoints" class="pointToggle" type="button" aria-expanded="false" aria-controls="latest history">👁 顯示加扣點紀錄</button><p>預設隱藏，僅在此頁面按鈕展開；投影前請按「隱藏」。已發布的資料並非保密資料。</p><p id="pointEmpty" class="pointNotice" hidden>目前沒有已發布的加扣點紀錄。老師發布當日加扣點後，「課堂表現」新增的紀錄會自動同步。</p></div><article id="latestEntry" class="entry"><div id="latest"></div>
  <form id="replyPanel" hidden>
@@ -117,6 +120,19 @@ function article(e,wrapped=true){
  return `${wrapped?'<article class="entry">':''}<h2>${esc(e.entry_date)}</h2><div class="date">最後更新：${esc(stamp(e.updated_at))}</div>${sections({...e,reminders:parsed.reminders})}${pointPanel(parsed.points,parsed.published,e.entry_date)}${wrapped?'</article>':''}`;
 }
 const hasThread=/^[0-9a-f]{64}$/.test(token);
+// 只保存這台瀏覽器自行送出的隨機留言識別碼；不開放拿分享網址任意刪除他人留言。
+const myMessagesKey='fundesk_notebook_sent_messages_'+token;
+function mySentMessages(){
+ try{const value=JSON.parse(localStorage.getItem(myMessagesKey)||'[]');return Array.isArray(value)?value.filter(x=>x&&/^[0-9a-f-]{36}$/i.test(x.id)).slice(-30):[]}
+ catch{return []}
+}
+function saveSentMessage(item){
+ try{const items=mySentMessages();if(!items.some(x=>x.id===item.id))items.push(item);localStorage.setItem(myMessagesKey,JSON.stringify(items.slice(-30)))}catch{}
+}
+function forgetSentMessage(id){
+ try{localStorage.setItem(myMessagesKey,JSON.stringify(mySentMessages().filter(x=>x.id!==id)))}catch{}
+}
+let threadDeleting=false;
 let threadBusy=false,threadRequest=0,threadPending=null;
 async function threadCall(payload={}){
  const response=await fetch(API_URL+'/rest/v1/rpc/fundesk_contact_messages',{
@@ -132,13 +148,47 @@ async function threadCall(payload={}){
 }
 function displayThread(data){
  const items=Array.isArray(data?.messages)?data.messages:[];
- const markup=items.map(item=>`<article style="padding:8px 0;border-bottom:1px solid #aac5b5">
+ const owned=mySentMessages().slice().sort((a,b)=>String(b.sentAt||'').localeCompare(String(a.sentAt||'')));
+ const matched=new Set();
+ const markup=items.map(item=>{
+  let own=null;
+  if(item.author_role==='homeroom'){
+   const posted=Date.parse(item.created_at||'');
+   own=owned.find(x=>{
+    if(matched.has(x.id)||x.message!==item.message)return false;
+    const sent=Date.parse(x.sentAt||'');
+    return Number.isFinite(posted)&&Number.isFinite(sent)&&Math.abs(posted-sent)<300000;
+   });
+   if(own)matched.add(own.id);
+  }
+  const deletion=own?'<button type="button" class="notebookDeleteMessage" data-delete-own="'+esc(own.id)+'" aria-label="刪除這一則自己送出的留言">刪除這則</button>':'';
+  return `<article style="padding:8px 0;border-bottom:1px solid #aac5b5">
   <b>${esc(item.display_name||(item.author_role==='subject'?'科任老師':'導師'))}</b> <small>${esc(stamp(item.created_at))}</small>
-  <div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(item.message)}</div></article>`).join('')||'目前沒有留言。';
+  ${deletion}
+  <div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(item.message)}</div></article>`;
+ }).join('')||'目前沒有留言。';
  if(el('threadMessages').innerHTML!==markup)el('threadMessages').innerHTML=markup;
- el('threadSend').disabled=threadBusy||!data.can_post;
+ el('threadSend').disabled=threadBusy||threadDeleting||!data.can_post;
  if(!data.can_post)el('threadStatus').textContent='班級聯絡簿發布後即可留言。';
 }
+el('threadMessages').addEventListener('click',async event=>{
+ const button=event.target.closest('[data-delete-own]');if(!button||threadDeleting)return;
+ const id=button.dataset.deleteOwn,record=mySentMessages().find(x=>x.id===id);
+ if(!record||!confirm('確定刪除這一則留言嗎？刪除後將無法復原。'))return;
+ threadDeleting=true;button.disabled=true;
+ const status=el('threadStatus');status.textContent='正在刪除留言…';
+ try{
+  const response=await fetch(API_URL+'/rest/v1/rpc/fundesk_contact_sent_reply_delete',{
+   method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},
+   body:JSON.stringify({p_token:token,p_request_id:id}),cache:'no-store'
+  });
+  const value=await response.json().catch(()=>null);
+  if(!response.ok||value?.ok!==true)throw Error(response.status===404?'請先由管理者在雲端執行 contact_replies_delete.sql，啟用逐筆刪除。':(value?.message||'刪除失敗'));
+  forgetSentMessage(id);
+  status.textContent='✅ 已刪除這一則留言。';await refreshThread();
+ }catch(error){status.textContent='❌ '+error.message}
+ finally{threadDeleting=false;button.disabled=false}
+});
 async function refreshThread(){
  if(!hasThread||threadBusy)return;
  const request=++threadRequest;
@@ -156,7 +206,9 @@ el('replyPanel').onsubmit=async event=>{
  if(threadPending?.message!==message)threadPending={message,id:crypto.randomUUID()};
  threadBusy=true;++threadRequest;el('threadSend').disabled=true;el('threadSendLabel').textContent='送出中…';status.textContent='正在送出…';
  try{
-  const data=await threadCall({p_message:message,p_request_id:threadPending.id});
+  const sentId=threadPending.id,sentAt=new Date().toISOString();
+  const data=await threadCall({p_message:message,p_request_id:sentId});
+  saveSentMessage({id:sentId,message,sentAt});
   threadPending=null;
   if(field.value.trim()===message)field.value='';
   status.textContent='留言已送出。';
