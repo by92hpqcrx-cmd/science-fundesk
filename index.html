@@ -142,6 +142,16 @@
 .roomWalker.roomPicked .roomName{background:#ffedaf}
 .roomHelp{font-size:12px;color:#61798b;padding:9px 3px 0}
 @media(max-width:680px){.movingRoomStage{height:65vh;min-height:420px}.roomWalker{width:62px}.roomWalker img,.roomWalker .roomFallback{width:47px;height:47px}.roomWalker .roomName{font-size:10px}}
+
+body.roomFullscreen .sidebar,body.roomFullscreen .topbar,body.roomFullscreen #stats{display:none!important}
+body.roomFullscreen .shell{display:block;min-height:100vh}
+body.roomFullscreen .main{max-width:none;width:100%;height:100vh;margin:0;padding:0;overflow:hidden}
+body.roomFullscreen #content{height:100vh}
+body.roomFullscreen .movingRoomPanel{height:100vh;border:0;border-radius:0;padding:10px;display:flex;flex-direction:column}
+body.roomFullscreen .movingRoomToolbar{flex:0 0 auto}
+body.roomFullscreen .movingRoomStage{flex:1;min-height:0;height:auto}
+body.roomFullscreen .roomHelp{flex:0 0 auto}
+body.roomFullscreen #modal{z-index:99999}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -439,7 +449,7 @@ function swapTemplateCell(index){
 }
 function resetLabTemplate(){if(!confirm('恢復 PDF 原始座號位置？會清除七班已另行調整的實驗座位排列，但不會刪除學生與課堂紀錄。'))return;db.labTemplate=DEFAULT_LAB_TEMPLATE.map(g=>[...g]);CLASSES.forEach(code=>db.classes[code].seats.lab=[]);templatePicked=null;save();render()}
 function setSeat(kind,arr){cls().seats[kind]=arr;save()}
-function changeClass(c){if(!activeCodes().includes(c))return;if(view==='contact'&&contactDirty()&&!confirm('目前有未儲存的聯絡簿，確定切換班級並捨棄修改？')){syncClassOptions();return;} const u=new URL(location.href);u.searchParams.set('class',c);history.replaceState({},'',u.href);pointSelection.clear();quizList=[];quizPicked.clear();currentQuestion=null;gameAnswered=false;correctionTaskId='';cl=c;editSeats=false;editLabTemplate=false;templatePicked=null;studentId=null;selectedTask='';$('modal').classList.add('hidden');render()}
+function changeClass(c){if(!activeCodes().includes(c))return;if(view==='contact'&&contactDirty()&&!confirm('目前有未儲存的聯絡簿，確定切換班級並捨棄修改？')){syncClassOptions();return;} const u=new URL(location.href);u.searchParams.set('class',c);history.replaceState({},'',u.href);pointSelection.clear();quizList=[];quizPicked.clear();currentQuestion=null;gameAnswered=false;correctionTaskId='';cl=c;if(view==='classroom'){roomOriginalClass=c;roomCardClass=null}editSeats=false;editLabTemplate=false;templatePicked=null;studentId=null;selectedTask='';$('modal').classList.add('hidden');render()}
 function statCards(){let n=tally();$('stats').innerHTML=[['學生人數',students().length,'目前班級'],['待補習作',n.missing,'實驗／習作未完成'],['待補考',n.exam,'缺考或補考未完成'],['缺席紀錄',n.absent,'累計缺席次數']].map(([a,b,c])=>`<div class="stat"><span>${a}</span><strong>${b}</strong><small>${c}</small></div>`).join('');$('sidebarPending').textContent=n.missing+n.exam||''}
 function renderTabletRules(){return `<div class="tabletGuide"><div class="tabletHero"><div><span class="tabletEyebrow">DA CHENG ELEMENTARY · DIGITAL LEARNING</span><h2>📱 學生平板使用守則</h2><p>先聽指令、專心學習、安全上網、準時歸還</p></div><span class="tabletHeroEmoji" aria-hidden="true">👩🏻‍🏫📲✨</span></div><div class="tabletIntro">我們的約定：平板是全校共用的學習工具，用得正確、用得安全，下一位同學也能安心使用。</div><div class="tabletNav"><a href="#tabletSec1">🎒 領取前</a><a href="#tabletSec2">💻 上課中</a><a href="#tabletSec3">🛡️ 安全與健康</a><a href="#tabletSec4">🔌 歸還</a><a href="#tabletPhotos">📷 操作圖解</a></div><section class="tabletSection" id="tabletSec1"><h3 style="background:#dceeff">🎒 ① 領取前：先聽指令，再拿平板</h3><div class="tabletRulesGrid"><article class="tabletRuleItem"><span class="tabletRuleNo">01</span><div><b>依座號領取</b><p>依照老師指定的座號或設備編號領取，不擅自更換，也不幫別人亂拿。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">02</span><div><b>雙手拿穩</b><p>拿取時雙手托住平板，避免抓螢幕、甩動保護套或推擠。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">03</span><div><b>先平放桌面</b><p>領到後平放桌面，等全班領取完畢，老師說開始才能操作。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">04</span><div><b>先檢查外觀</b><p>發現螢幕破裂、保護殼鬆脫、無法開機或電量異常，先告訴老師，不自行拆修。</p></div></article></div></section><section class="tabletSection" id="tabletSec2"><h3 style="background:#d9f7ed">💻 ② 上課中：專心學習、輕觸操作</h3><div class="tabletRulesGrid"><article class="tabletRuleItem"><span class="tabletRuleNo">05</span><div><b>只開指定內容</b><p>只使用老師指定的 App 或網站；不得自行看影片、玩遊戲、拍照錄影或瀏覽無關網頁。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">06</span><div><b>輕點輕滑</b><p>用手指輕觸操作，不用力敲打、連續猛點，也不拿筆尖或硬物戳螢幕。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">07</span><div><b>平板不離桌</b><p>未經老師同意，不拿著平板走動、奔跑或換位置；需要移動先鎖定畫面並雙手拿穩。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">08</span><div><b>遇到問題先舉手</b><p>操作卡住或畫面異常，先停止操作、舉手等候，可小聲提醒老師，不大聲喊叫。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">09</span><div><b>尊重同學</b><p>不搶拿或擅自碰觸別人的平板，不刪改他人作品，不隨意播放聲音干擾課堂。</p></div></article></div></section><section class="tabletSection" id="tabletSec3"><h3 style="background:#fff0dc">🛡️ ③ 安全與健康：保護自己，也保護資料</h3><div class="tabletRulesGrid"><article class="tabletRuleItem"><span class="tabletRuleNo">10</span><div><b>保護個資與帳號</b><p>不公開姓名、座號、密碼、照片或聯絡方式；不替別人登入，也不儲存自己的密碼在公用平板。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">11</span><div><b>小心網路內容</b><p>不點陌生連結、廣告或可疑下載，不回覆陌生訊息；看到不適當內容立即告知老師。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">12</span><div><b>拍照先取得同意</b><p>老師允許且有學習需要時才拍照或錄影；不偷拍、惡搞或傳播同學的影像。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">13</span><div><b>維持良好姿勢</b><p>將平板放穩、保持適當觀看距離，不趴著看；眼睛疲勞時依老師指示休息、望遠。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">14</span><div><b>保持乾燥清潔</b><p>不在平板旁放飲料和食物；手髒或手濕時先清潔擦乾，避免液體流入設備。</p></div></article></div></section><section class="tabletSection" id="tabletSec4"><h3 style="background:#efe7ff">🔌 ④ 下課後：正確登出、歸位充電</h3><div class="tabletRulesGrid"><article class="tabletRuleItem"><span class="tabletRuleNo">15</span><div><b>聽到停止立刻停</b><p>老師宣布停止使用後，先停止操作，不拖延或繼續遊戲。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">16</span><div><b>登出並整理畫面</b><p>依老師指示儲存學習成果、登出個人帳號，關閉使用中的 App。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">17</span><div><b>依號碼歸還</b><p>確認設備編號，依原來位置放回充電車；保護蓋朝上、朝右。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">18</span><div><b>不要跨到隔壁</b><p>保護蓋與平板不可跨進隔壁槽位，避免卡住或壓到其他設備。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">19</span><div><b>充電線插妥</b><p>在老師指導下確認平板放穩、充電接頭正確插入，不硬扯電線。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">20</span><div><b>回座安靜等候</b><p>平板歸還後回座位安靜等待，直到全班完成。</p></div></article></div></section><section class="tabletSection" id="tabletEmergency"><h3 style="background:#ffe4e4">🚨 發生狀況怎麼辦？</h3><table class="tabletIncident"><tbody><tr><th>摔落、破裂、進水</th><td>立刻停止使用，告訴老師；不自行開機測試或修理。</td></tr><tr><th>畫面異常或出現廣告</th><td>不要亂點，舉手請老師協助。</td></tr><tr><th>帳號忘記登出</th><td>立即向老師報告，請老師協助處理。</td></tr><tr><th>設備或充電線有異味、發熱</th><td>停止觸碰與充電，立刻通知老師。</td></tr></tbody></table><p class="tabletNotice">班級提醒｜違反使用規範時，依教師課堂管理規定提醒、扣點或暫停使用。設備損壞應立即通報，後續責任依學校規定處理。</p></section><section class="tabletSection" id="tabletPhotos"><h3 style="background:#dceeff">📷 平板怎麼拿、怎麼放、怎麼充電？</h3><p class="tabletMuted">以下照片保留自原始《平板使用規則》，請依學校設備實際狀況及老師指示操作。</p><div class="tabletPhotosGrid"><article class="tabletPhoto"><img src="tablet_photo_1.jpg" alt="領取後先平放" loading="lazy"><div><b>01 領取後先平放</b><p>平板先放在桌面上，等老師宣布開始。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_2.jpg" alt="正確立起保護套" loading="lazy"><div><b>02 正確立起保護套</b><p>使用保護套支架，確認支撐穩固。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_3.jpg" alt="核對設備編號" loading="lazy"><div><b>03 核對設備編號</b><p>按座號或老師指定號碼領取、歸還。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_4.jpg" alt="歸還時先平放" loading="lazy"><div><b>04 歸還時先平放</b><p>停止操作、登出後，依序整理平板。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_5.jpg" alt="放回正確槽位" loading="lazy"><div><b>05 放回正確槽位</b><p>對準對應的充電槽，保護蓋朝上朝右。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_6.jpg" alt="不跨隔壁並充電" loading="lazy"><div><b>06 不跨隔壁並充電</b><p>保護蓋不壓隔壁設備；插妥充電線。</p></div></article></div></section><div class="tabletPledge">🌈 我會遵守：輕拿輕放｜專心學習｜安全上網｜準時歸還</div><div class="tabletActions"><button type="button" class="btn outline" onclick="window.print()">🖨️ 列印守則</button><button type="button" class="btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ 回到頁首</button></div></div>`;}
 const pageScenes={
@@ -1051,17 +1061,14 @@ function bindNewFeatures(){
 }
 
 /* 動態教室 - 使用同一份雲端 db，名片開關時不重建走動場景。 */
-let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='all',roomOriginalClass=null,roomCardClass=null,roomObserver=null;
+let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='',roomOriginalClass=null,roomCardClass=null,roomObserver=null;
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
 function renderClassroom(){
- const codes=roomClassCodes();
- return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 學生漫遊教室</strong><select id="roomClassFilter" aria-label="選擇漫遊班級"><option value="all">全部班級（${codes.length} 班）</option>${codes.map(code=>`<option value="${esc(code)}">${esc(classDisplay(code))}</option>`).join('')}</select><span class="roomCount" id="roomCount"></span><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button></div>
- <div class="movingRoomStage" id="movingClassroom" aria-label="可點選移動中的學生頭像查看學生名片">
- <div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">FunDesk 快樂自然教室 🌱</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div></div><p class="roomHelp">點選學生頭像開啟原本的學生名片；關閉名片後，所有學生會繼續走動。可切換單班，或暫停以方便點選。</p></section>`;
+ return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 ${esc(classDisplay(cl))} · 動態教室</strong><span class="roomCount" id="roomCount"></span><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button></div>
+ <div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">FunDesk 快樂自然教室 🌱</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div></div><p class="roomHelp">只顯示目前選取班級的學生。點選學生開啟名片，關閉後繼續移動；可暫停或使用全螢幕。</p></section>`;
 }
 function roomPeople(){
- const codes=roomFilter==='all'?roomClassCodes():roomClassCodes().filter(code=>code===roomFilter);
- return codes.flatMap(code=>(db.classes[code]?.students||[]).map(s=>({code,s})));
+ return (db.classes[cl]?.students||[]).map(s=>({code:cl,s}));
 }
 function stopMovingClassroom(){
  if(roomAnimation)cancelAnimationFrame(roomAnimation);
@@ -1069,6 +1076,8 @@ function stopMovingClassroom(){
  if(roomObserver){roomObserver.disconnect();roomObserver=null}
  if(roomCardClass!==null)restoreClassroomSelection();
  roomOriginalClass=null;
+ if(document.fullscreenElement===document.documentElement&&document.body.classList.contains('roomFullscreen'))document.exitFullscreen().catch(()=>{});
+ document.body.classList.remove('roomFullscreen');
 }
 function roomBounds(){
  const el=$('movingClassroom');
@@ -1086,7 +1095,7 @@ function populateMovingRoom(){
   const url=studentAvatarPath(s);
   if(url){const img=document.createElement('img');img.src=url;img.alt='';img.loading='lazy';img.onerror=()=>{img.replaceWith(roomFallback())};el.appendChild(img)}
   else el.appendChild(roomFallback());
-  const name=document.createElement('span');name.className='roomName';name.textContent=`${roomFilter==='all'?classDisplay(code).replace('五年','').replace('班','')+'·':''}${s.no} ${s.name}`;el.appendChild(name);
+  const name=document.createElement('span');name.className='roomName';name.textContent=`${s.no} ${s.name}`;el.appendChild(name);
   el.onclick=()=>openMovingRoomStudent(code,s.id,el);
   fragment.appendChild(el);
   const angle=Math.random()*Math.PI*2,speed=12+Math.random()*22;
@@ -1098,6 +1107,7 @@ function populateMovingRoom(){
 function roomFallback(){const span=document.createElement('span');span.className='roomFallback';span.textContent='🙂';return span}
 function refreshMovingClassroomCards(){
  if(view!=='classroom'||!$('movingClassroom'))return;
+ if(roomCardClass===null&&roomOriginalClass!==cl){roomOriginalClass=cl;populateMovingRoom();return}
  for(const w of roomWalkers){
   const s=db.classes[w.code]?.students?.find(x=>x.id===w.sid);
   if(!s)continue;
@@ -1106,7 +1116,7 @@ function refreshMovingClassroomCards(){
   if(!image&&src){const img=document.createElement('img');img.src=src;img.alt='';w.el.firstElementChild.replaceWith(img)}
   w.el.title=`${classDisplay(w.code)} ${s.no} 號 ${s.name}`;
   w.el.setAttribute('aria-label',w.el.title);
-  w.el.querySelector('.roomName').textContent=`${roomFilter==='all'?classDisplay(w.code).replace('五年','').replace('班','')+'·':''}${s.no} ${s.name}`;
+  w.el.querySelector('.roomName').textContent=`${s.no} ${s.name}`;
  }
 }
 function restoreClassroomSelection(){
@@ -1127,12 +1137,19 @@ function openMovingRoomStudent(code,id,el){
  openStudent(id);
 }
 function startMovingClassroom(){
- const field=$('roomClassFilter');if(!field)return;
+ if(!$('movingClassroom'))return;
  if(roomOriginalClass===null)roomOriginalClass=cl;
- if(!roomClassCodes().includes(roomFilter))roomFilter='all';
- field.value=roomFilter;
- field.onchange=()=>{roomFilter=field.value;populateMovingRoom()};
  $('roomShuffle').onclick=populateMovingRoom;
+ const fullscreenButton=$('roomFullscreenToggle');
+ const updateFullscreenButton=()=>{const enabled=document.fullscreenElement===document.documentElement&&view==='classroom';document.body.classList.toggle('roomFullscreen',enabled);if(fullscreenButton.isConnected)fullscreenButton.textContent=enabled?'⛶ 退出全螢幕':'⛶ 全螢幕'};
+ fullscreenButton.onclick=async()=>{
+  try{
+   if(document.fullscreenElement===document.documentElement)await document.exitFullscreen();
+   else await document.documentElement.requestFullscreen();
+   updateFullscreenButton();
+  }catch(err){alert('無法切換全螢幕，請確認瀏覽器支援全螢幕模式。')}
+ };
+ document.addEventListener('fullscreenchange',updateFullscreenButton);
  let paused=false;
  $('roomMotionToggle').onclick=()=>{paused=!paused;$('roomMotionToggle').textContent=paused?'▶ 繼續移動':'⏸ 暫停移動'};
  populateMovingRoom();
