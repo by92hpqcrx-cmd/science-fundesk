@@ -1379,8 +1379,13 @@ async function contactLoad(code=cl){if(!cloudReady||!cloudSession){contactStatus
 }
 async function contactSave(){if(contactBusy)return;if(!cloudReady){contactStatus('請登入教師雲端',true);return}
  const code=cl,date=contactSafeDate($('contactDate').value),fields=contactFields();
- const points=contactDailyPoints(date,code);
- const alreadyPublished=contactSplitPoints((contactCache[code]?.entries||[]).find(e=>e.entry_date===date)?.reminders).published;
+ const rawPublished=(contactCache[code]?.entries||[]).find(e=>e.entry_date===date)?.reminders;
+ const previously=contactSplitPoints(rawPublished);
+ const points=[
+  ...(previously.published?previously.points.filter(p=>String(p.date||date)!==date):[]),
+  ...contactDailyPoints(date,code).map(p=>({...p,date}))
+ ];
+ const alreadyPublished=previously.published;
  const shouldPublishPoints=alreadyPublished||(points.length>0&&confirm('要一併發布當日加扣點紀錄（座號、姓名和原因）嗎？持有聯絡簿網址的人可讀取。選擇取消仍會發布已填寫的聯絡簿內容。'));
  if(shouldPublishPoints){
   fields.reminders+= '\n'+CONTACT_POINT_START+'\n'+JSON.stringify(points)+'\n'+CONTACT_POINT_END;
