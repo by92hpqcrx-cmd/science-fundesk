@@ -1282,6 +1282,74 @@ function examAnimalSvg(index){
  <path d="M81 121 Q74 114 66 119" fill="none" stroke="${edge}" stroke-width="9"/><circle cx="65" cy="119" r="8" fill="${body}" stroke="${edge}" stroke-width="2.5"/></g></svg>`;
  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
 }
+
+/* 動物 GIF：將側身角色的四種嘴型轉成真正的 GIF 影格，再以 Blob URL 播放。 */
+const examGifCache=new Map(),examGifPending=new Map();
+function examEncodeGif(frames,w,h){
+ const data=[],add=(...v)=>data.push(...v),short=n=>add(n&255,(n>>8)&255);
+ function str(v){for(let i=0;i<v.length;i++)add(v.charCodeAt(i))}
+ str('GIF89a');short(w);short(h);add(247,0,0);add(0,0,0,255,255,255);
+ for(let i=2;i<256;i++){
+  const n=i-2,r=Math.floor(n/42),g=Math.floor((n%42)/6),b=n%6;
+  add(Math.round(r*255/5),Math.round(g*255/6),Math.round(b*255/5));
+ }
+ add(33,255,11);str('NETSCAPE2.0');add(3,1,0,0,0);
+ function lzw(pixels){
+  const out=[];let bits=0,used=0;
+  function pushCode(c){bits|=c<<used;used+=9;while(used>=8){out.push(bits&255);bits>>>=8;used-=8}}
+  for(let i=0;i<pixels.length;i++){pushCode(256);pushCode(pixels[i])}
+  pushCode(257);if(used)out.push(bits&255);return out
+ }
+ for(const frame of frames){
+  add(33,249,4,9,12,0,0,0);add(44);short(0);short(0);short(w);short(h);add(0,8);
+  const packed=lzw(frame);
+  for(let i=0;i<packed.length;i+=255){const part=packed.slice(i,i+255);add(part.length,...part)}
+  add(0);
+ }
+ add(59);return new Blob([new Uint8Array(data)],{type:'image/gif'});
+}
+async function examPrepareGif(index){
+ index=Math.max(0,Math.min(4,Number(index)||0));
+ if(examGifCache.has(index))return examGifCache.get(index);
+ if(examGifPending.has(index))return examGifPending.get(index);
+ const promise=(async()=>{
+  const raw=decodeURIComponent(examAnimalSvg(index).split(',').slice(1).join(','));
+  const w=142,h=142,canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  if(!ctx)throw Error('無法建立 GIF 繪圖環境');
+  const frames=[];
+  for(const opening of [1.4,6,12,6]){
+   const xml=raw.replace(/<animate\b[^>]*\/>/g,'').replace('ry="1.4" fill="#963D53"','ry="'+opening+'" fill="#963D53"');
+   const img=new Image();
+   await new Promise((resolve,reject)=>{
+    img.onload=resolve;img.onerror=()=>reject(Error('動物影格載入失敗'));
+    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(xml);
+   });
+   ctx.clearRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+   const rgba=ctx.getImageData(0,0,w,h).data,pixels=new Uint8Array(w*h);
+   for(let k=0,j=0;k<rgba.length;k+=4,j++){
+    if(rgba[k+3]<100){pixels[j]=0;continue}
+    const r=Math.round(rgba[k]*5/255),g=Math.round(rgba[k+1]*6/255),b=Math.round(rgba[k+2]*5/255);
+    pixels[j]=2+(r*7+g)*6+b;
+   }
+   frames.push(pixels);
+  }
+  const url=URL.createObjectURL(examEncodeGif(frames,w,h));examGifCache.set(index,url);return url;
+ })();
+ examGifPending.set(index,promise);
+ try{return await promise}finally{examGifPending.delete(index)}
+}
+function examSetAnimalGif(index){
+ const node=document.getElementById('examLiveAnimal');if(!node)return;
+ index=Math.max(0,Math.min(4,Number(index)||0));node.dataset.gifIndex=String(index);
+ node.src=examGifCache.get(index)||examAnimalSvg(index);
+ if(examGifCache.has(index))return;
+ examPrepareGif(index).then(url=>{
+  const img=document.getElementById('examLiveAnimal');
+  if(img&&img.dataset.gifIndex===String(index))img.src=url;
+ }).catch(e=>console.warn('GIF 產生失敗，維持 SVG 動畫',e));
+}
+
 function examCurrent(entries,now){const list=entries.slice().sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));return list.find(x=>{const st=Date.parse(x.date+'T'+x.start+':00Z'),en=Date.parse(x.date+'T'+x.end+':00Z');return now>=st&&now<en})||list.find(x=>Date.parse(x.date+'T'+x.start+':00Z')>now)||list.at(-1)||null}
 function examRemaining(item,now){const start=Date.parse(item.date+'T'+item.start+':00Z'),end=Date.parse(item.date+'T'+item.end+':00Z');return {start,end,seconds:Math.max(0,Math.ceil(((now<start?start:end)-now)/1000)),progress:now<start?100:now>=end?0:Math.max(0,Math.min(100,(end-now)/(end-start)*100)),status:now<start?'距離開考':now<end?'考試剩餘':'考試已結束'}}
 function renderExamClock(){const entries=cls().examSchedule||[];return `<section class="panel"><h2>🕒 課堂時間模式</h2><p class="hint">顯示臺灣時間與距離本節下課剩餘時間。</p><div class="toolDisplay" id="wallClock">--:--:--</div><div class="actions"><label>手動指定下課時間（留空為自動） <input type="time" id="classEnd" value="${esc(classEndTime)}"></label><b><span id="classClockStatus">判斷課堂狀態中</span>：<span id="classRemain">--:--</span></b></div></section><section class="panel"><h2>📝 段考計時模式</h2><p class="hint">預先設定各科考試時間，畫面會隨臺灣時間自動切換科目。應到及實到人數可填報，資料獨立儲存於目前班級。</p><form id="examScheduleForm" class="formgrid"><label>考試科目<select name="subject" required><option value="國語">國語</option><option value="英文">英文</option><option value="數學">數學</option><option value="自然">自然</option><option value="社會">社會</option></select></label><label>日期<input type="date" name="date" value="${$('sessionDate').value}" required></label><label>開始時間<input name="start" type="time" required></label><label>結束時間<input name="end" type="time" required></label><label>時間動物<select name="animal">${EXAM_ANIMALS.map(([emoji,name],i)=>`<option value="${i}">${emoji} ${name}</option>`).join('')}</select></label><label>應到人數<input type="number" name="expected" min="0" max="200" value="${students().length}"></label><label>實到人數<input type="number" name="present" min="0" max="200" value="${students().length}"></label><label>考試提醒<input name="tip" placeholder="例：先寫姓名座號"></label><button type="submit" class="btn">新增考程</button></form>
@@ -1291,7 +1359,7 @@ let examDisplayId='';
 function updateExamCountdown(){showWallClock();const now=nowTaipeiMs(),entries=cls().examSchedule||[];
 document.querySelectorAll('[data-exam-count]').forEach(el=>{const item=entries.find(x=>String(x.id)===el.dataset.examCount);if(!item)return;const t=examRemaining(item,now);el.textContent=t.status+' '+(t.status==='考試已結束'?'':toMMSS(t.seconds));});
 const x=examCurrent(entries,now),stage=$('examAnimalStage');if(!stage)return;
-const bindId=x?String(x.id):'';if(examDisplayId!==bindId||stage.dataset.examId!==bindId){stage.dataset.examId=bindId;examDisplayId=bindId;$('examLiveSubject').textContent=x?x.subject:'尚未設定考程';$('examLivePeriod').textContent=x?x.date+'　'+x.start+'～'+x.end:'請先新增考試科目與時間';$('examLiveTip').textContent=x?.tip||'加油！一步一步完成考卷 🌟';$('examLiveAnimal').src=examAnimalSvg(x?.animal||0);$('examLiveExpected').value=x?.expected??students().length;$('examLivePresent').value=x?.present??students().length;}
+const bindId=x?String(x.id):'';if(examDisplayId!==bindId||stage.dataset.examId!==bindId){stage.dataset.examId=bindId;examDisplayId=bindId;$('examLiveSubject').textContent=x?x.subject:'尚未設定考程';$('examLivePeriod').textContent=x?x.date+'　'+x.start+'～'+x.end:'請先新增考試科目與時間';$('examLiveTip').textContent=x?.tip||'加油！一步一步完成考卷 🌟';examSetAnimalGif(x?.animal||0);$('examLiveExpected').value=x?.expected??students().length;$('examLivePresent').value=x?.present??students().length;}
 const t=x?examRemaining(x,now):null;$('examLiveTime').textContent=t?toMMSS(t.seconds):'--:--';$('examLiveStatus').textContent=t?t.status:'準備開始';const progress=t?t.progress:100,eaten=100-progress;$('examLiveFill').style.width=progress+'%';$('examLiveFill').style.left=eaten+'%';$('examLiveEaten').style.width=eaten+'%';$('examLiveAnimal').style.left=eaten+'%';
 }
 function updateCountdown(){if(timerDeadline!==null){timerSeconds=Math.max(0,Math.ceil((timerDeadline-Date.now())/1000));if(timerSeconds===0){timerDeadline=null;clearInterval(timerTick);timerTick=null;if(!timerNotified){timerNotified=true;setTimeout(()=>alert('時間到！'),0);}}}const display=$('timerShow');if(display)display.textContent=toMMSS(timerSeconds);const start=$('timerStart');if(start)start.textContent=timerDeadline!==null?'暫停':timerSeconds===0?'重新開始':'開始';}
