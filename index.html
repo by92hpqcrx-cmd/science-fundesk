@@ -369,6 +369,7 @@ function recordAttendance(sid,date,status,checked,reason=''){
  cls().attendance=cls().attendance.filter(x=>!(x.sid===sid&&x.date===date&&x.status===status));
  if(checked)cls().attendance.push({sid,date,status,reason:String(reason).trim().slice(0,300)});
  save();
+ if(status==='缺席'&&view==='classroom'&&date===($('sessionDate')?.value||today()))refreshMovingClassroomCards();
 }
 function attendanceControl(sid,date,status){
  const entry=attendanceEntry(sid,date,status);
@@ -1208,7 +1209,10 @@ function renderClassroom(){
  <div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">FunDesk 快樂自然教室 🌱</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div></div></section>`;
 }
 function roomPeople(){
- return (db.classes[cl]?.students||[]).map(s=>({code:cl,s}));
+ const date=$('sessionDate')?.value||today();
+ const entries=db.classes[cl]?.attendance||[];
+ const absent=new Set(entries.filter(a=>a.date===date&&a.status==='缺席').map(a=>String(a.sid)));
+ return (db.classes[cl]?.students||[]).filter(s=>!absent.has(String(s.id))).map(s=>({code:cl,s}));
 }
 function stopMovingClassroom(){
  if(roomAnimation)cancelAnimationFrame(roomAnimation);
@@ -1238,7 +1242,7 @@ function populateMovingRoom(){
  const root=$('roomWalkers');if(!root)return;
  root.replaceChildren();roomWalkers=[];
  const people=roomPeople(),geo=roomGeometry(people.length);
- $('roomCount').textContent=`目前 ${people.length} 位學生在教室裡`;
+ $('roomCount').textContent=`${classDisplay(cl)} · ${$('sessionDate')?.value||today()} · 出席 ${people.length} 人`;
  // 預先將格子洗牌，確保初始位置分散且無交疊。
  const cells=Array.from({length:geo.cols*geo.rows},(_,i)=>i);
  for(let i=cells.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cells[i],cells[j]]=[cells[j],cells[i]]}
@@ -1303,6 +1307,10 @@ function roomFallback(){const span=document.createElement('span');span.className
 function refreshMovingClassroomCards(){
  if(view!=='classroom'||!$('movingClassroom'))return;
  if(roomCardClass===null&&roomOriginalClass!==cl){roomOriginalClass=cl;populateMovingRoom();return}
+ const people=roomPeople();
+ const displayed=new Set(roomWalkers.map(w=>String(w.code)+'|'+String(w.sid)));
+ const wanted=new Set(people.map(p=>String(p.code)+'|'+String(p.s.id)));
+ if(displayed.size!==wanted.size||[...wanted].some(id=>!displayed.has(id))){populateMovingRoom();return}
  for(const w of roomWalkers){
   const s=db.classes[w.code]?.students?.find(x=>x.id===w.sid);
   if(!s)continue;
