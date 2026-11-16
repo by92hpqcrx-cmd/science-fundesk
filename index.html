@@ -1370,12 +1370,21 @@ async function examPrepareGif(index){
 function examSetAnimalGif(index){
  const node=document.getElementById('examLiveAnimal');if(!node)return;
  index=Math.max(0,Math.min(4,Number(index)||0));node.dataset.gifIndex=String(index);
- node.src=examGifCache.get(index)||examAnimalSvg(index);
- if(examGifCache.has(index))return;
- examPrepareGif(index).then(url=>{
-  const img=document.getElementById('examLiveAnimal');
-  if(img&&img.dataset.gifIndex===String(index))img.src=url;
- }).catch(e=>console.warn('GIF 產生失敗，維持 SVG 動畫',e));
+ const paths=['dino.gif','panda.gif','rabbit.gif','cat.gif','bear.gif'];
+ const asset='./assets/exam-animals/'+paths[index];
+ // 預設直接載入原畫 GIF。若尚未部署原畫素材，仍可使用既有動畫備援。
+ node.onload=()=>{};
+ node.onerror=()=>{
+  const active=document.getElementById('examLiveAnimal');
+  if(!active||active.dataset.gifIndex!==String(index))return;
+  active.onerror=null;
+  active.src=examGifCache.get(index)||examAnimalSvg(index);
+  if(!examGifCache.has(index))examPrepareGif(index).then(url=>{
+   const el=document.getElementById('examLiveAnimal');
+   if(el&&el.dataset.gifIndex===String(index))el.src=url;
+  }).catch(e=>console.warn('動物動畫備援無法載入',e));
+ };
+ node.src=asset;
 }
 
 function examCurrent(entries,now){const list=entries.slice().sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));return list.find(x=>{const st=Date.parse(x.date+'T'+x.start+':00Z'),en=Date.parse(x.date+'T'+x.end+':00Z');return now>=st&&now<en})||list.find(x=>Date.parse(x.date+'T'+x.start+':00Z')>now)||list.at(-1)||null}
