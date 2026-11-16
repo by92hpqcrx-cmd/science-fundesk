@@ -274,13 +274,13 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 const KEY='science_fundesk_v1';
 // 連結不包含學生資料，預設網址可由老師在主頁修改。
 const LINK_KEY='science_fundesk_links_v1';
-const LINK_DEFAULTS={personal:'https://by92hpqcrx-cmd.github.io/nature-science-game/personal.html',sky:'https://by92hpqcrx-cmd.github.io/sky-adventure/arena.html',quizace:'https://quizace.knsh.com.tw/teacher/quizList',learnmode:'https://www.learnmode.net/home/',kangxuan:'https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=na&grade=all&item=ebook&bookcase=mybookcase',kahoot:'https://kahoot.com/',monopoly:'https://by92hpqcrx-cmd.github.io/dachen-monopoly/'};
+const LINK_DEFAULTS={personal:'https://by92hpqcrx-cmd.github.io/nature-science-game/personal.html',sky:'https://by92hpqcrx-cmd.github.io/sky-adventure/arena.html',quizace:'https://quizace.knsh.com.tw/teacher/quizList',learnmode:'https://www.learnmode.net/home/',kangxuan:'https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=na&grade=all&item=ebook&bookcase=mybookcase',kahoot:'https://kahoot.com/',monopoly:'https://by92hpqcrx-cmd.github.io/dachen-monopoly/campus-challenge.html'};
 let quickLinks={...LINK_DEFAULTS};
-const LINK_REVISION='2';
+const LINK_REVISION='3';
 try{
  const stored=JSON.parse(localStorage.getItem(LINK_KEY));
  if(stored&&typeof stored==='object'){
-  const repaired=['personal','sky','quizace'];
+  const repaired=['personal','sky','quizace','monopoly'];
   for(const key of Object.keys(LINK_DEFAULTS)){
    if(stored.revision!==LINK_REVISION&&repaired.includes(key))continue;
    if(typeof stored[key]==='string'&&(!repaired.includes(key)||safeLink(stored[key])))quickLinks[key]=stored[key];
@@ -312,6 +312,34 @@ function openFunDeskMonopoly(event){
   .map(code=>({code,label:classDisplay(code),students:db.classes[code].students.map(st=>({
    id:String(st.id),no:st.no,name:String(st.name||''),avatar:studentAvatarPath(st)?new URL(studentAvatarPath(st),location.href).href:''
   }))}));
+ const rewardListener=async e=>{
+  if(e.origin!==location.origin||e.source!==child||e.data?.token!==token||e.data?.kind!=='fundesk-monopoly-award')return;
+  const send=(ok,error='')=>child.postMessage({kind:'fundesk-monopoly-award-result',token,ok,error},location.origin);
+  const d=e.data,sessionId=String(d.gameId||''),participants=d.players,winners=d.winners;
+  if(!cloudReady||!cloudSession||!sessionId||sessionId.length>100||!Array.isArray(participants)||!Array.isArray(winners)||participants.length<2||participants.length>6){send(false,'資料不完整');return}
+  const authorized=new Map(teacherRoster.flatMap(c=>c.students.map(st=>[c.code+':'+st.id,{code:c.code,student:st}])));
+  const ids=new Set();let valid=true;
+  for(const p of participants){const key=String(p.code)+':'+String(p.id);if(ids.has(key)||!authorized.has(key)||!Number.isInteger(p.place)||p.place<1||p.place>participants.length)valid=false;ids.add(key)}
+  const places=participants.map(p=>p.place);
+  if(new Set(places).size!==participants.length)valid=false;
+  const ordered=[...participants].sort((a,b)=>a.place-b.place).slice(0,participants.length===2?1:2);
+  if(winners.length!==ordered.length)valid=false;
+  if(valid)winners.forEach((w,i)=>{if(String(w.id)!==String(ordered[i].id)||String(w.code)!==String(ordered[i].code)||w.rank!==i+1||w.delta!==(i===0?5:3))valid=false});
+  if(!valid){send(false,'參賽名單或獎勵不符合規則');return}
+  const existing=Object.values(db.classes).some(c=>(c.points||[]).some(p=>p.monopolyGameId===sessionId));
+  if(existing){send(false,'這局獎勵已經登記，不能重複領取');return}
+  const summary=winners.map(w=>w.code+'班 '+w.name+' +'+w.delta+'點').join('\n');
+  if(!confirm('校園闖關已結束，是否將以下獎勵寫入 FunDesk 雲端積點？\n\n'+summary)){send(false,'教師取消頒獎');return}
+  const date=($('sessionDate')?.value||today());
+  const changed=[];
+  for(const w of winners){const c=db.classes[w.code],st=c?.students?.find(x=>String(x.id)===String(w.id));if(!c||!st){send(false,'學生資料已變更');return}
+   const entry={sid:st.id,date,delta:w.delta,reason:'校園闖關第'+w.rank+'名',kind:'monopoly',monopolyGameId:sessionId};
+   c.points.push(entry);changed.push({code:w.code,entry});
+  }
+  try{await cloudQueueSave();if(cloudBlocked)throw Error('雲端同步尚未完成');for(const c of changed)contactQueuePointsSync(c.code,date);render();send(true)}
+  catch(err){for(const c of changed){const arr=db.classes[c.code]?.points;if(arr){const ix=arr.indexOf(c.entry);if(ix>=0)arr.splice(ix,1)}}send(false,String(err?.message||err))}
+ };
+ window.addEventListener('message',rewardListener);
  const receive=e=>{
   if(e.origin!==location.origin||e.source!==child||e.data?.kind!=='fundesk-monopoly-ready'||e.data.token!==token)return;
   window.removeEventListener('message',receive);
