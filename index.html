@@ -291,7 +291,35 @@ try{
 function safeLink(v){try{const u=new URL(v);return ['https:','http:'].includes(u.protocol)?u.href:''}catch{return ''}}
 function renderQuickLinks(){
  const cfg=[['personal','🎮','自然科學王・個人賽'],['sky','🌌','星空冒險島'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版']];
- return `<section class="panel quicklinks"><div class="panelHead"><h2>教學快捷入口</h2><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quicklinkGrid"><button type="button" class="quickLink" data-goto="rps"><span class="quickIcon">✊</span><strong>課間小遊戲・剪刀石頭布</strong><small>選一位學生來挑戰老師</small></button>${cfg.map(([id,icon,title])=>{const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" href="${esc(link)}" target="_blank" rel="noopener noreferrer"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>開啟網站 ↗</small></a>`:`<button type="button" class="quickLink missing" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></section>`;
+ return `<section class="panel quicklinks"><div class="panelHead"><h2>教學快捷入口</h2><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quicklinkGrid"><button type="button" class="quickLink" data-goto="rps"><span class="quickIcon">✊</span><strong>課間小遊戲・剪刀石頭布</strong><small>選一位學生來挑戰老師</small></button>${cfg.map(([id,icon,title])=>{const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" href="${esc(link)}" ${id==='monopoly'?'data-fundesk-monopoly="1"':''} target="_blank" rel="noopener noreferrer"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></section>`;
+}
+/* FunDesk 授權教師開啟校園大富翁時，才透過同源訊息傳遞最少量的玩家候選名單。
+   學生名單不放在 URL，也不寫入公開檔案或 localStorage。 */
+function openFunDeskMonopoly(event){
+ const target=event.currentTarget,link=target?.getAttribute('href')||'';
+ const allowed=new URL('/dachen-monopoly/',location.origin);
+ let url;try{url=new URL(link,location.href)}catch{return}
+ // 自訂外站連結沿用原本的一般開啟模式，不傳送學生資料。
+ if(url.origin!==allowed.origin||!url.pathname.startsWith('/dachen-monopoly/'))return;
+ event.preventDefault();
+ if(!cloudReady||!cloudSession){alert('請先登入 FunDesk，完成雲端學生名單載入。');return}
+ const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);
+ const token=[...bytes].map(x=>x.toString(16).padStart(2,'0')).join('');
+ url.searchParams.set('fundeskToken',token);
+ const child=window.open(url.href,'_blank');
+ if(!child){alert('瀏覽器封鎖開啟遊戲視窗，請允許彈出視窗。');return}
+ const teacherRoster=activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students))
+  .map(code=>({code,label:classDisplay(code),students:db.classes[code].students.map(st=>({
+   id:String(st.id),no:st.no,name:String(st.name||''),avatar:studentAvatarPath(st)?new URL(studentAvatarPath(st),location.href).href:''
+  }))}));
+ const receive=e=>{
+  if(e.origin!==location.origin||e.source!==child||e.data?.kind!=='fundesk-monopoly-ready'||e.data.token!==token)return;
+  window.removeEventListener('message',receive);
+  clearTimeout(expire);
+  child.postMessage({kind:'fundesk-monopoly-roster',token,classes:teacherRoster},location.origin);
+ };
+ window.addEventListener('message',receive);
+ const expire=setTimeout(()=>window.removeEventListener('message',receive),45000);
 }
 function openLinkSettings(){
  const cfg=[['personal','自然科學王・個人賽'],['sky','星空冒險島'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot! 互動測驗'],['monopoly','校園大富翁・單機版']];
@@ -1412,7 +1440,7 @@ function hookClassManager(){
  $('manageSeats').onclick=()=>{view='seats';render()};
 }
 function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
-function hookView(){if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();$('editQuickLinks').onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings)}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='seats'){
+function hookView(){if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();$('editQuickLinks').onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings);document.querySelectorAll('[data-fundesk-monopoly]').forEach(x=>x.addEventListener('click',openFunDeskMonopoly))}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='seats'){
  document.querySelectorAll('[data-layout]').forEach(b=>b.onclick=()=>{layout=b.dataset.layout;editSeats=false;editLabTemplate=false;templatePicked=null;render()});$('seatEdit').onclick=()=>{editSeats=!editSeats;render()};
  if(layout==='lab'){$('templateEdit').onclick=()=>{if(!editLabTemplate){if(!confirm('進入七班共用模板編輯？交換座號會同步套用七班，並清除各班個別實驗座位排列；所有學生紀錄保留。'))return;editSeats=false;}editLabTemplate=!editLabTemplate;templatePicked=null;render()};if(editLabTemplate){$('templateReset').onclick=resetLabTemplate;document.querySelectorAll('[data-template-index]').forEach(b=>b.onclick=()=>swapTemplateCell(Number(b.dataset.templateIndex)));}}
  document.querySelectorAll('.seat:not(.templateSeat)').forEach(b=>{b.onclick=()=>{if(editSeats)return;let id=b.dataset.sid;if(id)openStudent(id)};b.ondragstart=e=>{if(!editSeats){e.preventDefault();return}e.dataTransfer.setData('text/plain',b.dataset.seat)};b.ondragover=e=>{if(editSeats){e.preventDefault();b.classList.add('dragover')}};b.ondragleave=()=>b.classList.remove('dragover');b.ondrop=e=>{e.preventDefault();b.classList.remove('dragover');let from=Number(e.dataTransfer.getData('text/plain'));let target=Number(b.dataset.seat);if(!Number.isInteger(from)||from<0)return;let a=layoutMap(layout);[a[from],a[target]]=[a[target],a[from]];setSeat(layout,a);render()}})
