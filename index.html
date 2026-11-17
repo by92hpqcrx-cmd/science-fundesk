@@ -1214,6 +1214,30 @@ body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFoodShelf>.roomFoodGrid{
   max-height:42px!important;
  }
 }
+</style><style id="fundeskRoomFoodHorizontalScroll20261118">
+/* 餵食小站不超出版面，空間不足時可左右滑動並顯示清楚的水平捲軸。 */
+.movingRoomPanel .roomPlayArea>.roomFoodShelf{min-width:0!important;max-width:100%!important;overflow:hidden}
+.movingRoomPanel .roomPlayArea>.roomFoodShelf>.roomFoodGrid{
+ display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;
+ min-width:0!important;max-width:100%!important;width:100%!important;
+ overflow-x:auto!important;overflow-y:hidden!important;
+ overscroll-behavior-x:contain;
+ scrollbar-width:auto!important;scrollbar-color:#89a9c6 #e9f0f5;
+ -webkit-overflow-scrolling:touch;
+ scroll-behavior:smooth;
+ padding:5px 4px 12px!important;
+ gap:8px!important;
+}
+.movingRoomPanel .roomPlayArea>.roomFoodShelf>.roomFoodGrid::-webkit-scrollbar{height:11px}
+.movingRoomPanel .roomPlayArea>.roomFoodShelf>.roomFoodGrid::-webkit-scrollbar-track{background:#e9f0f5;border-radius:12px}
+.movingRoomPanel .roomPlayArea>.roomFoodShelf>.roomFoodGrid::-webkit-scrollbar-thumb{background:#89a9c6;border:2px solid #e9f0f5;border-radius:12px}
+.movingRoomPanel .roomPlayArea>.roomFoodShelf>.roomFoodGrid>.roomFood{
+ flex:0 0 74px!important;min-width:74px!important;max-width:74px!important;
+ touch-action:pan-x!important;
+}
+@media(max-width:730px){
+ .movingRoomPanel .roomPlayArea>.roomFoodShelf>.roomFoodGrid>.roomFood{flex-basis:58px!important;min-width:58px!important;max-width:58px!important}
+}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
