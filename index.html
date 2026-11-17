@@ -228,8 +228,8 @@ body.roomFullscreen .roomHistoryList{max-height:70px}
 body.roomFullscreen .roomPet{right:auto;bottom:auto}
 
 /* 班級寵物與學生使用同一個動態舞台，依舞台縮放、同速移動與碰撞。 */
-.movingRoomStage .roomPet{width:calc(94px * var(--room-avatar-scale,1));height:calc(112px * var(--room-avatar-scale,1));min-width:0;min-height:0;padding:0;display:flex;gap:0;background:transparent;border:0;box-shadow:none;will-change:transform;justify-content:center;touch-action:manipulation}
-.movingRoomStage .roomPetImage{width:calc(76px * var(--room-avatar-scale,1));height:calc(76px * var(--room-avatar-scale,1));font-size:calc(44px * var(--room-avatar-scale,1));flex:0 0 auto;background-repeat:no-repeat;border-radius:50%;background-color:#ffffffd9;border:3px solid white;box-shadow:0 3px 8px #31495a55;transform-origin:center center}
+.movingRoomStage .roomPet{width:calc(188px * var(--room-avatar-scale,1));height:calc(224px * var(--room-avatar-scale,1));min-width:0;min-height:0;padding:0;display:flex;gap:0;background:transparent;border:0;box-shadow:none;will-change:transform;justify-content:center;touch-action:manipulation}
+.movingRoomStage .roomPetImage{width:calc(152px * var(--room-avatar-scale,1));height:calc(152px * var(--room-avatar-scale,1));font-size:calc(88px * var(--room-avatar-scale,1));flex:0 0 auto;background-repeat:no-repeat;border-radius:50%;background-color:#ffffffd9;border:3px solid white;box-shadow:0 3px 8px #31495a55;transform-origin:center center}
 .movingRoomStage .roomPetName{font-size:clamp(8px,calc(12px * var(--room-avatar-scale,1)),12px);line-height:1.25;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;background:#fffffff0;border:1px solid #d5e4ef;border-radius:8px;padding:2px 4px}
 .movingRoomStage .roomPetCount{font-size:clamp(7px,calc(10px * var(--room-avatar-scale,1)),10px);white-space:nowrap;margin:0;background:#fff9d9dc;border-radius:6px;padding:1px 3px}
 .movingRoomStage .roomPetFull{top:-28px;left:50%;font-size:14px;z-index:30;pointer-events:none}
@@ -2173,7 +2173,7 @@ let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='',roomOriginalClas
 const ROOM_PETS=[{id:'dino',name:'小恐龍',emoji:'🦖'},{id:'bear',name:'小熊',emoji:'🐻'},{id:'panda',name:'小貓',emoji:'🐱'},{id:'cat',name:'小兔',emoji:'🐰'},{id:'rabbit',name:'熊貓',emoji:'🐼'},{id:'501',name:'企鵝',emoji:'🐧'},{id:'502',name:'兔兔',emoji:'🐰'},{id:'503',name:'松鼠',emoji:'🐿️'},{id:'504',name:'小鳥',emoji:'🐦'},{id:'505',name:'貓貓',emoji:'🐱'},{id:'506',name:'小狗',emoji:'🐶'},{id:'507',name:'大象',emoji:'🐘'}];
 let roomPetCandidate=false,roomPetVisualTick=0,roomPetWalker=null;
 const roomPetAsset=id=>'/science-fundesk/class-pets/'+id+'.svg';
-const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香蕉',emoji:'🍌'},{id:'strawberry',name:'草莓',emoji:'🍓'},{id:'grapes',name:'葡萄',emoji:'🍇'},{id:'cookie',name:'餅乾',emoji:'🍪'},{id:'donut',name:'甜甜圈',emoji:'🍩'},{id:'juice',name:'果汁',emoji:'🧃'},{id:'milk',name:'牛奶',emoji:'🥛'}];
+const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香蕉',emoji:'🍌'},{id:'strawberry',name:'草莓',emoji:'🍓'},{id:'grapes',name:'葡萄',emoji:'🍇'},{id:'cookie',name:'餅乾',emoji:'🍪'},{id:'donut',name:'甜甜圈',emoji:'🍩'},{id:'juice',name:'果汁',emoji:'🧃'},{id:'milk',name:'牛奶',emoji:'🥛'},{id:'bamboo',name:'竹葉',emoji:'🎋'},{id:'fish',name:'小魚',emoji:'🐟'},{id:'bone',name:'骨頭',emoji:'🦴'},{id:'pinecone',name:'松果',emoji:'🌰'},{id:'carrot',name:'紅蘿蔔',emoji:'🥕'}];
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
 function renderClassroom(){
  return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 ${esc(classDisplay(cl))} · 動態教室</strong><span class="roomCount" id="roomCount"></span><label class="roomSpeedLabel" for="roomSpeedSelect">移動速度 <select id="roomSpeedSelect" aria-label="學生移動速度"><option value="slow">慢</option><option value="medium">中</option><option value="fast">快</option></select></label><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button></div>
@@ -2210,6 +2210,20 @@ function roomGeometry(count){
  return {width,height,cols,rows,maxX,maxY,radius,scale,itemWidth,itemHeight};
 }
 function roomBounds(){const geo=roomGeometry(roomWalkers.length);return {w:geo.maxX,h:geo.maxY}}
+// 班寵只在教室中央活動；以放大後的實際尺寸計算，避免圖像超出舞台。
+function roomPetBounds(g){
+ const petW=188*g.scale,petH=224*g.scale;
+ const maxX=Math.max(0,g.width-petW-8),maxY=Math.max(0,g.height-petH-8);
+ const centerX=maxX/2,centerY=maxY/2;
+ const halfX=Math.min(maxX/2,g.width*.28),halfY=Math.min(maxY/2,g.height*.27);
+ return {minX:centerX-halfX,maxX:centerX+halfX,minY:centerY-halfY,maxY:centerY+halfY};
+}
+function roomClampWalker(w,g){
+ const b=w.isPet?roomPetBounds(g):{minX:0,maxX:g.maxX,minY:0,maxY:g.maxY};
+ w.x=Math.max(b.minX,Math.min(b.maxX,w.x));
+ w.y=Math.max(b.minY,Math.min(b.maxY,w.y));
+ return b;
+}
 function populateMovingRoom(){
  const root=$('roomWalkers');if(!root)return;
  root.replaceChildren();roomWalkers=[];
@@ -2239,13 +2253,11 @@ function populateMovingRoom(){
  }
  root.appendChild(fragment);
  roomRenderPet();
- // 寵物和學生共用格點分散與速度，碰撞物理也使用同一套算法。
+ // 班寵由中央區域開始移動，學生仍使用原本全教室座位分散配置。
  const petEl=$('roomPet');roomPetWalker=null;
  if(hasPet&&petEl){
-  const index=cells[people.length],row=Math.floor(index/geo.cols),col=index%geo.cols;
-  const cellW=geo.maxX/Math.max(1,geo.cols-1),cellH=geo.maxY/Math.max(1,geo.rows-1);
-  const angle=Math.random()*Math.PI*2,speed=roomSpeedValue();
-  roomPetWalker={el:petEl,code:cl,isPet:true,x:geo.cols===1?geo.maxX/2:col*cellW,y:geo.rows===1?geo.maxY/2:row*cellH,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:geo.radius};
+  const b=roomPetBounds(geo),angle=Math.random()*Math.PI*2,speed=roomSpeedValue();
+  roomPetWalker={el:petEl,code:cl,isPet:true,x:(b.minX+b.maxX)/2,y:(b.minY+b.maxY)/2,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:Math.min(90*geo.scale,Math.min(geo.width,geo.height)*.18)};
   petEl.style.transform=`translate3d(${roomPetWalker.x}px,${roomPetWalker.y}px,0)`;
  }
  roomRenderFeedHistory();roomRefreshCandidate();
@@ -2256,14 +2268,15 @@ function advanceMovingRoom(dt){
  const g=roomGeometry(walkers.length),radius=g.radius,speed=roomSpeedValue();
  // 方向固定到碰撞或撞牆時才改變；不會穿越同學頭像。
  for(const w of walkers){
-  w.r=radius;
+  w.r=w.isPet?Math.min(90*g.scale,Math.min(g.width,g.height)*.18):radius;
   const magnitude=Math.hypot(w.vx,w.vy)||1;
   w.vx=w.vx/magnitude*speed;w.vy=w.vy/magnitude*speed;
   w.x+=w.vx*dt;w.y+=w.vy*dt;
-  if(w.x<0){w.x=0;w.vx=Math.abs(w.vx)}
-  else if(w.x>g.maxX){w.x=g.maxX;w.vx=-Math.abs(w.vx)}
-  if(w.y<0){w.y=0;w.vy=Math.abs(w.vy)}
-  else if(w.y>g.maxY){w.y=g.maxY;w.vy=-Math.abs(w.vy)}
+  const bounds=w.isPet?roomPetBounds(g):{minX:0,maxX:g.maxX,minY:0,maxY:g.maxY};
+  if(w.x<bounds.minX){w.x=bounds.minX;w.vx=Math.abs(w.vx)}
+  else if(w.x>bounds.maxX){w.x=bounds.maxX;w.vx=-Math.abs(w.vx)}
+  if(w.y<bounds.minY){w.y=bounds.minY;w.vy=Math.abs(w.vy)}
+  else if(w.y>bounds.maxY){w.y=bounds.maxY;w.vy=-Math.abs(w.vy)}
  }
  // 同質量彈性碰撞：沿兩人中心連線交換速度分量，並立即分開。
  for(let pass=0;pass<3;pass++){
@@ -2274,10 +2287,9 @@ function advanceMovingRoom(dt){
    if(dist<.0001){const theta=(i*17+j*31)*2.39996;dx=Math.cos(theta);dy=Math.sin(theta);dist=1}
    const nx=dx/dist,ny=dy/dist;
    const penetration=(minDist-dist)/2+.02;
-   a.x=Math.max(0,Math.min(g.maxX,a.x-nx*penetration));
-   a.y=Math.max(0,Math.min(g.maxY,a.y-ny*penetration));
-   b.x=Math.max(0,Math.min(g.maxX,b.x+nx*penetration));
-   b.y=Math.max(0,Math.min(g.maxY,b.y+ny*penetration));
+   a.x-=nx*penetration;a.y-=ny*penetration;
+   b.x+=nx*penetration;b.y+=ny*penetration;
+   roomClampWalker(a,g);roomClampWalker(b,g);
    if(pass===0){
     const approach=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
     if(approach<0){
