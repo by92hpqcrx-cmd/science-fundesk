@@ -701,6 +701,65 @@ body.roomFullscreen #homeFixedQuicklinks.generalFixedHeading{display:none!import
 body.roomFullscreen #content,
 #content:has(:fullscreen){background:transparent!important;border:0!important;padding:0!important}
 @media print{#content{background:white!important;border:0!important;padding:0!important}}
+</style><style id="fundeskRoomLargerAvatarsTopNames20261117">
+/* 動態教室：放大原始頭像；姓名為最上層的大字浮標，避免被圖片與餵食效果覆蓋 */
+.movingRoomStage .roomWalker{
+ width:calc(94px * var(--room-avatar-scale,1))!important;
+ height:calc(112px * var(--room-avatar-scale,1))!important;
+ min-height:calc(112px * var(--room-avatar-scale,1))!important;
+ position:absolute!important;
+ display:flex!important;
+ align-items:center!important;
+ justify-content:flex-end!important;
+ padding:0 0 calc(3px * var(--room-avatar-scale,1))!important;
+ overflow:visible!important;
+ isolation:isolate;
+}
+.movingRoomStage .roomWalker img,
+.movingRoomStage .roomWalker .roomFallback{
+ width:calc(76px * var(--room-avatar-scale,1))!important;
+ height:calc(76px * var(--room-avatar-scale,1))!important;
+ flex:0 0 auto!important;
+ max-width:none!important;
+ max-height:none!important;
+ position:relative!important;
+ z-index:1!important;
+}
+.movingRoomStage .roomWalker .roomName{
+ position:absolute!important;
+ top:0!important;
+ left:50%!important;
+ transform:translateX(-50%)!important;
+ z-index:90!important;
+ max-width:max(94px,calc(120px * var(--room-avatar-scale,1)))!important;
+ min-width:max-content!important;
+ padding:3px 6px!important;
+ font-size:clamp(15px,calc(19px * var(--room-avatar-scale,1)),21px)!important;
+ line-height:1.3!important;
+ color:#173950!important;
+ background:#fffdf2f5!important;
+ border:2px solid #fff!important;
+ border-radius:9px!important;
+ font-weight:950!important;
+ white-space:nowrap!important;
+ overflow:visible!important;
+ text-overflow:clip!important;
+ box-shadow:0 2px 7px #17395055!important;
+ pointer-events:none!important;
+}
+.movingRoomStage .roomWalker.roomPicked .roomName,
+.movingRoomStage .roomWalker.roomFeedSelected .roomName{
+ z-index:100!important;
+ background:#fff1aa!important;
+}
+.movingRoomStage .roomWalker.roomPicked img,
+.movingRoomStage .roomWalker.roomPicked .roomFallback{
+ width:calc(152px * var(--room-avatar-scale,1))!important;
+ height:calc(152px * var(--room-avatar-scale,1))!important;
+}
+@media(max-width:680px){
+ .movingRoomStage .roomWalker .roomName{font-size:clamp(14px,calc(17px * var(--room-avatar-scale,1)),18px)!important}
+}
 </style><style id="fundeskMulticolorLargerSidebarNav20261117">
 /* 每項功能依 data-view 使用固定配色，拖曳排序後顏色也不會改變。 */
 #nav button[data-view="seats"]{--nav-item-bg:#e8f2ff;--nav-item-ink:#174c91;--nav-item-border:#6fa7e5}
@@ -797,7 +856,7 @@ body.roomFullscreen #content,
  <div class="sidebarDateActions" aria-label="紀錄日期及資料備份"><div class="dashboardDateActions"><label for="sessionDate">紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" type="button" class="btn outline">↓ 備份</button></div></div>
  <button type="button" id="cloudLogout" class="sidebarCloudLogout">🚪 登出雲端</button>
  <div class="mini">115學年度 · 第一學期<br>課程：神祕的天空／燃燒與生鏽</div>
- <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試 <i id="sidebarPending"></i></button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="redemption">🎁　積點兌換</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="classroom">🏫　動態教室</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　我的班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
+ <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試 <i id="sidebarPending"></i></button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="redemption">🎁　積點兌換</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="classroom">🏫　動態教室</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
  <div class="sidebarFoot">教師登入後存取雲端學生紀錄<br><strong>使用公用電腦後請登出</strong><br></div>
  
  </div>
@@ -963,7 +1022,7 @@ function decorateClassPage(){
 const classOptions=()=>activeCodes().map(c=>`<option value="${esc(c)}">${esc(classDisplay(c))}</option>`).join('');
 const syncClassOptions=()=>{const sel=$('classSelect');sel.innerHTML=classOptions();if(activeCodes().includes(cl))sel.value=cl};
 const time={1:'08:50–09:30',2:'09:40–10:20',3:'10:35–11:15',4:'11:25–12:05',5:'13:20–14:00',6:'14:10–14:50',7:'15:00–15:40'};
-const titles={seats:'首頁',rps:'課間小遊戲',labDuty:'實驗工作分配',attention:'待追蹤清單',attendance:'出勤紀錄',tasks:'習作／實驗／考試',schedule:'我的教學進度',contact:'班級聯絡簿',points:'課堂表現',redemption:'積點兌換',correction:'習作訂正',board:'作業播放表',quiz:'抽籤問答',students:'學生名單',classroom:'動態教室',tools:'課堂小工具',tabletRules:'平板使用守則',classes:'我的班級管理',settings:'資料管理'};
+const titles={seats:'首頁',rps:'課間小遊戲',labDuty:'實驗工作分配',attention:'待追蹤清單',attendance:'出勤紀錄',tasks:'習作／實驗／考試',schedule:'我的教學進度',contact:'班級聯絡簿',points:'課堂表現',redemption:'積點兌換',correction:'習作訂正',board:'作業播放表',quiz:'抽籤問答',students:'學生名單',classroom:'動態教室',tools:'課堂小工具',tabletRules:'平板使用守則',classes:'班級管理',settings:'資料管理'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>{let parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());let v=Object.fromEntries(parts.map(x=>[x.type,x.value]));return `${v.year}-${v.month}-${v.day}`};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -2074,10 +2133,10 @@ function roomGeometry(count){
  const cols=Math.max(1,Math.ceil(Math.sqrt(Math.max(1,count)*width/height)));
  const rows=Math.max(1,Math.ceil(count/cols));
  // 小畫面依班級人數縮放頭像，使學生仍能彼此分開。
- const scale=Math.min(1,Math.max(.36,Math.min((width-20)/cols/88,(height-20)/rows/105)));
- const itemWidth=76*scale,itemHeight=86*scale;
+ const scale=Math.min(1,Math.max(.36,Math.min((width-20)/cols/106,(height-20)/rows/125)));
+ const itemWidth=94*scale,itemHeight=112*scale;
  const maxX=Math.max(0,width-itemWidth-8),maxY=Math.max(0,height-itemHeight-8);
- const radius=Math.min(46*scale,Math.min(width/cols,height/rows)*.46);
+ const radius=Math.min(55*scale,Math.min(width/cols,height/rows)*.46);
  stage?.style.setProperty('--room-avatar-scale',String(scale));
  return {width,height,cols,rows,maxX,maxY,radius,scale,itemWidth,itemHeight};
 }
