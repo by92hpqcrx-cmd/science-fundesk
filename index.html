@@ -363,6 +363,15 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 #toolTimerPanel:fullscreen .timerControlArea{padding:7px!important}
 @media(max-width:600px){#toolTimerPanel .customTimerLabel{width:100%;justify-content:center}#toolTimerPanel .customTimerLabel input{max-width:70px}}
 @media(max-height:700px){#toolTimerPanel:fullscreen #timerShow{font-size:clamp(50px,12vh,125px)!important}}
+</style><style id="compactQuickLinks20261117">
+/* 首頁快捷入口：十個捷徑，每排五個，最多兩列。 */
+.quicklinks .quicklinkGrid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-auto-flow:row!important;gap:7px!important;align-items:stretch!important}
+.quicklinks .quickLink{min-width:0!important;min-height:70px!important;padding:9px 10px!important;gap:3px!important;border-radius:12px!important;align-items:flex-start!important;justify-content:center!important}
+.quicklinks .quickLink .quickIcon{font-size:21px!important;line-height:1.1!important}
+.quicklinks .quickLink strong{display:block;font-size:clamp(11px,1vw,14px)!important;line-height:1.24!important;overflow-wrap:anywhere!important}
+.quicklinks .quickLink small{font-size:10px!important;line-height:1.2!important}
+@media(max-width:900px){.quicklinks .quicklinkGrid{grid-template-columns:repeat(5,minmax(0,1fr))!important;min-width:630px!important}.quicklinks{overflow-x:auto!important;overscroll-behavior-x:contain}}
+@media(min-width:901px){.quicklinks .quicklinkGrid{min-width:0!important}}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
