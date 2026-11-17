@@ -255,6 +255,59 @@ body.roomFullscreen .roomPet{right:auto;bottom:auto}
 .movingRoomStage.scene-activity .movingRoomFloor,
 .movingRoomStage.scene-activity .movingRoomDesk{display:none}
 @media(max-width:700px){.roomPetPicker .roomSceneLabel{margin-left:0}}
+
+/* 以使用者指定的原始教室 PNG 取代 CSS 教室繪圖，三種場景共用相同活動舞台。 */
+.movingRoomStage.scene-classroom,
+.movingRoomStage.scene-playground,
+.movingRoomStage.scene-activity{background-color:#fbf8f4;background-size:cover;background-position:center;background-repeat:no-repeat}
+.movingRoomStage.scene-classroom{background-image:url('./backgrounds/classroom.png')}
+.movingRoomStage.scene-classroom .movingRoomWall,
+.movingRoomStage.scene-classroom .movingRoomWindow,
+.movingRoomStage.scene-classroom .movingRoomBoard,
+.movingRoomStage.scene-classroom .movingRoomClock,
+.movingRoomStage.scene-classroom .movingRoomFloor,
+.movingRoomStage.scene-classroom .movingRoomDesk{display:none}
+/* 將左側餵食區與下方餵食紀錄互換，完整保留原有餵食操作。 */
+.roomPlayArea{display:grid;grid-template-columns:154px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:12px;align-items:stretch}
+.roomPlayArea>.roomFeedHistory{grid-column:1;grid-row:1;margin:0;min-width:0;min-height:0;padding:10px 7px;display:flex;flex-direction:column}
+.roomPlayArea>.roomFeedHistory .roomHistoryTitle{display:block;font-size:14px;flex:0 0 auto}
+.roomPlayArea>.roomFeedHistory .roomHistoryTitle span{display:block;margin-top:4px;line-height:1.3}
+.roomPlayArea>.roomFeedHistory .roomHistoryList{flex:1;min-height:130px;max-height:none;overflow-y:auto}
+.roomPlayArea>.roomFeedHistory .roomHistoryItem{display:flex;flex-wrap:wrap;gap:3px 6px;padding:7px 5px;font-size:11px}
+.roomPlayArea>.roomFeedHistory .roomHistoryItem time{margin:0}
+.roomPlayArea>.movingRoomStage{grid-column:2;grid-row:1;width:100%;min-width:0;height:clamp(440px,64vh,800px)}
+.roomPlayArea>.roomFoodShelf{
+ grid-column:1 / -1;grid-row:2;display:grid;
+ grid-template-columns:150px minmax(0,1fr);grid-template-rows:auto auto auto;
+ text-align:left;align-items:center;gap:5px 10px;padding:10px 13px;
+}
+.roomPlayArea>.roomFoodShelf>strong{grid-column:1;grid-row:1;font-size:18px;white-space:nowrap}
+.roomPlayArea>.roomFoodShelf>.roomFoodHint{grid-column:1;grid-row:2}
+.roomPlayArea>.roomFoodShelf>.roomFoodGrid{
+ grid-column:2;grid-row:1 / span 2;display:flex;gap:8px;flex-wrap:nowrap;
+ min-width:0;overflow-x:auto;padding:3px 3px 8px;scrollbar-width:thin
+}
+.roomPlayArea>.roomFoodShelf .roomFood{flex:0 0 74px;min-height:76px;padding:6px 3px}
+.roomPlayArea>.roomFoodShelf>.roomFoodRule{grid-column:1 / -1;margin:2px 0;padding:3px 8px;line-height:1.4}
+.roomPlayArea>.roomFoodShelf>.roomFeedStatus{grid-column:1 / -1;min-height:0;padding:5px 9px}
+.roomPlayArea>.roomFoodShelf>.roomFeedConfirm{grid-column:1 / -1}
+body.roomFullscreen .roomPlayArea{display:grid;grid-template-columns:154px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+body.roomFullscreen .roomPlayArea>.roomFeedHistory{grid-row:1;grid-column:1;min-height:0;flex:none}
+body.roomFullscreen .roomPlayArea>.roomFeedHistory .roomHistoryList{max-height:none;min-height:0}
+body.roomFullscreen .roomPlayArea>.movingRoomStage{grid-row:1;grid-column:2;height:auto;min-height:0;flex:none}
+body.roomFullscreen .roomPlayArea>.roomFoodShelf{grid-row:2;grid-column:1 / -1;padding:5px 9px}
+body.roomFullscreen .roomPlayArea>.roomFoodShelf .roomFood{min-height:55px;flex-basis:59px;font-size:24px}
+body.roomFullscreen .roomPlayArea>.roomFoodShelf>.roomFoodRule{display:none}
+@media(max-width:700px){
+ .roomPlayArea{grid-template-columns:100px minmax(0,1fr);gap:6px}
+ .roomPlayArea>.roomFeedHistory{padding:6px 3px}
+ .roomPlayArea>.roomFeedHistory .roomHistoryTitle{font-size:11px}
+ .roomPlayArea>.roomFeedHistory .roomHistoryItem{font-size:9px}
+ .roomPlayArea>.roomFoodShelf{grid-template-columns:86px minmax(0,1fr);padding:5px}
+ .roomPlayArea>.roomFoodShelf>strong{font-size:12px}
+ .roomPlayArea>.roomFoodShelf .roomFood{flex-basis:54px;min-height:59px}
+ body.roomFullscreen .roomPlayArea{grid-template-columns:100px minmax(0,1fr)}
+}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -2199,7 +2252,7 @@ const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
 function renderClassroom(){
  return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 ${esc(classDisplay(cl))} · 動態教室</strong><span class="roomCount" id="roomCount"></span><label class="roomSpeedLabel" for="roomSpeedSelect">移動速度 <select id="roomSpeedSelect" aria-label="學生移動速度"><option value="slow">慢</option><option value="medium">中</option><option value="fast">快</option></select></label><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button></div>
- <div class="roomPetPicker"><label for="roomPetSelect">🐾 班級寵物</label><select id="roomPetSelect"><option value="">未選擇寵物</option>${ROOM_PETS.map(p=>`<option value="${p.id}" ${db.classes[cl]?.classPetType===p.id?'selected':''}>${p.emoji} ${p.name}</option>`).join('')}</select><span class="roomPetPickerTip">各班獨立選擇，最多餵 10 次</span><label class="roomSceneLabel" for="roomSceneSelect">🖼️ 活動背景</label><select class="roomSceneSelect" id="roomSceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></div><div class="roomPlayArea"><aside class="roomFoodShelf" aria-label="餵食工具欄"><strong>🍽️ 餵食小站</strong><span class="roomFoodHint">點食物 → 點學生 → 確認餵食；也可拖曳</span><div class="roomFoodGrid">${ROOM_FOODS.map(f=>`<button type="button" draggable="true" class="roomFood" data-food="${f.id}" title="${f.name}：拖到學生頭像">${f.emoji}<small>${f.name}</small></button>`).join('')}</div><p class="roomFoodRule">每人最多餵 3 次<br>吃飽後休息 1 小時</p><div class="roomFeedStatus" id="roomFeedStatus" role="status" aria-live="polite">先選食物，再點學生頭像。</div><div class="roomFeedConfirm" id="roomFeedConfirm" hidden><div id="roomFeedCandidateName"></div><button type="button" class="btn small" id="roomFeedConfirmButton">✅ 確認餵食</button><button type="button" class="btn small outline" id="roomFeedCancelButton">取消</button></div></aside><div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">${esc(classDisplay(cl))} · 動態教室 ♡ 🐾</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div><button type="button" class="roomPet" id="roomPet" hidden aria-label="選擇班級寵物餵食"><span class="roomPetFull" id="roomPetFull" hidden>吃飽囉!!</span><span class="roomPetImage" id="roomPetImage"></span><span class="roomPetName" id="roomPetName"></span><span class="roomPetCount" id="roomPetCount"></span></button></div></div><section class="roomFeedHistory"><div class="roomHistoryTitle">📋 餵食紀錄 <span>依時間顯示最新紀錄</span></div><div class="roomHistoryList" id="roomFeedHistory"></div></section></section>`;
+ <div class="roomPetPicker"><label for="roomPetSelect">🐾 班級寵物</label><select id="roomPetSelect"><option value="">未選擇寵物</option>${ROOM_PETS.map(p=>`<option value="${p.id}" ${db.classes[cl]?.classPetType===p.id?'selected':''}>${p.emoji} ${p.name}</option>`).join('')}</select><span class="roomPetPickerTip">各班獨立選擇，最多餵 10 次</span><label class="roomSceneLabel" for="roomSceneSelect">🖼️ 活動背景</label><select class="roomSceneSelect" id="roomSceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></div><div class="roomPlayArea"><section class="roomFeedHistory"><div class="roomHistoryTitle">📋 餵食紀錄 <span>依時間顯示最新紀錄</span></div><div class="roomHistoryList" id="roomFeedHistory"></div></section><div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">${esc(classDisplay(cl))} · 動態教室 ♡ 🐾</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div><button type="button" class="roomPet" id="roomPet" hidden aria-label="選擇班級寵物餵食"><span class="roomPetFull" id="roomPetFull" hidden>吃飽囉!!</span><span class="roomPetImage" id="roomPetImage"></span><span class="roomPetName" id="roomPetName"></span><span class="roomPetCount" id="roomPetCount"></span></button></div><aside class="roomFoodShelf" aria-label="餵食工具欄"><strong>🍽️ 餵食小站</strong><span class="roomFoodHint">點食物 → 點學生 → 確認餵食；也可拖曳</span><div class="roomFoodGrid">${ROOM_FOODS.map(f=>`<button type="button" draggable="true" class="roomFood" data-food="${f.id}" title="${f.name}：拖到學生頭像">${f.emoji}<small>${f.name}</small></button>`).join('')}</div><p class="roomFoodRule">每人最多餵 3 次<br>吃飽後休息 1 小時</p><div class="roomFeedStatus" id="roomFeedStatus" role="status" aria-live="polite">先選食物，再點學生頭像。</div><div class="roomFeedConfirm" id="roomFeedConfirm" hidden><div id="roomFeedCandidateName"></div><button type="button" class="btn small" id="roomFeedConfirmButton">✅ 確認餵食</button><button type="button" class="btn small outline" id="roomFeedCancelButton">取消</button></div></aside></div></section>`;
 }
 function roomPeople(){
  const date=$('sessionDate')?.value||today();
@@ -2596,10 +2649,12 @@ function startMovingClassroom(){
   const saved=db.classes[cl]?.roomScene||'classroom';
   const scene=['classroom','playground','activity'].includes(saved)?saved:'classroom';
   sceneSelect.value=scene;
+  stage.classList.toggle('scene-classroom',scene==='classroom');
   stage.classList.toggle('scene-playground',scene==='playground');
   stage.classList.toggle('scene-activity',scene==='activity');
   sceneSelect.onchange=()=>{
    const value=sceneSelect.value;
+   stage.classList.toggle('scene-classroom',value==='classroom');
    stage.classList.toggle('scene-playground',value==='playground');
    stage.classList.toggle('scene-activity',value==='activity');
    if(db.classes[cl]){db.classes[cl].roomScene=value;save()}
