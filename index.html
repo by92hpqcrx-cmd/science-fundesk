@@ -372,6 +372,30 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 .quicklinks .quickLink small{font-size:10px!important;line-height:1.2!important}
 @media(max-width:900px){.quicklinks .quicklinkGrid{grid-template-columns:repeat(5,minmax(0,1fr))!important;min-width:630px!important}.quicklinks{overflow-x:auto!important;overscroll-behavior-x:contain}}
 @media(min-width:901px){.quicklinks .quicklinkGrid{min-width:0!important}}
+</style><style id="fundeskSevenMascots">
+/* 2026-11-17: 七班班級吉祥物（全班即時切換，首頁右側／各頁共用） */
+.topbar{align-items:center;gap:15px}
+.topbar>div:first-child{flex:1 1 230px;min-width:170px}
+.topActions{flex:0 1 auto}
+.classMascotBanner{--mascot-bg:#e8f4fc;--mascot-border:#9bc5df;display:flex;align-items:center;justify-content:space-between;gap:12px;flex:0 0 clamp(290px,26vw,390px);min-height:176px;padding:13px 11px 13px 20px;border:3px solid var(--mascot-border);background:linear-gradient(125deg,#fff,var(--mascot-bg));box-shadow:0 6px 20px #264c6c20;border-radius:26px;min-width:0;overflow:hidden;position:relative}
+.classMascotBanner[data-mascot="502"]{--mascot-bg:#fff0f5;--mascot-border:#e9b6ce}
+.classMascotBanner[data-mascot="503"]{--mascot-bg:#fff0dc;--mascot-border:#e7b680}
+.classMascotBanner[data-mascot="504"]{--mascot-bg:#e4f6ff;--mascot-border:#97c9e7}
+.classMascotBanner[data-mascot="505"]{--mascot-bg:#fff0dd;--mascot-border:#f0bd84}
+.classMascotBanner[data-mascot="506"]{--mascot-bg:#fff2e4;--mascot-border:#ddb68c}
+.classMascotBanner[data-mascot="507"]{--mascot-bg:#f0eefc;--mascot-border:#b6b6da}
+.classMascotText{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;position:relative;z-index:1}
+.classMascotLabel{font-size:16px;font-weight:850;color:#476677}
+#currentClassName{display:block;font-size:clamp(26px,2.5vw,39px);font-weight:950;color:#204969;line-height:1.17;letter-spacing:.04em;white-space:nowrap}
+.classMascotBanner #classSelect{width:100%;padding:7px 8px;max-width:175px;font-size:15px;font-weight:800;color:#325b74;border:2px solid var(--mascot-border);background:#fff;border-radius:9px}
+.classMascotCaption{font-size:12px;color:#5f8190;font-weight:850}
+.classMascotImage{flex:0 0 auto;width:clamp(105px,12vw,177px);height:clamp(138px,15vw,194px);object-fit:contain;filter:drop-shadow(0 4px 3px #5c72863d);animation:classMascotFloat 3.1s ease-in-out infinite;pointer-events:none}
+@keyframes classMascotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+#content .pageMascotAccent{height:48px;width:48px;object-fit:contain;display:inline-block;vertical-align:middle;margin-left:13px;filter:drop-shadow(0 2px 2px #647c9940);pointer-events:none}
+body.roomFullscreen .classMascotBanner{display:none!important}
+@media(max-width:1250px){.topbar{flex-wrap:wrap}.classMascotBanner{flex:1 1 290px;min-height:135px}.classMascotImage{width:120px;height:135px}#currentClassName{font-size:30px}}
+@media(max-width:730px){.classMascotBanner{width:100%;flex:1 1 100%;min-height:130px}.classMascotImage{width:123px;height:135px}.classMascotBanner #classSelect{max-width:170px}#currentClassName{font-size:clamp(25px,7vw,34px)}.topActions{flex-wrap:wrap}}
+@media print{.classMascotBanner #classSelect{display:none}.classMascotBanner{box-shadow:none}}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
@@ -387,14 +411,18 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 <div id="cloudStatus" class="cloudStatus" role="status" aria-live="polite">尚未登入雲端</div>
 <div class="shell">
  <aside class="sidebar"><div class="brand"><img class="brandAppIcon" src="./fundesk-app-icon.svg" alt="FunDesk 可愛小黑板圖示"><div><b>自然科任 FunDesk</b></div></div>
- <label class="fieldlabel" for="classSelect">目前班級</label><select id="classSelect" class="classSelect"></select>
+ 
  <div class="fastClasses" id="fastClasses"><b>班級快速入口</b><div id="fastClassLinks"></div></div>
  <button type="button" id="cloudLogout" class="sidebarCloudLogout">🚪 登出雲端</button>
  <div class="mini">115學年度 · 第一學期<br>課程：神祕的天空／燃燒與生鏽</div>
  <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attention">▤　待追蹤清單 <i id="sidebarPending"></i></button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試</button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="redemption">🎁　積點兌換</button><button data-view="correction">☑　作業訂正</button><button data-view="board">▣　作業播放表</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="classroom">🏫　動態教室</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　我的班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
  <div class="sidebarFoot">教師登入後存取雲端學生紀錄<br><strong>使用公用電腦後請登出</strong><br></div>
  </aside>
- <main class="main"><header class="topbar"><div><div class="eyebrow">SCIENCE CLASSROOM · 115-1</div><h1 id="pageTitle">首頁</h1><p id="pageSub">點選座位即可查看學生紀錄並進行課堂操作</p></div><span class="fundeskSticker" id="pageSticker" data-scene="explore" aria-hidden="true"></span><div class="topActions"><label>紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" class="btn outline">↓ 備份</button></div></header>
+ <main class="main"><header class="topbar"><div><div class="eyebrow">SCIENCE CLASSROOM · 115-1</div><h1 id="pageTitle">首頁</h1><p id="pageSub">點選座位即可查看學生紀錄並進行課堂操作</p></div><div class="topActions"><label>紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" class="btn outline">↓ 備份</button></div>
+ <div class="classMascotBanner" id="classMascotBanner" aria-live="polite">
+  <div class="classMascotText"><label for="classSelect" class="classMascotLabel">目前班級</label><strong id="currentClassName">五年一班</strong><select id="classSelect" class="classSelect" aria-label="切換目前班級"></select><span class="classMascotCaption" id="classMascotCaption">企鵝小夥伴</span></div>
+  <img id="classMascotImage" class="classMascotImage" alt="當班動物吉祥物" draggable="false">
+ </div></header>
  <div id="stats" class="stats"></div><div id="content"></div></main>
 </div>
 <div id="siteError" hidden role="alert" style="position:fixed;right:14px;bottom:14px;z-index:9999;background:#fff2f2;color:#9a1a1a;border:2px solid #d04444;border-radius:10px;padding:12px;max-width:440px;font-size:14px;"></div><div id="modal" class="modal hidden"><div class="shade" data-close="true"></div><section class="dialog"><button class="close" data-close="true">×</button><div id="modalContent"></div></section></div>
@@ -524,6 +552,30 @@ const freshClass=()=>({students:[],seats:{normal:[],lab:[]},attendance:[],tasks:
 const className=c=>{const n=String(db?.classMeta?.[c]?.name||'').trim();if(n&&n!==c)return n;if(c==='c_mwc0lni8_le3us8')return '五年一班';return /^50[1-7]$/.test(c)?'五年'+['','一','二','三','四','五','六','七'][Number(c)-500]+'班':n||c;};
 const activeCodes=()=>CLASSES.filter(c=>db?.classMeta?.[c]?.active!==false);
 const classDisplay=c=>/^\d+$/.test(className(c))?className(c)+' 班':className(c);
+
+// 班級吉祥物：固定 501~507；其他教師自訂班級依顯示順序配對。
+const FDESK_MASCOT_NAME={"501":"企鵝","502":"兔子","503":"松鼠","504":"小鳥","505":"小貓","506":"小狗","507":"小象"};
+const FDESK_MASCOT_IMAGE={"501":"./mascots/501.png","502":"./mascots/502.png","503":"./mascots/503.png","504":"./mascots/504.png","505":"./mascots/505.png","506":"./mascots/506.png","507":"./mascots/507.png"};
+function fundeskMascotCode(code){
+ const c=String(code||'');if(FDESK_MASCOT_IMAGE[c])return c;
+ const i=CLASSES.indexOf(c);return '50'+String(Math.min(7,Math.max(1,(i<0?0:i)%7+1)));
+}
+function updateClassMascot(){
+ const code=fundeskMascotCode(cl),label=classDisplay(cl),animal=FDESK_MASCOT_NAME[code]||'企鵝';
+ const card=$('classMascotBanner'),img=$('classMascotImage'),classNameEl=$('currentClassName');
+ if(card)card.dataset.mascot=code;
+ if(classNameEl)classNameEl.textContent=label;
+ if(img){const path=FDESK_MASCOT_IMAGE[code];if(img.getAttribute('src')!==path)img.src=path;img.alt=label+' '+animal+'吉祥物';}
+ const caption=$('classMascotCaption');if(caption)caption.textContent=animal+'小夥伴';
+}
+function decorateClassPage(){
+ const root=$('content'), firstHeading=root?.querySelector('.panel h2');
+ if(!firstHeading)return;
+ let icon=firstHeading.querySelector('.pageMascotAccent');
+ if(!icon){icon=document.createElement('img');icon.className='pageMascotAccent';icon.setAttribute('aria-hidden','true');icon.draggable=false;firstHeading.appendChild(icon);}
+ const c=fundeskMascotCode(cl);icon.src=FDESK_MASCOT_IMAGE[c];
+}
+
 const classOptions=()=>activeCodes().map(c=>`<option value="${esc(c)}">${esc(classDisplay(c))}</option>`).join('');
 const syncClassOptions=()=>{const sel=$('classSelect');sel.innerHTML=classOptions();if(activeCodes().includes(cl))sel.value=cl};
 const time={1:'08:50–09:30',2:'09:40–10:20',3:'10:35–11:15',4:'11:25–12:05',5:'13:20–14:00',6:'14:10–14:50',7:'15:00–15:40'};
@@ -787,7 +839,7 @@ function navBindLongPress(){
  window.addEventListener('blur',cancel);
  nav.addEventListener('contextmenu',e=>{if(navDragState?.active)e.preventDefault()});
 }
-function render(){if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();syncNavOrder();cloudRenderQuickClasses();$('pageTitle').textContent=titles[view];$('pageSticker').dataset.scene=pageScenes[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');if(view==='classroom'&&root.querySelector('#movingClassroom')){refreshMovingClassroomCards();return}if(root.querySelector('#movingClassroom'))stopMovingClassroom();root.innerHTML=({seats:renderSeats,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,classroom:renderClassroom,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();hookView()}
+function render(){if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();syncNavOrder();cloudRenderQuickClasses();updateClassMascot();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');if(view==='classroom'&&root.querySelector('#movingClassroom')){refreshMovingClassroomCards();return}if(root.querySelector('#movingClassroom'))stopMovingClassroom();root.innerHTML=({seats:renderSeats,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,classroom:renderClassroom,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();decorateClassPage();hookView()}
 const labGroupOrder=[2,3,4,0,1];
 const labRoleColumns=['組長','副組長','器材長 1／器材長','器材長 2','習作長','清潔長'];
 function labRoles(count){
