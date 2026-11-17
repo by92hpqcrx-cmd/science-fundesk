@@ -1238,6 +1238,73 @@ body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFoodShelf>.roomFoodGrid{
 @media(max-width:730px){
  .movingRoomPanel .roomPlayArea>.roomFoodShelf>.roomFoodGrid>.roomFood{flex-basis:58px!important;min-width:58px!important;max-width:58px!important}
 }
+</style><style id="fundeskRoomDesktopFullscreenNoHeaderFit20261118">
+/* 只在動態教室的瀏覽器全螢幕模式，真正移除截圖紅框的固定標題列。 */
+body.roomFullscreen .shell > .main.compactDashboardMain > #homeFixedQuicklinks,
+body.roomFullscreen .shell > .main.compactDashboardMain > #homeFixedQuicklinks.generalFixedHeading,
+body.roomFullscreen .shell > .main.compactDashboardMain > .srPageMeta,
+body.roomFullscreen .shell > .main.compactDashboardMain > #statsRestingPlace,
+body.roomFullscreen > #cloudStatus{
+ display:none!important;visibility:hidden!important;
+ height:0!important;min-height:0!important;max-height:0!important;
+ margin:0!important;padding:0!important;border:0!important;
+}
+/* 修正固定頁首的高優先權 CSS，從最頂端開始填滿視窗。 */
+body.roomFullscreen .shell>.main.compactDashboardMain{
+ display:flex!important;flex-direction:column!important;
+ box-sizing:border-box!important;
+ position:relative!important;inset:auto!important;
+ width:100vw!important;height:100dvh!important;min-height:0!important;max-height:100dvh!important;
+ margin:0!important;padding:0!important;gap:0!important;overflow:hidden!important;
+}
+body.roomFullscreen .shell>.main.compactDashboardMain>#content{
+ display:block!important;box-sizing:border-box!important;
+ flex:1 1 0%!important;
+ width:100%!important;height:100%!important;min-height:0!important;max-height:100%!important;
+ padding:0!important;margin:0!important;
+ overflow:hidden!important;
+}
+/* 固定餵食區的底部空間，主舞台僅佔餘下空間，避免食物列被裁切。 */
+body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel{
+ height:100%!important;max-height:100%!important;min-height:0!important;
+ display:flex!important;flex-direction:column!important;
+ box-sizing:border-box!important;overflow:hidden!important;
+ padding:5px 7px 7px!important;gap:5px!important;
+}
+body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPetPicker{
+ flex:0 0 auto!important;margin:0!important;min-height:0!important;
+}
+body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea{
+ flex:1 1 0%!important;height:auto!important;min-height:0!important;
+ display:grid!important;grid-template-rows:minmax(0,1fr) max-content!important;
+ align-content:stretch!important;overflow:hidden!important;
+}
+body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea>.movingRoomStage{
+ height:100%!important;min-height:0!important;max-height:100%!important;
+}
+body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea>.roomFoodShelf{
+ box-sizing:border-box!important;
+ height:auto!important;max-height:none!important;min-height:0!important;
+ overflow:hidden!important;
+ padding:4px 8px!important;gap:3px 8px!important;
+}
+body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea>.roomFoodShelf>.roomFoodGrid{
+ min-width:0!important;max-width:100%!important;
+ padding:2px 4px 9px!important;
+ overflow-x:auto!important;overflow-y:hidden!important;
+}
+body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea>.roomFoodShelf .roomFood{
+ min-height:60px!important;flex:0 0 66px!important;
+ font-size:25px!important;padding:3px 2px!important;
+}
+@media(max-width:730px){
+ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea{
+  grid-template-rows:minmax(0,1fr) max-content minmax(0,65px)!important;
+ }
+ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea>.roomFoodShelf .roomFood{
+  flex-basis:55px!important;
+ }
+}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
