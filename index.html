@@ -768,13 +768,34 @@ body.roomFullscreen #content,
 #content .scheduleDailyOverview>.panel{height:100%;margin:0;background:#fffbea!important;border:1px solid #e6cb62!important}
 #content .scheduleDailyOverview .panelHead{background:#fff4a7!important;border-bottom-color:#e3ad00!important}
 @media(max-width:900px){#content .scheduleDailyOverview{grid-template-columns:minmax(0,1fr)}}
+</style><style id="fundeskSidebarCurrentClassLargerText20261117">
+/* 目前班級只保留下拉選單：全區字級加大，下拉選單最醒目 */
+.sidebar .classMascotBanner .classMascotText{gap:10px!important;min-width:0!important}
+.sidebar .classMascotBanner .classMascotLabel{
+ font-size:20px!important;font-weight:950!important;line-height:1.3!important;color:#315669!important
+}
+.sidebar .classMascotBanner #classSelect{
+ font-size:clamp(22px,1.9vw,26px)!important;font-weight:950!important;
+ line-height:1.35!important;min-height:56px!important;
+ padding:9px 11px!important;width:100%!important;max-width:none!important;
+ color:#1c4d67!important;border-width:3px!important;
+}
+.sidebar .classMascotBanner #classSelect option{font-size:23px!important;font-weight:850!important}
+.sidebar .classMascotBanner .classMascotCaption{
+ font-size:17px!important;font-weight:900!important;line-height:1.35!important;color:#426477!important
+}
+@media(max-width:730px){
+.sidebar .classMascotBanner .classMascotLabel{font-size:19px!important}
+.sidebar .classMascotBanner #classSelect{font-size:22px!important;min-height:50px!important}
+.sidebar .classMascotBanner .classMascotCaption{font-size:16px!important}
+}
 </style><style id="fundeskMulticolorLargerSidebarNav20261117">
 /* 每項功能依 data-view 使用固定配色，拖曳排序後顏色也不會改變。 */
 #nav button[data-view="seats"]{--nav-item-bg:#e8f2ff;--nav-item-ink:#174c91;--nav-item-border:#6fa7e5}
 #nav button[data-view="labDuty"]{--nav-item-bg:#ecf9f1;--nav-item-ink:#216a4a;--nav-item-border:#74c39a}
 #nav button[data-view="attendance"]{--nav-item-bg:#fff3df;--nav-item-ink:#865015;--nav-item-border:#e7b56e}
 #nav button[data-view="tasks"]{--nav-item-bg:#f5ebff;--nav-item-ink:#673b99;--nav-item-border:#b79add}
-#nav button[data-view="schedule"]{--nav-item-bg:#ffe83d;--nav-item-ink:#654900;--nav-item-border:#e3ad00}
+#nav button[data-view="schedule"]{--nav-item-bg:#fff4b8;--nav-item-ink:#755c17;--nav-item-border:#e5cc75}
 #nav button[data-view="contact"]{--nav-item-bg:#fff0f4;--nav-item-ink:#a03c68;--nav-item-border:#e6a3bb}
 #nav button[data-view="points"]{--nav-item-bg:#eef0ff;--nav-item-ink:#4e50a1;--nav-item-border:#a5a7e2}
 #nav button[data-view="redemption"]{--nav-item-bg:#fff3e9;--nav-item-ink:#a2512d;--nav-item-border:#e8a77f}
