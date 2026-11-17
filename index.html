@@ -1417,6 +1417,16 @@ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>
  }
  .movingRoomPanel .roomPetPicker #roomCount{font-size:16px!important}
 }
+</style><style id="fundeskCountdownRightToLeft20261118">
+/* Remaining time stays attached to the left edge; the right boundary recedes leftward. */
+#toolTimerPanel .toolProgress{direction:ltr!important}
+#toolTimerPanel .toolProgressFill{left:0!important;right:auto!important;transform-origin:left center!important;transition:width .3s linear!important}
+#toolTimerPanel .toolProgress>.toolMascot{transition:left .3s linear;will-change:left}
+#toolTimerPanel .animalToolHead .toolFullButton{min-height:44px;padding:9px 14px;font-weight:850;white-space:nowrap;cursor:pointer}
+#toolTimerPanel:fullscreen{box-sizing:border-box;background:var(--a-bg,#eaf3e8);width:100vw;height:100dvh;overflow:auto;padding:clamp(12px,2vw,28px);padding-bottom:max(12px,env(safe-area-inset-bottom))}
+#toolTimerPanel:fullscreen .animalToolHead{flex:0 0 auto}
+#toolTimerPanel:fullscreen .animalToolControls{flex-wrap:wrap;justify-content:center}
+@media(max-width:600px){#toolTimerPanel .animalToolHead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}#toolTimerPanel .animalToolHead .toolFullButton{font-size:14px;padding:8px 10px}}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
@@ -2640,7 +2650,7 @@ function updateCountdown(){
   const ratio=Math.min(1,Math.max(0,timerSeconds/Math.max(1,timerBaseSeconds)));
   fill.style.width=(ratio*100)+'%';
   const bar=fill.parentElement;
-  if(bar){bar.setAttribute('aria-valuenow',String(Math.round(ratio*100)));const pet=bar.querySelector('.toolMascot');if(pet)pet.style.left='calc('+(ratio*100)+'% - 25px)';}
+  if(bar){bar.setAttribute('aria-valuenow',String(Math.round(ratio*100)));const pet=bar.querySelector('.toolMascot');if(pet)pet.style.left='clamp(0px, calc('+(ratio*100)+'% - 38px), calc(100% - 76px))';}
  }
  const start=$('timerStart');if(start)start.textContent=timerDeadline!==null?'暫停':timerSeconds===0?'重新開始':'開始';
 }
@@ -3321,7 +3331,20 @@ document.querySelectorAll('[data-time]').forEach(b=>b.onclick=()=>setTimer(Numbe
 $('timerStart').onclick=toggleTimer;$('timerReset').onclick=()=>setTimer(timerBaseSeconds);
 $('timerCustomSet').onclick=()=>{const min=Number($('customTimerMinutes').value),sec=Number($('customTimerSeconds').value);if(!Number.isInteger(min)||!Number.isInteger(sec)||min<0||min>5999||sec<0||sec>59||min*60+sec<=0){alert('請輸入有效的自訂時間（至少 1 秒，秒數 0～59）。');return;}setTimer(min*60+sec)};
 document.querySelectorAll('.toolAnimalSelect').forEach(select=>{select.value=toolAnimalChoice;select.onchange=()=>{toolAnimalChoice=select.value;try{localStorage.setItem('fundesk-tool-animal',toolAnimalChoice)}catch(_){};refreshToolAnimals()}});
-document.querySelectorAll('[data-tool-fullscreen]').forEach(button=>button.onclick=async()=>{const panel=$(button.dataset.toolFullscreen);try{if(document.fullscreenElement){if(document.fullscreenElement===panel)await document.exitFullscreen();else{await document.exitFullscreen();await panel.requestFullscreen();}}else await panel.requestFullscreen();}catch(e){alert('無法進入全螢幕，請確認瀏覽器是否允許。')}});
+document.querySelectorAll('[data-tool-fullscreen]').forEach(button=>{
+ const panel=$(button.dataset.toolFullscreen);
+ const sync=()=>{if(button.isConnected)button.textContent=document.fullscreenElement===panel?'⛶ 退出全螢幕':'⛶ 全螢幕'};
+ button.onclick=async()=>{
+  try{
+   if(document.fullscreenElement===panel){await document.exitFullscreen()}
+   else if(panel?.requestFullscreen){if(document.fullscreenElement)await document.exitFullscreen();await panel.requestFullscreen()}
+   else alert('此瀏覽器不支援網頁全螢幕，電腦可改按 F11。');
+  }catch(e){alert('無法切換全螢幕，請確認瀏覽器是否允許。')}
+  sync();
+ };
+ document.addEventListener('fullscreenchange',sync);
+ sync();
+});
 $('pickStudent').onclick=()=>{const pool=[...students()];if(!pool.length){$('randomShow').innerHTML='<span class="randomEmpty">目前班級尚無學生</span>';return;}const n=Math.max(1,Math.min(pool.length,Math.floor(Number($('randomCount').value)||1)));for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}const chosen=pool.slice(0,n);$('randomShow').innerHTML=chosen.map(s=>{const path=studentAvatarPath(s);return '<div class="randomStudentCard">'+(path?'<img src="'+esc(path)+'" alt="'+esc(s.name)+'的設定頭像">':'<span class="noAvatar" aria-hidden="true">😊</span>')+'<strong>'+esc(s.name)+'</strong><small>'+esc(s.no)+' 號</small></div>'}).join('')};
 refreshToolAnimals();updateCountdown()}
 
