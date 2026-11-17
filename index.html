@@ -320,6 +320,27 @@ body.roomFullscreen .roomPetPicker .roomPetFeedTopInfo .roomFoodRule{display:blo
  .roomPetPicker .roomPetFeedTopInfo .roomFoodRule{white-space:normal}
  .roomPetPicker .roomPetFeedTopInfo .roomFeedStatus{min-width:150px}
 }
+
+/* 班寵選擇、餵食規則及即時提示固定單列；狹窄螢幕可水平捲動，不換行。 */
+.roomPetPicker{flex-wrap:nowrap!important;white-space:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;gap:8px}
+.roomPetPicker>label,.roomPetPicker>select,.roomPetPicker>.roomPetPickerTip{flex:0 0 auto}
+.roomPetPicker .roomSceneLabel{margin-left:0}
+.roomPetPicker .roomPetFeedTopInfo{display:flex!important;flex:0 0 auto!important;flex-wrap:nowrap!important;min-width:0;gap:8px}
+.roomPetPicker .roomPetFeedTopInfo .roomFoodRule{
+ display:flex;align-items:center;white-space:nowrap;flex:0 0 auto;
+ padding:6px 10px;margin:0;min-height:0;line-height:1.25
+}
+.roomPetPicker .roomPetFeedTopInfo .roomFeedStatus{
+ display:flex;align-items:center;white-space:nowrap;
+ flex:0 0 auto;max-width:none;min-width:0;min-height:0;margin:0;padding:6px 10px
+}
+body.roomFullscreen .roomPetPicker{flex-wrap:nowrap!important}
+@media(max-width:700px){
+ .roomPetPicker{flex-wrap:nowrap!important}
+ .roomPetPicker .roomPetFeedTopInfo{flex-wrap:nowrap!important;flex:0 0 auto!important}
+ .roomPetPicker .roomPetFeedTopInfo .roomFoodRule{white-space:nowrap}
+ .roomPetPicker .roomPetFeedTopInfo .roomFeedStatus{min-width:0;white-space:nowrap}
+}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
