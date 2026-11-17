@@ -760,13 +760,21 @@ body.roomFullscreen #content,
 @media(max-width:680px){
  .movingRoomStage .roomWalker .roomName{font-size:clamp(14px,calc(17px * var(--room-avatar-scale,1)),18px)!important}
 }
+</style><style id="fundeskScheduleHomeMove20261117">
+/* 首頁僅保留座位表；當日課程及待追蹤摘要移至教學進度 */
+#content>.homeSeatsSingle{display:block;width:100%;min-width:0}
+#content>.homeSeatsSingle>.panel{width:100%;min-width:0}
+#content .scheduleDailyOverview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:15px 0 18px;align-items:start}
+#content .scheduleDailyOverview>.panel{height:100%;margin:0;background:#fffbea!important;border:1px solid #e6cb62!important}
+#content .scheduleDailyOverview .panelHead{background:#fff4a7!important;border-bottom-color:#e3ad00!important}
+@media(max-width:900px){#content .scheduleDailyOverview{grid-template-columns:minmax(0,1fr)}}
 </style><style id="fundeskMulticolorLargerSidebarNav20261117">
 /* 每項功能依 data-view 使用固定配色，拖曳排序後顏色也不會改變。 */
 #nav button[data-view="seats"]{--nav-item-bg:#e8f2ff;--nav-item-ink:#174c91;--nav-item-border:#6fa7e5}
 #nav button[data-view="labDuty"]{--nav-item-bg:#ecf9f1;--nav-item-ink:#216a4a;--nav-item-border:#74c39a}
 #nav button[data-view="attendance"]{--nav-item-bg:#fff3df;--nav-item-ink:#865015;--nav-item-border:#e7b56e}
 #nav button[data-view="tasks"]{--nav-item-bg:#f5ebff;--nav-item-ink:#673b99;--nav-item-border:#b79add}
-#nav button[data-view="schedule"]{--nav-item-bg:#e5f8f7;--nav-item-ink:#166e74;--nav-item-border:#74c3c7}
+#nav button[data-view="schedule"]{--nav-item-bg:#ffe83d;--nav-item-ink:#654900;--nav-item-border:#e3ad00}
 #nav button[data-view="contact"]{--nav-item-bg:#fff0f4;--nav-item-ink:#a03c68;--nav-item-border:#e6a3bb}
 #nav button[data-view="points"]{--nav-item-bg:#eef0ff;--nav-item-ink:#4e50a1;--nav-item-border:#a5a7e2}
 #nav button[data-view="redemption"]{--nav-item-bg:#fff3e9;--nav-item-ink:#a2512d;--nav-item-border:#e8a77f}
@@ -1502,10 +1510,9 @@ function renderSeats(){
  const cells=arr.map((sid,i)=>{const s=student(sid);if(!s)return `<button class="seat empty" data-seat="${i}" data-sid=""><small>空位</small></button>`;
  const ap=att(sid,date),pd=pending(sid),bad=ap==='缺席'?'absent':pd.length?'warn':'';
  return `<button draggable="${editSeats}" class="seat ${bad}" data-seat="${i}" data-sid="${sid}" title="${esc(s.name)}">${avatarWatermark(s)}<small>${s.no}號 · 座位${i+1}</small><b>${esc(s.name)}</b><div class="metricRow">${ap==='缺席'?'<span class="badgeDot">缺席</span>':''}${pd.length?`<span class="badgeDot">待追 ${pd.length}</span>`:''}</div></button>`}).reverse().join('');
- const lessons=(Array.isArray(cls().scheduleLessons)?cls().scheduleLessons:[]).filter(x=>x.date===date);
  const seatMarkup=layout==='lab'?labGroups():`<div class="seats seatRotated180">${cells}</div><div class="seatstage seatstageBottom">講 台 ／ 黑 板</div>`;
  const templateControls=layout==='lab'?`<button class="btn small ${editLabTemplate?'danger':'outline'}" id="templateEdit">${editLabTemplate?'完成編輯模板':'編輯共用模板'}</button>${editLabTemplate?'<button class="btn small outline" id="templateReset">還原 PDF 原始座位</button>':''}`:'';
- return `${renderQuickLinks()}<div class="gridMain"><section class="panel"><div class="panelHead"><h2>▦ ${esc(classDisplay(cl))}座位表</h2><div class="row"><div class="switch"><button data-layout="normal" class="${layout==='normal'?'active':''}">一般座位</button><button data-layout="lab" class="${layout==='lab'?'active':''}">實驗分組</button></div><button class="btn small outline" id="seatEdit" ${editLabTemplate?'disabled':''}>${editSeats?'完成調整':'調整本班座位'}</button>${templateControls}</div></div>${seatMarkup}${layout==='lab'?'<div class="actions"><button type="button" class="btn outline" data-goto="labDuty">實驗工作分配</button></div>':''}<p class="hint">${editLabTemplate?'共用模板編輯：依序點選兩個位置，就會交換座號，並同步套用到 501～507 班。若有自訂本班實驗座位，修改共用模板會清除該排列。':editSeats?'拖曳學生卡片交換座位；只影響目前班級，不影響七班共用模板。':layout==='lab'?'實驗座位依第一至第五組分區，每組六席；黑板在上方；上排由左至右為第三、第二、第一組，下排由左至右為第五、第四組；每組六席的相對位置均依原始 PDF 整體旋轉 180 度（座號與姓名保持正向可讀）。點選姓名可查看所屬組別及學生紀錄。':'點選學生姓名可查看詳細資料；黃色表示有待追蹤項目，紅色表示當日缺席。'}</p></section><div><section class="panel"><div class="panelHead"><h2>當日課程</h2><span class="pill">${esc(date)}</span></div>${lessons.length?lessons.map(x=>`<div class="lesson ${x.rush?'rush':''}"><span class="pill ${x.rush?'warn':''}">${esc(x.period)} ${x.rush?'需趕課':esc(x.type)}</span><h3>${esc(x.topic)}</h3></div>`).join(''):'<div class="emptymsg">這一天沒有預載授課進度<br>可切換日期或進入教學進度查看</div>'}<div class="actions"><button class="btn small soft" data-goto="tasks">建立習作／考試</button><button class="btn small outline" data-goto="attendance">當日點名</button></div></section><section class="panel"><div class="panelHead"><h2>需要處理</h2><button class="btn small outline" data-goto="attention">查看全部</button></div>${attentionList(5)}</section></div></div>`;
+ return `${renderQuickLinks()}<div class="homeSeatsSingle"><section class="panel"><div class="panelHead"><h2>▦ ${esc(classDisplay(cl))}座位表</h2><div class="row"><div class="switch"><button data-layout="normal" class="${layout==='normal'?'active':''}">一般座位</button><button data-layout="lab" class="${layout==='lab'?'active':''}">實驗分組</button></div><button class="btn small outline" id="seatEdit" ${editLabTemplate?'disabled':''}>${editSeats?'完成調整':'調整本班座位'}</button>${templateControls}</div></div>${seatMarkup}${layout==='lab'?'<div class="actions"><button type="button" class="btn outline" data-goto="labDuty">實驗工作分配</button></div>':''}<p class="hint">${editLabTemplate?'共用模板編輯：依序點選兩個位置，就會交換座號，並同步套用到 501～507 班。若有自訂本班實驗座位，修改共用模板會清除該排列。':editSeats?'拖曳學生卡片交換座位；只影響目前班級，不影響七班共用模板。':layout==='lab'?'實驗座位依第一至第五組分區，每組六席；黑板在上方；上排由左至右為第三、第二、第一組，下排由左至右為第五、第四組；每組六席的相對位置均依原始 PDF 整體旋轉 180 度（座號與姓名保持正向可讀）。點選姓名可查看所屬組別及學生紀錄。':'點選學生姓名可查看詳細資料；黃色表示有待追蹤項目，紅色表示當日缺席。'}</p></section></div>`;
 }
 function attentionList(limit){
  const records=cls().results.filter(x=>['未繳交','待訂正','未完成','未交','缺考','待補考','補考未完成'].includes(x.status))
@@ -1566,6 +1573,16 @@ function schedShift(d,days){let x=new Date(d+'T12:00:00');x.setDate(x.getDate()+
 function scheduleClassesOverview(){return activeCodes().map(c=>{const a=db.classes[c]?.scheduleLessons||[],finished=a.filter(x=>x.done).length;return `<button class="btn small ${cl===c?'':'outline'}" data-schedule-class="${esc(c)}">${esc(classDisplay(c))} ${finished}/${a.length}</button>`}).join('')}
 function scheduleFormOptions(val=''){return ['一般教學','實驗／實作','實驗課／整合教學','單元考','考卷檢討','停課','其他'].map(t=>`<option value="${esc(t)}" ${t===val?'selected':''}>${esc(t)}</option>`).join('')}
 function scheduleActivityOptions(val=''){const pairs=[['','不連動題庫'],...['01','02','03','04'].flatMap(u=>['01','02','03'].map(a=>[`${u}-${a}`,`第${Number(u)}單元・活動${Number(a)}`]))];return pairs.map(([v,t])=>`<option value="${v}" ${v===val?'selected':''}>${esc(t)}</option>`).join('')}
+function renderScheduleDailyAndPending(){
+ const date=$('sessionDate')?.value||today();
+ const lessons=(Array.isArray(cls().scheduleLessons)?cls().scheduleLessons:[]).filter(x=>x.date===date);
+ return `<div class="scheduleDailyOverview">
+ <section class="panel"><div class="panelHead"><h2>當日課程</h2><span class="pill">${esc(date)}</span></div>
+ ${lessons.length?lessons.map(x=>`<div class="lesson ${x.rush?'rush':''}"><span class="pill ${x.rush?'warn':''}">${esc(x.period)} ${x.rush?'需趕課':esc(x.type)}</span><h3>${esc(x.topic)}</h3></div>`).join(''):'<div class="emptymsg">這一天沒有預載授課進度，可於下方新增課程或切換日期。</div>'}
+ <div class="actions"><button class="btn small soft" data-goto="tasks">建立習作／考試</button><button class="btn small outline" data-goto="attendance">當日點名</button></div></section>
+ <section class="panel"><div class="panelHead"><h2>需要處理</h2><button class="btn small outline" data-goto="attention">查看全部</button></div>${attentionList(5)}</section>
+ </div>`;
+}
 function renderSchedule(){
  const all=scheduleLessons().slice().sort((a,b)=>a.date.localeCompare(b.date)||String(a.period).localeCompare(String(b.period),'zh-Hant'));
  const completed=all.filter(x=>x.done).length,rush=all.filter(x=>x.rush).length,behind=all.filter(x=>x.needsFollowup).length;
@@ -1578,7 +1595,7 @@ function renderSchedule(){
   </div></article>`}).join('');
  return `<section class="panel"><div class="panelHead"><h2>▣ ${esc(classDisplay(cl))}｜我的教學進度</h2><span class="pill">依教師帳號獨立儲存</span></div>
  <p class="hint">每位老師可為自己管理的班級新增、調整與完成課程；資料保存在該老師的雲端班級紀錄，與學生名單及題庫分開。不會自動匯入其他老師的課表。</p>
- <div class="scheduleClassLinks">${scheduleClassesOverview()}</div>
+ ${renderScheduleDailyAndPending()}
  <div class="scheduleMetrics"><div><b>${completed} / ${all.length}</b><small>已完成／總節數</small></div><div><b>${all.length?Math.round(100*completed/all.length):0}%</b><small>完成率</small></div><div><b>${behind} / ${rush}</b><small>需追進度／原訂趕課</small></div></div>
  <div class="schedulePlacePanel"><div class="schedulePlaceTop"><strong>📍 第${teachingWeekInfo(monday).week} 週｜本周上課地點：${esc(contactWeeklyPlace(cl,monday))}</strong><span>${db.classes[cl]?.weeklyLocationOverrides?.[monday]?'老師手動設定':'依教師帳號及單／雙週自動排定'}</span></div><div class="actions"><label for="schedulePlaceSelect">手動更改本週地點 <select id="schedulePlaceSelect"><option value="" ${!db.classes[cl]?.weeklyLocationOverrides?.[monday]?'selected':''}>依單／雙週自動安排</option><option value="自然教室" ${db.classes[cl]?.weeklyLocationOverrides?.[monday]==='自然教室'?'selected':''}>自然教室</option><option value="原班教室" ${db.classes[cl]?.weeklyLocationOverrides?.[monday]==='原班教室'?'selected':''}>原班教室</option></select></label><button type="button" class="btn small" id="schedulePlaceSave">儲存教室設定</button></div><p class="hint">${isOppositeClassroomAccount()?'uie508：單週原班教室、雙週自然教室':'目前教師：單週自然教室、雙週原班教室'}。此設定適用您管理的所有班級；既有已發布連絡簿需重新儲存該日期，公開頁才會更新。</p></div>
  <div class="scheduleToolbar"><button class="btn small outline" data-plan-shift="-7">← 上週</button><strong>${esc(monday)}～${esc(sunday)}</strong><button class="btn small outline" data-plan-shift="7">下週 →</button><button class="btn small soft" id="planToday">回本週</button><input id="scheduleJumpDate" type="date" value="${esc(monday)}" title="跳到指定週"></div>
