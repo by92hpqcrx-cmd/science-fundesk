@@ -568,6 +568,30 @@ body.roomFullscreen .classMascotBanner{display:none!important}
 @media(max-width:1050px){.quicklinks .quicklinksHeader .quicklinkStats .stat span{font-size:14px!important}.quicklinks .quicklinksHeader .quicklinkStats .stat strong{font-size:29px!important}}
 @media(max-width:900px){.quicklinks .quicklinksHeader{min-height:0!important}.quicklinks .quicklinksHeader>.quicklinkStatsHost{align-self:auto!important}.quicklinks .quicklinksHeader .quicklinkStats{min-height:72px!important}.quicklinks .quicklinksHeader .quicklinkStats .stat{min-height:72px!important;padding:8px 3px!important}.quicklinks .quicklinksHeader .quicklinkStats .stat span{font-size:12px!important}.quicklinks .quicklinksHeader .quicklinkStats .stat strong{font-size:26px!important}}
 @media(max-width:730px){.sidebar #nav button[data-view]{font-size:16px!important;white-space:nowrap!important;padding:10px 12px!important}.sidebar #nav .navMoveRow{min-height:43px!important}}
+</style><style id="fundeskAllPagesPinnedHeader20261117">
+/* 所有一般功能頁面：頁首標題與班級吉祥物固定，內容從其下方開始獨立捲動 */
+@media(min-width:731px){
+html,body{height:100%;overflow:hidden!important}
+.shell{height:100dvh!important;min-height:0!important;overflow:hidden!important;align-items:stretch!important}
+.shell>.main.compactDashboardMain{height:100dvh!important;max-height:100dvh!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;margin:0 auto!important;padding:12px 22px 0!important}
+.shell>.main.compactDashboardMain>#content{flex:1 1 auto!important;min-height:0!important;height:auto!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain!important;scrollbar-width:thin;padding:0 8px 28px 0;scroll-padding-top:12px}
+.shell>.main.compactDashboardMain>.fixedPageHeader{flex:0 0 auto!important}
+}
+.fixedPageHeader{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:78px;padding:5px 15px 7px;margin:0 0 10px;border:1px solid #d4e3e5;border-radius:17px;background:linear-gradient(110deg,#f3fbf8,#f2f7ff);box-shadow:0 4px 15px #20466112}
+.fixedPageHeaderText{flex:1 1 auto;min-width:0}
+.fixedPageEyebrow{font-size:10px;color:#7186a0;letter-spacing:.11em;font-weight:800}
+.fixedPageHeader h1{margin:1px 0 0;font-size:clamp(22px,2.25vw,33px);line-height:1.2;color:#244967;font-weight:950}
+.fixedPageMascot{flex:0 0 auto;width:72px;height:68px;object-fit:contain;filter:drop-shadow(0 2px 4px #49617d30)}
+/* 全螢幕教室與其它原生全螢幕版面不顯示主程式固定頁首 */
+body.roomFullscreen .fixedPageHeader{display:none!important}
+body.roomFullscreen .shell>.main.compactDashboardMain{height:100vh!important;max-height:none!important;padding:0!important}
+body.roomFullscreen .shell>.main.compactDashboardMain>#content{height:100vh!important;max-height:none!important;overflow:hidden!important;padding:0!important}
+@media(max-width:730px){
+.fixedPageHeader{position:sticky;top:0;z-index:8;min-height:65px;padding:5px 11px;background:#eff9f6}
+.fixedPageMascot{width:58px;height:56px}
+.compactDashboardMain{padding-top:0!important}
+}
+@media print{html,body{height:auto!important;overflow:visible!important}.shell,.shell>.main.compactDashboardMain{height:auto!important;max-height:none!important;overflow:visible!important}.shell>.main.compactDashboardMain>#content{overflow:visible!important;height:auto!important}.fixedPageHeader{display:none!important}}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
@@ -601,6 +625,10 @@ body.roomFullscreen .classMascotBanner{display:none!important}
  <main class="main compactDashboardMain">
  <div class="srPageMeta" aria-hidden="true"><span id="pageTitle">首頁</span><span id="pageSub"></span></div>
  <div id="statsRestingPlace" hidden><div id="stats" class="stats dashboardStats"></div></div>
+ <div id="fixedPageHeader" class="fixedPageHeader" aria-label="目前功能頁面">
+  <div class="fixedPageHeaderText"><div class="fixedPageEyebrow">SCIENCE CLASSROOM · 115-1</div><h1 id="fixedPageTitle">首頁</h1></div>
+  <img id="fixedPageMascot" class="fixedPageMascot" alt="本班小動物" draggable="false">
+ </div>
  <div id="content"></div>
 </main>
 </div>
@@ -1018,7 +1046,7 @@ function navBindLongPress(){
  window.addEventListener('blur',cancel);
  nav.addEventListener('contextmenu',e=>{if(navDragState?.active)e.preventDefault()});
 }
-function render(){const existingStats=$('stats');const restingPlace=$('statsRestingPlace');if(existingStats&&restingPlace&&existingStats.parentElement!==restingPlace)restingPlace.appendChild(existingStats);document.querySelector('.compactDashboardMain')?.classList.toggle('dashboardHome',view==='seats');if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();syncNavOrder();cloudRenderQuickClasses();updateClassMascot();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');if(view==='classroom'&&root.querySelector('#movingClassroom')){refreshMovingClassroomCards();return}if(root.querySelector('#movingClassroom'))stopMovingClassroom();root.innerHTML=({seats:renderSeats,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,classroom:renderClassroom,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();if(view==='seats'){const statsHost=$('quicklinkStatsHost');const stats=$('stats');if(statsHost&&stats){statsHost.appendChild(stats);stats.classList.add('quicklinkStats')}}decorateClassPage();hookView()}
+function render(){const title=$('fixedPageTitle'),mascot=$('fixedPageMascot');if(title)title.textContent=titles[view]||'首頁';if(mascot){const mascotCode=fundeskMascotCode(cl);const src=FDESK_MASCOT_IMAGE[mascotCode];if(src&&mascot.getAttribute('src')!==src)mascot.src=src;mascot.alt=classDisplay(cl)+' '+(FDESK_MASCOT_NAME[mascotCode]||'')+'吉祥物';}const existingStats=$('stats');const restingPlace=$('statsRestingPlace');if(existingStats&&restingPlace&&existingStats.parentElement!==restingPlace)restingPlace.appendChild(existingStats);document.querySelector('.compactDashboardMain')?.classList.toggle('dashboardHome',view==='seats');if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();syncNavOrder();cloudRenderQuickClasses();updateClassMascot();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');if(view==='classroom'&&root.querySelector('#movingClassroom')){refreshMovingClassroomCards();return}if(root.querySelector('#movingClassroom'))stopMovingClassroom();root.innerHTML=({seats:renderSeats,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,classroom:renderClassroom,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();if(root)root.scrollTop=0;if(view==='seats'){const statsHost=$('quicklinkStatsHost');const stats=$('stats');if(statsHost&&stats){statsHost.appendChild(stats);stats.classList.add('quicklinkStats')}}decorateClassPage();hookView()}
 const labGroupOrder=[2,3,4,0,1];
 const labRoleColumns=['組長','副組長','器材長 1／器材長','器材長 2','習作長','清潔長'];
 function labRoles(count){
