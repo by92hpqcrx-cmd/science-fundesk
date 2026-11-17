@@ -1013,6 +1013,43 @@ body.roomFullscreen #content,
 .sidebar #classMascotBanner #classSelect{font-size:27px!important;min-height:62px!important}
 .sidebar #classMascotBanner .classMascotCaption{font-size:19px!important}
 }
+</style><style id="fundeskRoomIPadFit20261117">
+/* iPad 橫豎向：教室舞台完整佔可用寬度，不因左側紀錄或工具列被裁切。 */
+@media (min-width:731px) and (max-width:1180px), (pointer:coarse) and (max-width:1366px){
+  body:not(.roomFullscreen) .main{min-width:0!important;width:100%!important;max-width:none!important;padding-left:12px!important;padding-right:12px!important}
+  body:not(.roomFullscreen) .movingRoomPanel{min-width:0!important;width:100%!important;max-width:100%!important;overflow:visible!important;padding:10px!important}
+  .movingRoomPanel .roomPetPicker{min-width:0!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch}
+  .movingRoomPanel .roomPlayArea{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto!important;gap:9px!important;width:100%!important;min-width:0!important;max-width:100%!important}
+  .movingRoomPanel .roomPlayArea>.movingRoomStage{
+    grid-column:1!important;grid-row:1!important;
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    height:clamp(340px,52vh,650px)!important;min-height:0!important;
+  }
+  .movingRoomPanel .roomPlayArea>.roomFoodShelf{grid-column:1!important;grid-row:2!important;width:100%!important;min-width:0!important;max-width:100%!important;grid-template-columns:115px minmax(0,1fr)!important}
+  .movingRoomPanel .roomPlayArea>.roomFoodShelf>.roomFoodGrid{min-width:0!important;max-width:100%!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+  .movingRoomPanel .roomPlayArea>.roomFeedHistory{
+    grid-column:1!important;grid-row:3!important;width:100%!important;min-width:0!important;max-width:100%!important;
+  }
+  .movingRoomPanel .roomPlayArea>.roomFeedHistory .roomHistoryList{min-height:0!important;max-height:125px!important;overflow-y:auto!important}
+  .movingRoomPanel .roomPlayArea>.roomFeedHistory .roomHistoryTitle span{display:inline!important}
+  .movingRoomPanel .roomPlayArea>.roomFeedHistory .roomHistoryItem{font-size:12px!important}
+  body.roomFullscreen .movingRoomPanel{height:100dvh!important;min-height:0!important;overflow:hidden!important;padding:6px!important}
+  body.roomFullscreen .roomPlayArea{min-height:0!important;overflow-y:auto!important;align-content:start}
+  body.roomFullscreen .roomPlayArea>.movingRoomStage{height:clamp(290px,49dvh,610px)!important;flex:none!important}
+  body.roomFullscreen .roomPlayArea>.roomFoodShelf{flex:none!important}
+  body.roomFullscreen .roomPlayArea>.roomFeedHistory{flex:none!important}
+}
+@media (max-width:730px){
+  body:not(.roomFullscreen) .movingRoomPanel{width:100%!important;max-width:100%!important;min-width:0!important;padding:7px!important;overflow:visible!important}
+  .movingRoomPanel .roomPlayArea{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto!important;min-width:0!important;gap:7px!important}
+  .movingRoomPanel .roomPlayArea>.movingRoomStage{grid-column:1!important;grid-row:1!important;width:100%!important;min-width:0!important;height:clamp(320px,49vh,520px)!important;min-height:0!important}
+  .movingRoomPanel .roomPlayArea>.roomFoodShelf{grid-column:1!important;grid-row:2!important;min-width:0!important;grid-template-columns:86px minmax(0,1fr)!important}
+  .movingRoomPanel .roomPlayArea>.roomFeedHistory{grid-column:1!important;grid-row:3!important;min-width:0!important}
+  .movingRoomPanel .roomPlayArea>.roomFeedHistory .roomHistoryList{max-height:110px!important;min-height:0!important}
+  .movingRoomPanel .roomPetPicker{max-width:100%!important;min-width:0!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+  body.roomFullscreen .roomPlayArea{overflow-y:auto!important;min-height:0!important}
+  body.roomFullscreen .roomPlayArea>.movingRoomStage{height:clamp(280px,48dvh,520px)!important}
+}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
