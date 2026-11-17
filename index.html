@@ -2274,7 +2274,8 @@ function advanceMovingRoom(dt){
 /* 教室餵食紀錄隨教師班級雲端資料同步；按學生 ID 分別計算三次與一小時冷卻。 */
 function roomPetSelected(code=cl){return ROOM_PETS.find(p=>p.id===db.classes[code]?.classPetType)||null}
 function roomPetState(code=cl,now=Date.now()){
- const record=db.classes[code]?.classPetFeeding||{};
+ const type=db.classes[code]?.classPetType;
+ const record=db.classes[code]?.classPetFeedings?.[type]||{};
  const until=Math.max(0,Number(record.until)||0);
  return until>now?{count:10,until}:{count:until?0:Math.min(10,Math.max(0,Number(record.count)||0)),until:0};
 }
@@ -2310,7 +2311,8 @@ function roomFeedPet(foodId){
  const now=Date.now(),state=roomPetState(cl,now),status=$('roomFeedStatus');
  if(state.until>now){if(status)status.textContent='🐾 '+pet.name+' 吃飽囉!! 再等 '+Math.ceil((state.until-now)/60000)+' 分鐘。';return false}
  const count=state.count+1;
- record.classPetFeeding={count,until:count>=10?now+3600000:0};
+ if(!record.classPetFeedings||typeof record.classPetFeedings!=='object')record.classPetFeedings={};
+ record.classPetFeedings[pet.id]={count,until:count>=10?now+3600000:0};
  if(!Array.isArray(record.roomFeedingLog))record.roomFeedingLog=[];
  record.roomFeedingLog.push({kind:'pet',name:pet.name,pet:pet.id,food:food.id,count,at:now});
  if(record.roomFeedingLog.length>150)record.roomFeedingLog=record.roomFeedingLog.slice(-150);
@@ -2515,6 +2517,7 @@ function refreshMovingClassroomCards(){
   w.el.querySelector('.roomName').textContent=`${s.no} ${s.name}`;
   roomApplyFeedingAppearance(w.el,w.code,w.sid);
  }
+ const selector=$('roomPetSelect');if(selector)selector.value=roomPetSelected()?.id||'';
  roomRenderPet();roomRenderFeedHistory();roomRefreshCandidate();
 }
 function restoreClassroomSelection(){
