@@ -216,7 +216,7 @@ body.roomFullscreen .roomHistoryList{max-height:70px}
 .roomPetPickerTip{font-size:11px;color:#67856b;font-weight:500}
 .roomPet{position:absolute;z-index:15;right:3%;bottom:8%;width:130px;height:175px;background:#ffffff90;border:2px solid #fff4b2;border-radius:22px;box-shadow:0 7px 22px #2d61443b;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;cursor:pointer;overflow:visible;touch-action:manipulation}
 .roomPet[hidden],.roomPetFull[hidden]{display:none!important}
-.roomPetImage{width:104px;height:104px;background-repeat:no-repeat;background-position:center;background-size:contain;transform:scale(var(--room-pet-grow,1));transition:transform 1s linear;transform-origin:center bottom;image-rendering:auto;pointer-events:none}
+ .roomPetImage{display:grid;place-items:center;font-size:76px;line-height:1;width:104px;height:104px;background-repeat:no-repeat;background-position:center;background-size:contain;transform:scale(var(--room-pet-grow,1));transition:transform 1s linear;transform-origin:center bottom;image-rendering:auto;pointer-events:none}
 .roomPetName{font-weight:900;color:#315e46;background:#f3ffed;border-radius:6px;padding:2px 5px;font-size:13px}
 .roomPetCount{font-size:10px;color:#597868;margin-bottom:5px}
 .roomPetFull{position:absolute;top:-26px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#ffeb92;border:2px solid white;color:#9c5b1b;font-size:18px;font-weight:1000;border-radius:20px;padding:3px 12px;box-shadow:0 4px 9px #6e733b40;z-index:20}
@@ -2292,10 +2292,14 @@ function roomRenderPet(){
  el.hidden=!chosen;
  const img=$('roomPetImage');if(!chosen){roomPetCandidate=false;return}
  const index=ROOM_PETS.findIndex(p=>p.id===chosen.id);
- img.style.backgroundImage='url('+JSON.stringify('/science-fundesk/class-pets/pets-sprite.webp')+')';
+ const sprite='/science-fundesk/class-pets/pets-sprite.webp';
+ img.style.backgroundImage='none';img.textContent=chosen.emoji;
  img.style.backgroundSize='500% 100%';
  img.style.backgroundPosition=(index*25)+'% 50%';
- img.textContent='';
+ const check=new Image();
+ check.onload=()=>{if(roomPetSelected()?.id===chosen.id&&img.isConnected){img.style.backgroundImage='url('+JSON.stringify(sprite)+')';img.textContent=''}};
+ check.onerror=()=>{if(roomPetSelected()?.id===chosen.id&&img.isConnected){img.style.backgroundImage='none';img.textContent=chosen.emoji}};
+ check.src=sprite;
  $('roomPetName').textContent=chosen.emoji+' '+chosen.name;
  el.onclick=()=>{if(!roomFoodChoice)return;roomPetCandidate=true;roomFeedCandidate=null;roomRefreshCandidate();const status=$('roomFeedStatus');if(status)status.textContent='已選班級寵物 '+chosen.name+'，請確認後餵食。'};
  roomUpdatePetAppearance();
