@@ -1,0 +1,16 @@
+{
+  "name": "FunDesk 自然科教學",
+  "short_name": "FunDesk",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#e7f3e7",
+  "theme_color": "#2a7667",
+  "icons": [
+    {
+      "src": "./fundesk-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
