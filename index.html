@@ -169,6 +169,26 @@ body.roomFullscreen #modal{z-index:99999}
 #nav button[data-view]{user-select:none;-webkit-user-select:none}
 .seatstageBottom{margin:18px auto 0;border-radius:16px 16px 0 0}
 .labRoom>.labBlackboard{margin-top:4px}
+/* 動態教室左側食物欄與餵食特效 */
+.roomPlayArea{display:grid;grid-template-columns:154px minmax(0,1fr);gap:12px;min-height:0;flex:1}
+.roomPlayArea>.movingRoomStage{min-width:0;height:clamp(440px,64vh,800px)}
+.roomFoodShelf{min-width:0;border:2px solid #f4e3c8;border-radius:18px;padding:13px 9px;background:linear-gradient(160deg,#fff9ed,#f0f8ff);display:flex;flex-direction:column;gap:9px;color:#435668;text-align:center}
+.roomFoodShelf>strong{font-size:17px;color:#80562e}
+.roomFoodHint{font-size:11px;color:#627b92}
+.roomFoodGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.roomFood{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:white;border:1.5px solid #ebd7b7;border-radius:14px;padding:8px 2px;font-size:29px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 3px 0 #dcc4a3}
+.roomFood:active{cursor:grabbing;transform:translateY(2px)}
+.roomFood small{font-size:11px;font-weight:800;color:#715c44}
+.roomFoodRule{font-size:11px;line-height:1.65;color:#795c3a;background:#fff3dd;border-radius:9px;padding:7px 3px;margin:2px 0}
+.roomFeedStatus{font-size:12px;line-height:1.5;background:#fff;border-radius:10px;border:1px solid #d6e5f0;padding:9px 5px;color:#37687d;min-height:62px}
+.roomFoodGhost{position:fixed;z-index:100000;font-size:46px;pointer-events:none;transform:translate(-50%,-50%);filter:drop-shadow(0 4px 8px #153d5f55)}
+.movingRoomStage .roomWalker img,.movingRoomStage .roomWalker .roomFallback{transform:scale(var(--room-feed-grow,1));transition:transform .25s ease}
+.roomWalker.roomFoodTarget{outline:3px solid #ffcf70;outline-offset:6px;border-radius:15px;z-index:20}
+.roomWalker.roomJustFed img,.roomWalker.roomJustFed .roomFallback{animation:roomNomNom .48s ease-in-out 2}
+@keyframes roomNomNom{0%,100%{transform:scale(var(--room-feed-grow,1))}45%{transform:scale(calc(var(--room-feed-grow,1) * 1.12)) rotate(4deg)}}
+body.roomFullscreen .roomPlayArea{flex:1;min-height:0}
+body.roomFullscreen .roomPlayArea>.movingRoomStage{flex:none;height:auto;min-height:0}
+@media(max-width:700px){.roomPlayArea{grid-template-columns:96px minmax(0,1fr);gap:6px}.roomFoodShelf{padding:8px 4px}.roomFoodGrid{gap:4px}.roomFood{font-size:22px;padding:7px 0}.roomFood small{font-size:9px}.roomFoodShelf>strong{font-size:13px}.roomFoodRule,.roomFeedStatus{font-size:10px}}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -1646,11 +1666,12 @@ function bindNewFeatures(){
 }
 
 /* 動態教室 - 使用同一份雲端 db，名片開關時不重建走動場景。 */
-let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='',roomOriginalClass=null,roomCardClass=null,roomObserver=null,roomSpeed="medium";
+let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='',roomOriginalClass=null,roomCardClass=null,roomObserver=null,roomSpeed="medium",roomFoodGhost=null,roomFeedingPointer=null;
+const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香蕉',emoji:'🍌'},{id:'strawberry',name:'草莓',emoji:'🍓'},{id:'grapes',name:'葡萄',emoji:'🍇'},{id:'cookie',name:'餅乾',emoji:'🍪'},{id:'donut',name:'甜甜圈',emoji:'🍩'},{id:'juice',name:'果汁',emoji:'🧃'},{id:'milk',name:'牛奶',emoji:'🥛'}];
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
 function renderClassroom(){
  return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 ${esc(classDisplay(cl))} · 動態教室</strong><span class="roomCount" id="roomCount"></span><label class="roomSpeedLabel" for="roomSpeedSelect">移動速度 <select id="roomSpeedSelect" aria-label="學生移動速度"><option value="slow">慢</option><option value="medium">中</option><option value="fast">快</option></select></label><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button></div>
- <div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">FunDesk 快樂自然教室 🌱</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div></div></section>`;
+ <div class="roomPlayArea"><aside class="roomFoodShelf" aria-label="餵食工具欄"><strong>🍽️ 餵食小站</strong><span class="roomFoodHint">拖曳食物給學生</span><div class="roomFoodGrid">${ROOM_FOODS.map(f=>`<button type="button" draggable="true" class="roomFood" data-food="${f.id}" title="${f.name}：拖到學生頭像">${f.emoji}<small>${f.name}</small></button>`).join('')}</div><p class="roomFoodRule">每人最多餵 3 次<br>吃飽後休息 1 小時</p><div class="roomFeedStatus" id="roomFeedStatus" role="status" aria-live="polite">選一種食物拖到學生身上吧！</div></aside><div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">FunDesk 快樂自然教室 🌱</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div></div></div></section>`;
 }
 function roomPeople(){
  const date=$('sessionDate')?.value||today();
@@ -1659,6 +1680,7 @@ function roomPeople(){
  return (db.classes[cl]?.students||[]).filter(s=>!absent.has(String(s.id))).map(s=>({code:cl,s}));
 }
 function stopMovingClassroom(){
+ roomClearFeedingPointer();
  if(roomAnimation)cancelAnimationFrame(roomAnimation);
  roomAnimation=0;roomWalkers=[];roomLastTick=0;
  if(roomObserver){roomObserver.disconnect();roomObserver=null}
@@ -1699,6 +1721,8 @@ function populateMovingRoom(){
   else el.appendChild(roomFallback());
   const name=document.createElement('span');name.className='roomName';name.textContent=`${s.no} ${s.name}`;el.appendChild(name);
   el.onclick=()=>openMovingRoomStudent(code,s.id,el);
+  el.dataset.roomStudent=String(s.id);el.dataset.roomClass=code;
+  roomApplyFeedingAppearance(el,code,s.id);
   fragment.appendChild(el);
   const index=cells[i],row=Math.floor(index/geo.cols),col=index%geo.cols;
   const cellW=geo.maxX/Math.max(1,geo.cols-1),cellH=geo.maxY/Math.max(1,geo.rows-1);
@@ -1747,6 +1771,110 @@ function advanceMovingRoom(dt){
  }
  for(const w of roomWalkers)w.el.style.transform=`translate3d(${w.x.toFixed(1)}px,${w.y.toFixed(1)}px,0)`;
 }
+/* 教室餵食紀錄隨教師班級雲端資料同步；按學生 ID 分別計算三次與一小時冷卻。 */
+function roomFeedState(code,sid,now=Date.now()){
+ const store=db.classes[code]?.roomFeeding||{};
+ const record=store[String(sid)]||{};
+ const until=Number(record.until)||0;
+ if(until>now)return {count:3,until};
+ // 休息時間結束後，可開始新的三次餵食循環。
+ return {count:until>0?0:Math.min(3,Math.max(0,Number(record.count)||0)),until:0};
+}
+function roomFeedGrow(code,sid){return 1+roomFeedState(code,sid).count*.085}
+function roomApplyFeedingAppearance(el,code,sid){
+ const state=roomFeedState(code,sid);
+ el.style.setProperty('--room-feed-grow',String(1+state.count*.085));
+ el.dataset.feedCount=String(state.count);
+ const remaining=Math.max(0,state.until-Date.now());
+ const note=remaining>0?'已吃飽，'+Math.ceil(remaining/60000)+' 分鐘後可再餵':'已餵 '+state.count+'/3 次';
+ el.dataset.feedTip=note;
+ el.title=(el.getAttribute('aria-label')||'學生')+' · '+note;
+}
+function roomFeedStudent(code,sid,foodId){
+ const food=ROOM_FOODS.find(f=>f.id===foodId),record=db.classes[code];
+ if(!food||!record||!record.students?.some(st=>String(st.id)===String(sid)))return;
+ const now=Date.now(),state=roomFeedState(code,sid,now);
+ const status=$('roomFeedStatus');
+ const pupil=record.students.find(st=>String(st.id)===String(sid));
+ if(state.until>now){
+  if(status)status.textContent='⏳ '+pupil.name+' 已吃飽！再等 '+Math.ceil((state.until-now)/60000)+' 分鐘。';
+  return;
+ }
+ if(state.count>=3){
+  if(status)status.textContent='⏳ '+pupil.name+' 已吃飽，1 小時後才能再餵。';
+  return;
+ }
+ const count=state.count+1;
+ if(!record.roomFeeding||typeof record.roomFeeding!=='object')record.roomFeeding={};
+ record.roomFeeding[String(sid)]={count,until:count===3?now+3600000:0};
+ save();
+ const walker=roomWalkers.find(w=>w.code===code&&String(w.sid)===String(sid));
+ if(walker){
+  roomApplyFeedingAppearance(walker.el,code,sid);
+  walker.el.classList.remove('roomJustFed');void walker.el.offsetWidth;walker.el.classList.add('roomJustFed');
+  setTimeout(()=>walker.el?.classList.remove('roomJustFed'),850);
+ }
+ if(status)status.textContent=food.emoji+' '+pupil.name+' 吃了'+food.name+'！已餵 '+count+'/3 次'+(count===3?'，現在要休息 1 小時。':'。');
+}
+function roomFoodDropAt(x,y,foodId){
+ const target=document.elementFromPoint(x,y)?.closest?.('.roomWalker');
+ if(!target||!$('movingClassroom')?.contains(target)){$('roomFeedStatus').textContent='請把食物放到學生頭像上。';return}
+ roomFeedStudent(target.dataset.roomClass,target.dataset.roomStudent,foodId);
+}
+function roomClearFeedingPointer(){
+ if(roomFoodGhost)roomFoodGhost.remove();
+ roomFoodGhost=null;roomFeedingPointer=null;
+ document.querySelectorAll('.roomWalker.roomFoodTarget').forEach(el=>el.classList.remove('roomFoodTarget'));
+}
+function roomBindFoods(){
+ const stage=$('movingClassroom');
+ const foods=document.querySelectorAll('.roomFood');
+ const shelf=$('roomFeedStatus');
+ foods.forEach(button=>{
+  button.ondragstart=e=>{
+   e.dataTransfer.setData('application/x-fundesk-food',button.dataset.food);
+   e.dataTransfer.setData('text/plain',button.dataset.food);
+   e.dataTransfer.effectAllowed='copy';
+  };
+  // 平板以 pointer 觸控拖曳；滑鼠則使用瀏覽器原生 Drag and Drop。
+  button.onpointerdown=e=>{
+   if(e.pointerType==='mouse'||e.button!==0)return;
+   const food=ROOM_FOODS.find(f=>f.id===button.dataset.food);if(!food)return;
+   roomClearFeedingPointer();
+   roomFeedingPointer={id:e.pointerId,food:food.id,source:button};
+   roomFoodGhost=document.createElement('div');roomFoodGhost.className='roomFoodGhost';
+   roomFoodGhost.textContent=food.emoji;document.body.appendChild(roomFoodGhost);
+   roomFoodGhost.style.left=e.clientX+'px';roomFoodGhost.style.top=e.clientY+'px';
+   button.setPointerCapture?.(e.pointerId);
+   e.preventDefault();
+  };
+  button.onpointermove=e=>{
+   if(!roomFeedingPointer||roomFeedingPointer.id!==e.pointerId)return;
+   if(roomFoodGhost){roomFoodGhost.style.left=e.clientX+'px';roomFoodGhost.style.top=e.clientY+'px'}
+   document.querySelectorAll('.roomWalker.roomFoodTarget').forEach(el=>el.classList.remove('roomFoodTarget'));
+   const target=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('.roomWalker');
+   if(target&&stage.contains(target))target.classList.add('roomFoodTarget');
+   e.preventDefault();
+  };
+  button.onpointerup=e=>{
+   if(!roomFeedingPointer||roomFeedingPointer.id!==e.pointerId)return;
+   const foodId=roomFeedingPointer.food;
+   roomFoodDropAt(e.clientX,e.clientY,foodId);
+   roomClearFeedingPointer();e.preventDefault();
+  };
+  button.onpointercancel=roomClearFeedingPointer;
+ });
+ stage.ondragover=e=>{
+  if(e.dataTransfer?.types.includes('application/x-fundesk-food')){e.preventDefault();e.dataTransfer.dropEffect='copy'}
+ };
+ stage.ondrop=e=>{
+  const id=e.dataTransfer?.getData('application/x-fundesk-food');
+  if(!ROOM_FOODS.some(f=>f.id===id))return;
+  e.preventDefault();roomFoodDropAt(e.clientX,e.clientY,id);
+ };
+ if(shelf)shelf.textContent='拖曳食物到學生頭像上，每人最多 3 次。';
+}
+
 function roomFallback(){const span=document.createElement('span');span.className='roomFallback';span.textContent='🙂';return span}
 function refreshMovingClassroomCards(){
  if(view!=='classroom'||!$('movingClassroom'))return;
@@ -1764,6 +1892,7 @@ function refreshMovingClassroomCards(){
   w.el.title=`${classDisplay(w.code)} ${s.no} 號 ${s.name}`;
   w.el.setAttribute('aria-label',w.el.title);
   w.el.querySelector('.roomName').textContent=`${s.no} ${s.name}`;
+  roomApplyFeedingAppearance(w.el,w.code,w.sid);
  }
 }
 function restoreClassroomSelection(){
@@ -1787,6 +1916,7 @@ function startMovingClassroom(){
  if(!$('movingClassroom'))return;
  if(roomOriginalClass===null)roomOriginalClass=cl;
  $('roomShuffle').onclick=populateMovingRoom;
+ roomBindFoods();
  const speedSelect=$('roomSpeedSelect');speedSelect.value=roomSpeed;speedSelect.onchange=()=>{roomSpeed=speedSelect.value};
  const fullscreenButton=$('roomFullscreenToggle');
  const updateFullscreenButton=()=>{const enabled=document.fullscreenElement===document.documentElement&&view==='classroom';document.body.classList.toggle('roomFullscreen',enabled);if(fullscreenButton.isConnected)fullscreenButton.textContent=enabled?'⛶ 退出全螢幕':'⛶ 全螢幕'};
