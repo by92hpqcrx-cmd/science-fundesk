@@ -652,6 +652,55 @@ body.roomFullscreen #homeFixedQuicklinks.generalFixedHeading{display:none!import
 #homeFixedQuicklinks:not([hidden]) .roomCount{
   color:var(--fixed-title-ink,#174c91)!important;
 }
+</style><style id="fundeskMatchedContentColors20261117">
+/* 主內容區延續各功能選單及固定標題配色：以淡色底與同色系分隔，避免遮蓋功能畫面 */
+.shell>.main.compactDashboardMain>#content{
+  --page-surface:var(--page-theme-bg,#e8f2ff);
+  --page-ink:var(--page-theme-ink,#174c91);
+  --page-border:var(--page-theme-border,#6fa7e5);
+  background:color-mix(in srgb,var(--page-surface) 45%,white)!important;
+  border:1px solid color-mix(in srgb,var(--page-border) 45%,white)!important;
+  border-radius:15px;
+  padding:12px 12px 28px!important;
+}
+#content>.panel,
+#content>.gridMain>.panel,
+#content>.gridMain>div>.panel,
+#content>.twoCols>.panel,
+#content>.quicklinks,
+#content>.contactShell>.panel{
+  background:color-mix(in srgb,var(--page-surface) 36%,white)!important;
+  border-color:color-mix(in srgb,var(--page-border) 62%,white)!important;
+}
+#content .panelHead:not(.quicklinksHeader),
+#content .animalToolHead,
+#content .movingRoomToolbar{
+  background:color-mix(in srgb,var(--page-surface) 75%,white)!important;
+  border-bottom-color:var(--page-border)!important;
+  border-radius:10px;
+}
+#content .panelHead h2,
+#content .animalToolHead h2,
+#content .movingRoomToolbar>strong{
+  color:var(--page-ink)!important;
+}
+#content .tablewrap thead th,
+#content .labDutyTable thead th{
+  background:color-mix(in srgb,var(--page-surface) 80%,white)!important;
+  color:var(--page-ink)!important;
+  border-bottom-color:var(--page-border)!important;
+}
+#content .lesson,
+#content .list>.item,
+#content .unifiedTasksNav,
+#content .emptymsg{
+  border-color:color-mix(in srgb,var(--page-border) 45%,white)!important;
+}
+/* 保留首頁捷徑卡片的獨立多彩配色，以及遊戲棋盤、黑板、全螢幕舞台 */
+#content .quickLink{background-image:none}
+body.roomFullscreen #content,
+#content:has(:fullscreen){background:transparent!important;border:0!important;padding:0!important}
+@media print{#content{background:white!important;border:0!important;padding:0!important}}
 </style><style id="fundeskMulticolorLargerSidebarNav20261117">
 /* 每項功能依 data-view 使用固定配色，拖曳排序後顏色也不會改變。 */
 #nav button[data-view="seats"]{--nav-item-bg:#e8f2ff;--nav-item-ink:#174c91;--nav-item-border:#6fa7e5}
@@ -1184,6 +1233,8 @@ function syncFixedHeadingColor(){
  for(const [source,target] of map){
   const value=css?.getPropertyValue(source).trim();
   if(value)fixed.style.setProperty(target,value);else fixed.style.removeProperty(target);
+  const content=$('content');
+  if(content){const contentToken=target.replace('--fixed-title-','--page-theme-');if(value)content.style.setProperty(contentToken,value);else content.style.removeProperty(contentToken);}
  }
 }
 function render(){const mascot=$('fixedPageMascot');if(mascot){const mascotCode=fundeskMascotCode(cl);const src=FDESK_MASCOT_IMAGE[mascotCode];if(src&&mascot.getAttribute('src')!==src)mascot.src=src;mascot.alt=classDisplay(cl)+' '+(FDESK_MASCOT_NAME[mascotCode]||'')+'吉祥物';}const existingStats=$('stats');const restingPlace=$('statsRestingPlace');if(existingStats&&restingPlace&&existingStats.parentElement!==restingPlace)restingPlace.appendChild(existingStats);document.querySelector('.compactDashboardMain')?.classList.toggle('dashboardHome',view==='seats');const homeFixedHost=$('homeFixedQuicklinks');if(homeFixedHost){homeFixedHost.replaceChildren();homeFixedHost.hidden=true;homeFixedHost.classList.toggle('generalFixedHeading',view!=='seats');}if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();syncNavOrder();cloudRenderQuickClasses();updateClassMascot();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');if(view==='classroom'&&root.querySelector('#movingClassroom')){refreshMovingClassroomCards();return}if(root.querySelector('#movingClassroom'))stopMovingClassroom();root.innerHTML=({seats:renderSeats,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,classroom:renderClassroom,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();if(root)root.scrollTop=0;if(view==='seats'){const fixedHost=$('homeFixedQuicklinks');const homeHeading=root.querySelector('.quicklinksHeader');if(fixedHost&&homeHeading){fixedHost.replaceChildren(homeHeading);fixedHost.hidden=false;}const statsHost=$('quicklinkStatsHost');const stats=$('stats');if(statsHost&&stats){statsHost.appendChild(stats);stats.classList.add('quicklinkStats')}}else{const fixedHost=$('homeFixedQuicklinks');const selector=view==='classroom'?'.movingRoomToolbar':view==='tools'?'.animalToolHead':view==='tabletRules'?'.tabletHero':'.panelHead';const sectionHeading=root.querySelector(selector);if(fixedHost&&sectionHeading){fixedHost.replaceChildren(sectionHeading);fixedHost.hidden=false;}}syncFixedHeadingColor();decorateClassPage();hookView()}
