@@ -1136,6 +1136,84 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.movingRoomStage{
 .sidebar #classMascotBanner #classSelect option{font-size:17px!important}
 .sidebar #classMascotBanner .classMascotCaption{font-size:12px!important}
 }
+</style><style id="fundeskRoomFullscreenFillViewport20261117">
+/* 全螢幕按實際視窗比例自動鋪滿：解除固定 vh 限制，讓教室舞台吃滿剩餘高度。 */
+body.roomFullscreen{overflow:hidden!important}
+body.roomFullscreen .sidebar,
+body.roomFullscreen .topbar,
+body.roomFullscreen .srPageMeta,
+body.roomFullscreen #homeFixedQuicklinks.generalFixedHeading,
+body.roomFullscreen .main>.generalFixedHeading,
+body.roomFullscreen .movingRoomPanel>.movingRoomToolbar{display:none!important}
+body.roomFullscreen .shell,
+body.roomFullscreen .shell>.main,
+body.roomFullscreen .main,
+body.roomFullscreen #content{
+ width:100%!important;max-width:none!important;min-width:0!important;
+ height:100dvh!important;min-height:0!important;max-height:100dvh!important;
+ margin:0!important;padding:0!important;overflow:hidden!important;
+}
+body.roomFullscreen .movingRoomPanel{
+ display:flex!important;flex-direction:column!important;box-sizing:border-box!important;
+ width:100%!important;max-width:none!important;height:100dvh!important;min-height:0!important;
+ padding:6px!important;margin:0!important;gap:5px!important;
+ overflow:hidden!important;border:0!important;border-radius:0!important;
+}
+body.roomFullscreen .movingRoomPanel>.roomPetPicker{
+ flex:0 0 auto!important;width:100%!important;max-width:100%!important;
+ min-height:0!important;margin:0!important;
+ overflow-x:auto!important;overflow-y:hidden!important;white-space:nowrap!important;
+}
+body.roomFullscreen .movingRoomPanel>.roomPlayArea{
+ flex:1 1 0%!important;display:grid!important;
+ grid-template-columns:clamp(112px,10vw,162px) minmax(0,1fr)!important;
+ grid-template-rows:minmax(0,1fr) auto!important;
+ gap:6px 8px!important;align-content:stretch!important;
+ width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;
+ margin:0!important;padding:0!important;overflow:hidden!important;
+}
+body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFeedHistory{
+ grid-column:1!important;grid-row:1!important;height:100%!important;
+ min-height:0!important;max-height:none!important;overflow:hidden!important;
+}
+body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFeedHistory .roomHistoryList{
+ flex:1 1 auto!important;min-height:0!important;max-height:none!important;
+ overflow-y:auto!important;
+}
+body.roomFullscreen .movingRoomPanel>.roomPlayArea>.movingRoomStage{
+ grid-column:2!important;grid-row:1!important;
+ width:100%!important;height:100%!important;min-width:0!important;
+ min-height:0!important;max-height:none!important;align-self:stretch!important;
+ flex:none!important;
+ background-size:cover!important;background-position:center center!important;
+}
+body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFoodShelf{
+ grid-column:1 / -1!important;grid-row:2!important;
+ width:100%!important;min-height:0!important;
+ max-height:132px!important;overflow:visible!important;
+ padding:6px 10px!important;
+}
+body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFoodShelf>.roomFoodGrid{
+ min-height:0!important;overflow-x:auto!important;overflow-y:hidden!important;
+}
+@media(max-width:730px){
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea{
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr) auto auto!important;
+ }
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea>.movingRoomStage{
+  grid-column:1!important;grid-row:1!important;height:100%!important;
+ }
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFoodShelf{
+  grid-column:1!important;grid-row:2!important;max-height:110px!important;
+ }
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFeedHistory{
+  grid-column:1!important;grid-row:3!important;height:auto!important;max-height:75px!important;
+ }
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFeedHistory .roomHistoryList{
+  max-height:42px!important;
+ }
+}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
