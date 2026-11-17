@@ -2172,7 +2172,7 @@ function bindNewFeatures(){
 let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='',roomOriginalClass=null,roomCardClass=null,roomObserver=null,roomSpeed="medium",roomFoodGhost=null,roomFeedingPointer=null,roomFoodChoice=null,roomFeedCandidate=null,roomFeedLastVisual=0;
 const ROOM_PETS=[{id:'dino',name:'小恐龍',emoji:'🦖'},{id:'bear',name:'小熊',emoji:'🐻'},{id:'panda',name:'熊貓',emoji:'🐼'},{id:'cat',name:'小貓',emoji:'🐱'},{id:'rabbit',name:'小兔',emoji:'🐰'}];
 let roomPetCandidate=false,roomPetVisualTick=0,roomPetWalker=null;
-const roomPetAsset=id=>'/science-fundesk/class-pets/'+id+'.webp';
+const roomPetAsset=id=>'/science-fundesk/class-pets/'+id+'.svg';
 const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香蕉',emoji:'🍌'},{id:'strawberry',name:'草莓',emoji:'🍓'},{id:'grapes',name:'葡萄',emoji:'🍇'},{id:'cookie',name:'餅乾',emoji:'🍪'},{id:'donut',name:'甜甜圈',emoji:'🍩'},{id:'juice',name:'果汁',emoji:'🧃'},{id:'milk',name:'牛奶',emoji:'🥛'}];
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
 function renderClassroom(){
@@ -2310,15 +2310,14 @@ function roomRenderPet(){
  const el=$('roomPet'),chosen=roomPetSelected();if(!el)return;
  el.hidden=!chosen;
  const img=$('roomPetImage');if(!chosen){roomPetCandidate=false;return}
- const index=ROOM_PETS.findIndex(p=>p.id===chosen.id);
- const sprite='/science-fundesk/class-pets/pets-sprite.webp';
+ const asset=roomPetAsset(chosen.id);
  img.style.backgroundImage='none';img.textContent=chosen.emoji;
- img.style.backgroundSize='500% 100%';
- img.style.backgroundPosition=(index*25)+'% 50%';
+ img.style.backgroundSize='contain';
+ img.style.backgroundPosition='center';
  const check=new Image();
- check.onload=()=>{if(roomPetSelected()?.id===chosen.id&&img.isConnected){img.style.backgroundImage='url('+JSON.stringify(sprite)+')';img.textContent=''}};
+ check.onload=()=>{if(roomPetSelected()?.id===chosen.id&&img.isConnected){img.style.backgroundImage='url('+JSON.stringify(asset)+')';img.textContent=''}};
  check.onerror=()=>{if(roomPetSelected()?.id===chosen.id&&img.isConnected){img.style.backgroundImage='none';img.textContent=chosen.emoji}};
- check.src=sprite;
+ check.src=asset;
  $('roomPetName').textContent=chosen.emoji+' '+chosen.name;
  el.onclick=()=>{if(!roomFoodChoice)return;roomPetCandidate=true;roomFeedCandidate=null;roomRefreshCandidate();const status=$('roomFeedStatus');if(status)status.textContent='已選班級寵物 '+chosen.name+'，請確認後餵食。'};
  roomUpdatePetAppearance();
