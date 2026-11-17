@@ -2872,8 +2872,9 @@ function roomInitPetPicker(){
  if(!button||!select)return;
  roomSyncPetPicker();
  let menu=null;
- const close=()=>{if(menu){menu.remove();menu=null}button.setAttribute('aria-expanded','false');document.removeEventListener('pointerdown',outside,true);window.removeEventListener('resize',close);window.removeEventListener('scroll',close,true)};
- const outside=e=>{if(!menu?.contains(e.target)&&!button.contains(e.target))close()};
+ const close=()=>{if(menu){menu.remove();menu=null}button.setAttribute('aria-expanded','false');document.removeEventListener('pointerdown',outside,true);window.removeEventListener('resize',close);window.removeEventListener('scroll',reposition,true)};
+ const outside=e=>{if(menu&&!menu.contains(e.target)&&!button.contains(e.target))close()};
+ const reposition=()=>{if(!menu||!button.isConnected){close();return}const rect=button.getBoundingClientRect();menu.style.left=Math.max(6,Math.min(rect.left,window.innerWidth-menu.offsetWidth-6))+'px';menu.style.top=(rect.bottom+menu.offsetHeight+6<=window.innerHeight?rect.bottom+4:Math.max(6,rect.top-menu.offsetHeight-4))+'px'};
  button.onclick=()=>{
   if(menu){close();return}
   menu=document.createElement('div');menu.className='roomPetChoiceMenu';menu.setAttribute('role','listbox');menu.setAttribute('aria-label','選擇班級寵物');
@@ -2887,13 +2888,12 @@ function roomInitPetPicker(){
    menu.appendChild(row);
   }
   document.body.appendChild(menu);
-  const rect=button.getBoundingClientRect();
-  menu.style.left=Math.max(6,Math.min(rect.left,window.innerWidth-menu.offsetWidth-6))+'px';
-  menu.style.top=(rect.bottom+menu.offsetHeight+6<=window.innerHeight?rect.bottom+4:Math.max(6,rect.top-menu.offsetHeight-4))+'px';
+  reposition();
   button.setAttribute('aria-expanded','true');
-  document.addEventListener('pointerdown',outside,true);window.addEventListener('resize',close);window.addEventListener('scroll',close,true);
+  document.addEventListener('pointerdown',outside,true);window.addEventListener('resize',close);window.addEventListener('scroll',reposition,true);
   menu.addEventListener('keydown',e=>{if(e.key==='Escape'){close();button.focus()}});
-  menu.querySelector('[aria-selected="true"]')?.focus();
+  // Do not focus the selected item on opening: iOS Safari scrolls on focus,
+  // and the former scroll-to-close listener immediately dismissed the popup.
  };
 }
 
