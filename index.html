@@ -1317,6 +1317,15 @@ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>
 @media(max-width:730px){
  .movingRoomPanel .roomPetPicker #roomCount{font-size:24px!important}
 }
+</style><style id="roomPetActualThumbs20261118">
+.roomPetNativeSelect{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important}
+.roomPetPickerButton{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;min-height:46px;padding:5px 10px;border:1px solid #bad5bc;border-radius:10px;background:#fff;color:#345e4a;font:inherit;cursor:pointer;white-space:nowrap}
+.roomPetPickerPreview{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;border-radius:9px;background:#f2faf1;font-size:22px;overflow:hidden}
+.roomPetPickerPreview img,.roomPetChoiceThumb img{display:block;width:100%;height:100%;object-fit:contain}
+.roomPetChoiceMenu{position:fixed;z-index:100000;min-width:185px;max-height:min(380px,65dvh);overflow-y:auto;padding:5px;border:1px solid #c7dcc9;border-radius:12px;background:#fff;box-shadow:0 12px 32px #233a4250}
+.roomPetChoiceItem{display:flex;align-items:center;gap:11px;width:100%;padding:6px 9px;border:0;border-radius:9px;background:transparent;text-align:left;font:inherit;color:#345e4a;cursor:pointer}
+.roomPetChoiceItem:hover,.roomPetChoiceItem[aria-selected="true"]{background:#e7f5e9}
+.roomPetChoiceThumb{display:grid;place-items:center;width:46px;height:46px;flex:0 0 46px;overflow:hidden;border-radius:9px;background:#f2faf1;font-size:25px}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
@@ -2610,7 +2619,7 @@ const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
 function renderClassroom(){
  return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 ${esc(classDisplay(cl))} · 動態教室</strong></div>
- <div class="roomPetPicker"><span class="roomCount" id="roomCount"></span><label class="roomSpeedLabel" for="roomSpeedSelect">移動速度 <select id="roomSpeedSelect" aria-label="學生移動速度"><option value="slow">慢</option><option value="medium">中</option><option value="fast">快</option></select></label><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button><label for="roomPetSelect">🐾 班級寵物</label><select id="roomPetSelect"><option value="">未選擇寵物</option>${ROOM_PETS.map(p=>`<option value="${p.id}" ${db.classes[cl]?.classPetType===p.id?'selected':''}>${p.emoji} ${p.name}</option>`).join('')}</select><span class="roomPetPickerTip">各班獨立選擇，最多餵 10 次</span><div class="roomPetFeedTopInfo"><p class="roomFoodRule">每人最多餵 3 次<br>吃飽後休息 1 小時</p><div class="roomFeedStatus" id="roomFeedStatus" role="status" aria-live="polite">先選食物，再點學生頭像。</div></div><label class="roomSceneLabel" for="roomSceneSelect">🖼️ 活動背景</label><select class="roomSceneSelect" id="roomSceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></div><div class="roomPlayArea"><section class="roomFeedHistory"><div class="roomHistoryTitle">📋 餵食紀錄 <span>依時間顯示最新紀錄</span></div><div class="roomHistoryList" id="roomFeedHistory"></div></section><div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">${esc(classDisplay(cl))} · 動態教室 ♡ 🐾</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div><button type="button" class="roomPet" id="roomPet" hidden aria-label="選擇班級寵物餵食"><span class="roomPetFull" id="roomPetFull" hidden>吃飽囉!!</span><span class="roomPetImage" id="roomPetImage"></span><span class="roomPetName" id="roomPetName"></span><span class="roomPetCount" id="roomPetCount"></span></button></div><aside class="roomFoodShelf" aria-label="餵食工具欄"><strong>🍽️ 餵食小站</strong><span class="roomFoodHint">點食物 → 點學生 → 確認餵食；也可拖曳</span><div class="roomFoodGrid">${ROOM_FOODS.map(f=>`<button type="button" draggable="true" class="roomFood" data-food="${f.id}" title="${f.name}：拖到學生頭像">${f.emoji}<small>${f.name}</small></button>`).join('')}</div><div class="roomFeedConfirm" id="roomFeedConfirm" hidden><div id="roomFeedCandidateName"></div><button type="button" class="btn small" id="roomFeedConfirmButton">✅ 確認餵食</button><button type="button" class="btn small outline" id="roomFeedCancelButton">取消</button></div></aside></div></section>`;
+ <div class="roomPetPicker"><span class="roomCount" id="roomCount"></span><label class="roomSpeedLabel" for="roomSpeedSelect">移動速度 <select id="roomSpeedSelect" aria-label="學生移動速度"><option value="slow">慢</option><option value="medium">中</option><option value="fast">快</option></select></label><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button><label for="roomPetPickerButton">🐾 班級寵物</label><button type="button" id="roomPetPickerButton" class="roomPetPickerButton" aria-haspopup="listbox" aria-expanded="false"><span id="roomPetPickerPreview" class="roomPetPickerPreview">🐾</span><span id="roomPetPickerName">未選擇寵物</span><span aria-hidden="true">▾</span></button><select id="roomPetSelect" class="roomPetNativeSelect" aria-label="班級寵物"><option value="">未選擇寵物</option>${ROOM_PETS.map(p=>`<option value="${p.id}" ${db.classes[cl]?.classPetType===p.id?'selected':''}>${p.emoji} ${p.name}</option>`).join('')}</select><span class="roomPetPickerTip">各班獨立選擇，最多餵 10 次</span><div class="roomPetFeedTopInfo"><p class="roomFoodRule">每人最多餵 3 次<br>吃飽後休息 1 小時</p><div class="roomFeedStatus" id="roomFeedStatus" role="status" aria-live="polite">先選食物，再點學生頭像。</div></div><label class="roomSceneLabel" for="roomSceneSelect">🖼️ 活動背景</label><select class="roomSceneSelect" id="roomSceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></div><div class="roomPlayArea"><section class="roomFeedHistory"><div class="roomHistoryTitle">📋 餵食紀錄 <span>依時間顯示最新紀錄</span></div><div class="roomHistoryList" id="roomFeedHistory"></div></section><div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">${esc(classDisplay(cl))} · 動態教室 ♡ 🐾</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div><button type="button" class="roomPet" id="roomPet" hidden aria-label="選擇班級寵物餵食"><span class="roomPetFull" id="roomPetFull" hidden>吃飽囉!!</span><span class="roomPetImage" id="roomPetImage"></span><span class="roomPetName" id="roomPetName"></span><span class="roomPetCount" id="roomPetCount"></span></button></div><aside class="roomFoodShelf" aria-label="餵食工具欄"><strong>🍽️ 餵食小站</strong><span class="roomFoodHint">點食物 → 點學生 → 確認餵食；也可拖曳</span><div class="roomFoodGrid">${ROOM_FOODS.map(f=>`<button type="button" draggable="true" class="roomFood" data-food="${f.id}" title="${f.name}：拖到學生頭像">${f.emoji}<small>${f.name}</small></button>`).join('')}</div><div class="roomFeedConfirm" id="roomFeedConfirm" hidden><div id="roomFeedCandidateName"></div><button type="button" class="btn small" id="roomFeedConfirmButton">✅ 確認餵食</button><button type="button" class="btn small outline" id="roomFeedCancelButton">取消</button></div></aside></div></section>`;
 }
 function roomPeople(){
  const date=$('sessionDate')?.value||today();
@@ -2751,7 +2760,54 @@ function roomUpdatePetAppearance(now=Date.now()){
  const count=$('roomPetCount');if(count)count.textContent=remaining?'休息中 · '+Math.ceil(remaining/60000)+' 分鐘':'已餵 '+state.count+'/10 次';
  el.title=pet.name+(remaining?'，吃飽囉!!':'，已餵 '+state.count+'/10 次');
 }
+
+function roomPetThumb(container,pet){
+ container.replaceChildren();
+ if(!pet){container.textContent='🐾';return}
+ const fallback=document.createElement('span');fallback.textContent=pet.emoji;
+ const image=document.createElement('img');image.alt='';image.loading='lazy';image.src=roomPetAsset(pet.id);
+ image.onerror=()=>{image.remove();if(!fallback.isConnected)container.appendChild(fallback)};
+ container.appendChild(image);
+}
+function roomSyncPetPicker(){
+ const button=$('roomPetPickerButton'),name=$('roomPetPickerName'),preview=$('roomPetPickerPreview');
+ if(!button||!name||!preview)return;
+ const chosen=roomPetSelected();name.textContent=chosen?.name||'未選擇寵物';
+ roomPetThumb(preview,chosen);
+ button.setAttribute('aria-label','班級寵物：'+name.textContent+'，展開選擇');
+}
+function roomInitPetPicker(){
+ const button=$('roomPetPickerButton'),select=$('roomPetSelect');
+ if(!button||!select)return;
+ roomSyncPetPicker();
+ let menu=null;
+ const close=()=>{if(menu){menu.remove();menu=null}button.setAttribute('aria-expanded','false');document.removeEventListener('pointerdown',outside,true);window.removeEventListener('resize',close);window.removeEventListener('scroll',close,true)};
+ const outside=e=>{if(!menu?.contains(e.target)&&!button.contains(e.target))close()};
+ button.onclick=()=>{
+  if(menu){close();return}
+  menu=document.createElement('div');menu.className='roomPetChoiceMenu';menu.setAttribute('role','listbox');menu.setAttribute('aria-label','選擇班級寵物');
+  for(const pet of [null,...ROOM_PETS]){
+   const row=document.createElement('button');row.type='button';row.className='roomPetChoiceItem';row.setAttribute('role','option');
+   row.setAttribute('aria-selected',String((pet?.id||'')===select.value));
+   const thumb=document.createElement('span');thumb.className='roomPetChoiceThumb';roomPetThumb(thumb,pet);
+   const label=document.createElement('span');label.textContent=pet?.name||'未選擇寵物';
+   row.append(thumb,label);
+   row.onclick=()=>{select.value=pet?.id||'';select.dispatchEvent(new Event('change',{bubbles:true}));roomSyncPetPicker();close();button.focus()};
+   menu.appendChild(row);
+  }
+  document.body.appendChild(menu);
+  const rect=button.getBoundingClientRect();
+  menu.style.left=Math.max(6,Math.min(rect.left,window.innerWidth-menu.offsetWidth-6))+'px';
+  menu.style.top=(rect.bottom+menu.offsetHeight+6<=window.innerHeight?rect.bottom+4:Math.max(6,rect.top-menu.offsetHeight-4))+'px';
+  button.setAttribute('aria-expanded','true');
+  document.addEventListener('pointerdown',outside,true);window.addEventListener('resize',close);window.addEventListener('scroll',close,true);
+  menu.addEventListener('keydown',e=>{if(e.key==='Escape'){close();button.focus()}});
+  menu.querySelector('[aria-selected="true"]')?.focus();
+ };
+}
+
 function roomRenderPet(){
+ roomSyncPetPicker();
  const el=$('roomPet'),chosen=roomPetSelected();if(!el)return;
  el.hidden=!chosen;
  const img=$('roomPetImage');if(!chosen){roomPetCandidate=false;return}
@@ -3020,6 +3076,7 @@ function startMovingClassroom(){
  }
  $('roomShuffle').onclick=populateMovingRoom;
  $('roomPetSelect').onchange=e=>{const id=e.target.value;if(id&&!ROOM_PETS.some(p=>p.id===id))return;db.classes[cl].classPetType=id;save();roomPetCandidate=false;populateMovingRoom();roomRefreshCandidate()};
+ roomInitPetPicker();
  roomBindFoods();roomFoodChoice=null;roomFeedCandidate=null;roomPetCandidate=false;roomRenderFeedHistory();
  const speedSelect=$('roomSpeedSelect');speedSelect.value=roomSpeed;speedSelect.onchange=()=>{roomSpeed=speedSelect.value};
  const fullscreenButton=$('roomFullscreenToggle');
