@@ -991,6 +991,7 @@ const CORRECTION_STATUSES=['未繳交','已繳交','待訂正','已完成'];
 const taskTypes=['習作','實驗','考試'];
 let CLASSES=['501','502','503','504','505','506','507'];
 const DEFAULT_CLASSES=[...CLASSES];
+let retiredClassCodes=[];
 const freshClass=()=>({students:[],seats:{normal:[],lab:[]},attendance:[],tasks:[],results:[],points:[],scheduleLessons:[]});
 const className=c=>{const n=String(db?.classMeta?.[c]?.name||'').trim();if(n&&n!==c)return n;if(c==='c_mwc0lni8_le3us8')return '五年一班';return /^50[1-7]$/.test(c)?'五年'+['','一','二','三','四','五','六','七'][Number(c)-500]+'班':n||c;};
 const activeCodes=()=>CLASSES.filter(c=>db?.classMeta?.[c]?.active!==false);
@@ -2468,11 +2469,29 @@ function renderClassManager(){
  }).join('');
  return `<section class="panel"><div class="panelHead"><h2>🏫 我的班級管理</h2><span class="pill">共 ${active.length} 個使用中班級</span></div>
  <p class="hint">每位教師帳號獨立設定班級。原本 501～507 保留；更改班名不會改變雲端資料代碼、名單或獎懲紀錄。停用只隱藏班級，資料會保留，可再次啟用。</p>
+ <div class="actions" id="demoClassCodeTools">${CLASSES.includes('501')&&!CLASSES.includes('test')?'<button type="button" class="btn outline" id="renameDemoClassCode">將示範班級 501 轉為 test（保留原始備份）</button>':''}</div>
  <form id="addClassForm" class="row" style="margin:14px 0 20px"><label for="newClassName"><b>新增班級名稱：</b></label><input id="newClassName" name="name" placeholder="例如 701、六甲、科學社" maxlength="35" required><button class="btn" type="submit">＋ 新增班級</button></form>
  <div class="tablewrap"><table><thead><tr><th>班級名稱</th><th>學生數</th><th>狀態</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table></div></section>
  <section class="panel"><h2>班級學生名單與座位</h2><p class="hint">新增或切換班級後，請進入「學生名單」新增／CSV 匯入學生；進入「首頁」可調整一般座位與實驗座位。全站共用五組實驗桌模板；各班可以自行交換學生座位。新班級從空名單開始。</p><div class="actions"><button class="btn outline" type="button" id="manageStudents">管理目前班級學生</button><button class="btn outline" type="button" id="manageSeats">管理目前班級座位</button></div></section>`;
 }
+async function migrateDemo501ToTest(){
+ if(!cloudReady||cloudBlocked)return alert('請先完成雲端登入與同步');
+ if(!CLASSES.includes('501')||CLASSES.includes('test')||cloudSnapshots.test)return alert('原代碼 501 不存在或 test 已存在，為避免覆蓋而停止');
+ if(!confirm('將目前帳號的 501 班級內部代碼改成 test？會保留原來 501 雲端紀錄作為安全備份，不刪除學生與紀錄。'))return;
+ await cloudQueue;if(cloudBlocked)return;
+ const oldData=db.classes['501'],oldMeta=db.classMeta['501'];
+ if(!oldData||!oldMeta)return alert('找不到 501 班資料，未進行更動');
+ const idx=CLASSES.indexOf('501');CLASSES.splice(idx,1,'test');
+ db.classes.test=structuredClone(oldData);db.classMeta.test={...oldMeta};
+ delete db.classes['501'];delete db.classMeta['501'];
+ if(!retiredClassCodes.includes('501'))retiredClassCodes.push('501');
+ if(cl==='501')cl='test';
+ const url=new URL(location.href);if(url.searchParams.get('class')==='501'){url.searchParams.set('class','test');history.replaceState({},'',url.href)}
+ await cloudQueueSave();
+ if(!cloudBlocked){alert('班級內部代碼已更新為 test；原 501 雲端資料保留作備份。');render()}
+}
 function hookClassManager(){
+ const demoRename=$('renameDemoClassCode');if(demoRename)demoRename.onclick=migrateDemo501ToTest;
  $('addClassForm').onsubmit=e=>{
   e.preventDefault();if(!cloudReady||cloudBlocked)return alert('目前未完成雲端連線，不能新增班級');
   const name=String(new FormData(e.target).get('name')||'').trim();
@@ -3016,7 +3035,7 @@ function cloudRenderQuickClasses(){
  const url=new URL(location.href);root.innerHTML=activeCodes().map(c=>{const u=new URL(url.href);u.searchParams.set('class',c);return `<a href="${esc(u.href)}" class="${cl===c?'selected':''}" title="${c} 班專屬網址">${esc(className(c))}</a>`}).join('');
  root.querySelectorAll('a').forEach(a=>{a.onclick=e=>{e.preventDefault();const code=new URL(a.href).searchParams.get('class');changeClass(code)}});
 }
-function cloudPayload(code){return code==='shared'?{labTemplate:db.labTemplate,classCodes:[...CLASSES],classMeta:db.classMeta}:db.classes[code]}
+function cloudPayload(code){return code==='shared'?{labTemplate:db.labTemplate,classCodes:[...CLASSES],classMeta:db.classMeta,retiredClassCodes:[...retiredClassCodes]}:db.classes[code]}
 async function cloudGetAll(){return await cloudFetch('/rest/v1/fundesk_teacher_data?select=class_code,payload,revision&order=class_code.asc')}
 async function cloudLoad(){
  cloudStatus('正在讀取個人雲端紀錄…');
@@ -3026,8 +3045,9 @@ async function cloudLoad(){
  // 先從雲端共用設定還原班級清單；舊版尚未有 metadata 時保留 501～507。
  const shared=rows.find(r=>r.class_code==='shared')?.payload;
  const stored=Array.isArray(shared?.classCodes)?shared.classCodes.filter(c=>typeof c==='string'&&/^[A-Za-z0-9_-]{1,40}$/.test(c)):null;
- const rowCodes=rows.filter(r=>r.class_code!=='shared'&&/^[A-Za-z0-9_-]{1,40}$/.test(r.class_code)).map(r=>r.class_code);
- CLASSES=[...new Set([...(stored?.length?stored:DEFAULT_CLASSES),...rowCodes])];
+ retiredClassCodes=Array.isArray(shared?.retiredClassCodes)?shared.retiredClassCodes.filter(c=>typeof c==='string'&&/^[A-Za-z0-9_-]{1,40}$/.test(c)):[];
+ const rowCodes=rows.filter(r=>r.class_code!=='shared'&&!retiredClassCodes.includes(r.class_code)&&/^[A-Za-z0-9_-]{1,40}$/.test(r.class_code)).map(r=>r.class_code);
+ CLASSES=[...new Set([...(stored?.length?stored:DEFAULT_CLASSES),...rowCodes])].filter(c=>!retiredClassCodes.includes(c));
  const fresh=makeState();
  if(shared?.classMeta&&typeof shared.classMeta==='object'){
   for(const code of CLASSES){const item=shared.classMeta[code];if(item&&typeof item.name==='string'&&item.name.trim())fresh.classMeta[code]={name:item.name.slice(0,35),active:item.active!==false}}
