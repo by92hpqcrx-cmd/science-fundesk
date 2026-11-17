@@ -592,6 +592,77 @@ body.roomFullscreen .shell>.main.compactDashboardMain>#content{height:100vh!impo
 .compactDashboardMain{padding-top:0!important}
 }
 @media print{html,body{height:auto!important;overflow:visible!important}.shell,.shell>.main.compactDashboardMain{height:auto!important;max-height:none!important;overflow:visible!important}.shell>.main.compactDashboardMain>#content{overflow:visible!important;height:auto!important}.fixedPageHeader{display:none!important}}
+</style><style id="fundeskMulticolorLargerSidebarNav20261117">
+/* 每項功能依 data-view 使用固定配色，拖曳排序後顏色也不會改變。 */
+#nav button[data-view="seats"]{--nav-item-bg:#e8f2ff;--nav-item-ink:#174c91;--nav-item-border:#6fa7e5}
+#nav button[data-view="labDuty"]{--nav-item-bg:#ecf9f1;--nav-item-ink:#216a4a;--nav-item-border:#74c39a}
+#nav button[data-view="attendance"]{--nav-item-bg:#fff3df;--nav-item-ink:#865015;--nav-item-border:#e7b56e}
+#nav button[data-view="tasks"]{--nav-item-bg:#f5ebff;--nav-item-ink:#673b99;--nav-item-border:#b79add}
+#nav button[data-view="schedule"]{--nav-item-bg:#e5f8f7;--nav-item-ink:#166e74;--nav-item-border:#74c3c7}
+#nav button[data-view="contact"]{--nav-item-bg:#fff0f4;--nav-item-ink:#a03c68;--nav-item-border:#e6a3bb}
+#nav button[data-view="points"]{--nav-item-bg:#eef0ff;--nav-item-ink:#4e50a1;--nav-item-border:#a5a7e2}
+#nav button[data-view="redemption"]{--nav-item-bg:#fff3e9;--nav-item-ink:#a2512d;--nav-item-border:#e8a77f}
+#nav button[data-view="quiz"]{--nav-item-bg:#eaf8ff;--nav-item-ink:#216b9b;--nav-item-border:#8bbfdc}
+#nav button[data-view="students"]{--nav-item-bg:#eff8e3;--nav-item-ink:#57732a;--nav-item-border:#acc780}
+#nav button[data-view="classroom"]{--nav-item-bg:#ffedec;--nav-item-ink:#97483d;--nav-item-border:#dcaaa2}
+#nav button[data-view="tools"]{--nav-item-bg:#ebf6ff;--nav-item-ink:#2e6088;--nav-item-border:#96b9d9}
+#nav button[data-view="tabletRules"]{--nav-item-bg:#f2efff;--nav-item-ink:#6e50a5;--nav-item-border:#b7a5d9}
+#nav button[data-view="classes"]{--nav-item-bg:#eef9e9;--nav-item-ink:#477c42;--nav-item-border:#a4cfa0}
+#nav button[data-view="settings"]{--nav-item-bg:#f2f5f8;--nav-item-ink:#4a6077;--nav-item-border:#a8b5c3}
+.sidebar #nav button[data-view]{
+  font-size:clamp(19px,1.42vw,22px)!important;
+  font-weight:900!important;
+  line-height:1.35!important;
+  color:var(--nav-item-ink,#203e69)!important;
+  background:var(--nav-item-bg,#edf3ff)!important;
+  border:2px solid var(--nav-item-border,#b9cde8)!important;
+  border-radius:12px!important;
+  padding:12px 9px!important;
+  min-height:56px!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  text-align:left!important;
+  text-shadow:none!important;
+  box-shadow:0 2px 4px #07152b16!important;
+  letter-spacing:0!important;
+}
+.sidebar #nav button[data-view]:hover{
+  filter:brightness(.97)!important;
+  box-shadow:0 3px 10px #0002!important;
+}
+.sidebar #nav button[data-view].active{
+  color:var(--nav-item-ink,#203e69)!important;
+  background:var(--nav-item-bg,#e5f0ff)!important;
+  font-weight:1000!important;
+  border-width:3px!important;
+  outline:3px solid #fff!important;
+  outline-offset:-5px!important;
+  box-shadow:inset 5px 0 0 var(--nav-item-ink,#325b83),0 3px 10px #0002!important;
+}
+.sidebar #nav button[data-view]:focus-visible{
+  outline:3px solid #fff!important;
+  outline-offset:2px!important;
+}
+.sidebar #nav button[data-view] i{
+  font-size:15px!important;
+  font-weight:900!important;
+  color:#fff!important;
+  background:var(--nav-item-ink,#325b83)!important;
+  border-radius:12px!important;
+  padding:2px 5px!important;
+}
+.sidebar #nav .navMoveRow{min-height:58px!important;width:100%!important}
+.sidebar #nav .navMoveRow.navDragging>button[data-view]{opacity:.83!important}
+.sidebar #nav{gap:7px!important}
+@media(max-width:730px){
+  .sidebar #nav button[data-view]{
+    font-size:18px!important;
+    min-height:49px!important;
+    padding:10px 12px!important;
+    white-space:nowrap!important;
+  }
+  .sidebar #nav .navMoveRow{min-height:49px!important}
+}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
