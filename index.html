@@ -2170,7 +2170,7 @@ function bindNewFeatures(){
 
 /* 動態教室 - 使用同一份雲端 db，名片開關時不重建走動場景。 */
 let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='',roomOriginalClass=null,roomCardClass=null,roomObserver=null,roomSpeed="medium",roomFoodGhost=null,roomFeedingPointer=null,roomFoodChoice=null,roomFeedCandidate=null,roomFeedLastVisual=0;
-const ROOM_PETS=[{id:'dino',name:'小恐龍',emoji:'🦖'},{id:'bear',name:'小熊',emoji:'🐻'},{id:'panda',name:'熊貓',emoji:'🐼'},{id:'cat',name:'小貓',emoji:'🐱'},{id:'rabbit',name:'小兔',emoji:'🐰'}];
+const ROOM_PETS=[{id:'dino',name:'小恐龍',emoji:'🦖'},{id:'bear',name:'小熊',emoji:'🐻'},{id:'panda',name:'熊貓',emoji:'🐼'},{id:'cat',name:'小貓',emoji:'🐱'},{id:'rabbit',name:'小兔',emoji:'🐰'},{id:'501',name:'企鵝',emoji:'🐧'},{id:'502',name:'兔兔',emoji:'🐰'},{id:'503',name:'松鼠',emoji:'🐿️'},{id:'504',name:'小鳥',emoji:'🐦'},{id:'505',name:'貓貓',emoji:'🐱'},{id:'506',name:'小狗',emoji:'🐶'},{id:'507',name:'大象',emoji:'🐘'}];
 let roomPetCandidate=false,roomPetVisualTick=0,roomPetWalker=null;
 const roomPetAsset=id=>'/science-fundesk/class-pets/'+id+'.svg';
 const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香蕉',emoji:'🍌'},{id:'strawberry',name:'草莓',emoji:'🍓'},{id:'grapes',name:'葡萄',emoji:'🍇'},{id:'cookie',name:'餅乾',emoji:'🍪'},{id:'donut',name:'甜甜圈',emoji:'🍩'},{id:'juice',name:'果汁',emoji:'🧃'},{id:'milk',name:'牛奶',emoji:'🥛'}];
