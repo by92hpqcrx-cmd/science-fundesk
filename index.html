@@ -775,7 +775,7 @@ body.roomFullscreen #content,
 #nav button[data-view="classroom"]{--nav-item-bg:#ffedec;--nav-item-ink:#97483d;--nav-item-border:#dcaaa2}
 #nav button[data-view="tools"]{--nav-item-bg:#ebf6ff;--nav-item-ink:#2e6088;--nav-item-border:#96b9d9}
 #nav button[data-view="tabletRules"]{--nav-item-bg:#f2efff;--nav-item-ink:#6e50a5;--nav-item-border:#b7a5d9}
-#nav button[data-view="classes"]{--nav-item-bg:#eef9e9;--nav-item-ink:#477c42;--nav-item-border:#a4cfa0}
+#nav button[data-view="classes"]{--nav-item-bg:#fff1a8;--nav-item-ink:#795400;--nav-item-border:#e2b93a}
 #nav button[data-view="settings"]{--nav-item-bg:#f2f5f8;--nav-item-ink:#4a6077;--nav-item-border:#a8b5c3}
 .sidebar #nav button[data-view]{
   font-size:clamp(19px,1.42vw,22px)!important;
@@ -856,7 +856,7 @@ body.roomFullscreen #content,
  <div class="sidebarDateActions" aria-label="紀錄日期及資料備份"><div class="dashboardDateActions"><label for="sessionDate">紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" type="button" class="btn outline">↓ 備份</button></div></div>
  <button type="button" id="cloudLogout" class="sidebarCloudLogout">🚪 登出雲端</button>
  <div class="mini">115學年度 · 第一學期<br>課程：神祕的天空／燃燒與生鏽</div>
- <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作／實驗／考試 <i id="sidebarPending"></i></button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="redemption">🎁　積點兌換</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="classroom">🏫　動態教室</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
+ <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作實驗考試 <i id="sidebarPending"></i></button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="redemption">🎁　積點兌換</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="classroom">🏫　動態教室</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
  <div class="sidebarFoot">教師登入後存取雲端學生紀錄<br><strong>使用公用電腦後請登出</strong><br></div>
  
  </div>
@@ -1022,7 +1022,7 @@ function decorateClassPage(){
 const classOptions=()=>activeCodes().map(c=>`<option value="${esc(c)}">${esc(classDisplay(c))}</option>`).join('');
 const syncClassOptions=()=>{const sel=$('classSelect');sel.innerHTML=classOptions();if(activeCodes().includes(cl))sel.value=cl};
 const time={1:'08:50–09:30',2:'09:40–10:20',3:'10:35–11:15',4:'11:25–12:05',5:'13:20–14:00',6:'14:10–14:50',7:'15:00–15:40'};
-const titles={seats:'首頁',rps:'課間小遊戲',labDuty:'實驗工作分配',attention:'待追蹤清單',attendance:'出勤紀錄',tasks:'習作／實驗／考試',schedule:'我的教學進度',contact:'班級聯絡簿',points:'課堂表現',redemption:'積點兌換',correction:'習作訂正',board:'作業播放表',quiz:'抽籤問答',students:'學生名單',classroom:'動態教室',tools:'課堂小工具',tabletRules:'平板使用守則',classes:'班級管理',settings:'資料管理'};
+const titles={seats:'首頁',rps:'課間小遊戲',labDuty:'實驗工作分配',attention:'待追蹤清單',attendance:'出勤紀錄',tasks:'習作實驗考試',schedule:'我的教學進度',contact:'班級聯絡簿',points:'課堂表現',redemption:'積點兌換',correction:'習作訂正',board:'作業播放表',quiz:'抽籤問答',students:'學生名單',classroom:'動態教室',tools:'課堂小工具',tabletRules:'平板使用守則',classes:'班級管理',settings:'資料管理'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>{let parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());let v=Object.fromEntries(parts.map(x=>[x.type,x.value]));return `${v.year}-${v.month}-${v.day}`};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
