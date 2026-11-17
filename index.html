@@ -214,18 +214,25 @@ body.roomFullscreen .roomHistoryList{max-height:70px}
 .roomPetPicker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#f5fff2;border:1px solid #cce8c9;border-radius:12px;padding:8px 12px;margin-bottom:10px;color:#356647;font-size:14px;font-weight:800}
 .roomPetPicker select{font:inherit;padding:7px 12px;border:1px solid #bad5bc;border-radius:9px;background:white;color:#345e4a}
 .roomPetPickerTip{font-size:11px;color:#67856b;font-weight:500}
-.roomPet{position:absolute;z-index:15;right:3%;bottom:8%;width:130px;height:175px;background:#ffffff90;border:2px solid #fff4b2;border-radius:22px;box-shadow:0 7px 22px #2d61443b;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;cursor:pointer;overflow:visible;touch-action:manipulation}
+.roomPet{position:absolute;z-index:15;left:0;top:0;right:auto;bottom:auto;width:94px;height:112px;background:#ffffff90;border:2px solid #fff4b2;border-radius:22px;box-shadow:0 7px 22px #2d61443b;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;cursor:pointer;overflow:visible;touch-action:manipulation}
 .roomPet[hidden],.roomPetFull[hidden]{display:none!important}
- .roomPetImage{display:grid;place-items:center;font-size:76px;line-height:1;width:104px;height:104px;background-repeat:no-repeat;background-position:center;background-size:contain;transform:scale(var(--room-pet-grow,1));transition:transform 1s linear;transform-origin:center bottom;image-rendering:auto;pointer-events:none}
+ .roomPetImage{display:grid;place-items:center;font-size:45px;line-height:1;width:75px;height:75px;background-repeat:no-repeat;background-position:center;background-size:contain;transform:scale(var(--room-pet-grow,1));transition:transform 1s linear;transform-origin:center bottom;image-rendering:auto;pointer-events:none}
 .roomPetName{font-weight:900;color:#315e46;background:#f3ffed;border-radius:6px;padding:2px 5px;font-size:13px}
 .roomPetCount{font-size:10px;color:#597868;margin-bottom:5px}
-.roomPetFull{position:absolute;top:-26px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#ffeb92;border:2px solid white;color:#9c5b1b;font-size:18px;font-weight:1000;border-radius:20px;padding:3px 12px;box-shadow:0 4px 9px #6e733b40;z-index:20}
+.roomPetFull{position:absolute;top:-30px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#ffeb92;border:2px solid white;color:#9c5b1b;font-size:18px;font-weight:1000;border-radius:20px;padding:3px 12px;box-shadow:0 4px 9px #6e733b40;z-index:20}
 .roomPet.roomPetSelected,.roomPet.roomFoodTarget{outline:5px solid #ffd36b;outline-offset:5px;box-shadow:0 0 0 10px #fff4ac55;z-index:22}
 .roomPet.roomPetSelected .roomPetImage{filter:drop-shadow(0 0 7px #ffdc63)}
 .roomPet.roomJustFed .roomPetImage{animation:roomPetYum .4s ease 2}
 @keyframes roomPetYum{50%{transform:scale(calc(var(--room-pet-grow,1) * 1.12)) rotate(5deg)}}
-@media(max-width:700px){.roomPet{width:85px;height:123px;right:1%;bottom:3%}.roomPetImage{width:66px;height:66px}.roomPetName{font-size:10px}.roomPetFull{font-size:13px}.roomPetCount{font-size:9px}}
-body.roomFullscreen .roomPet{right:4%;bottom:8%}
+@media(max-width:700px){.roomPet{width:94px;height:112px}.roomPetImage{width:66px;height:66px}.roomPetName{font-size:10px}.roomPetFull{font-size:13px}.roomPetCount{font-size:9px}}
+body.roomFullscreen .roomPet{right:auto;bottom:auto}
+
+/* 班級寵物與學生使用同一個動態舞台，依舞台縮放、同速移動與碰撞。 */
+.movingRoomStage .roomPet{width:calc(94px * var(--room-avatar-scale,1));height:calc(112px * var(--room-avatar-scale,1));min-width:0;min-height:0;padding:0;display:flex;gap:0;background:transparent;border:0;box-shadow:none;will-change:transform;justify-content:center;touch-action:manipulation}
+.movingRoomStage .roomPetImage{width:calc(76px * var(--room-avatar-scale,1));height:calc(76px * var(--room-avatar-scale,1));font-size:calc(44px * var(--room-avatar-scale,1));flex:0 0 auto;background-repeat:no-repeat;border-radius:50%;background-color:#ffffffd9;border:3px solid white;box-shadow:0 3px 8px #31495a55;transform-origin:center center}
+.movingRoomStage .roomPetName{font-size:clamp(8px,calc(12px * var(--room-avatar-scale,1)),12px);line-height:1.25;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;background:#fffffff0;border:1px solid #d5e4ef;border-radius:8px;padding:2px 4px}
+.movingRoomStage .roomPetCount{font-size:clamp(7px,calc(10px * var(--room-avatar-scale,1)),10px);white-space:nowrap;margin:0;background:#fff9d9dc;border-radius:6px;padding:1px 3px}
+.movingRoomStage .roomPetFull{top:-28px;left:50%;font-size:14px;z-index:30;pointer-events:none}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -2164,7 +2171,7 @@ function bindNewFeatures(){
 /* 動態教室 - 使用同一份雲端 db，名片開關時不重建走動場景。 */
 let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='',roomOriginalClass=null,roomCardClass=null,roomObserver=null,roomSpeed="medium",roomFoodGhost=null,roomFeedingPointer=null,roomFoodChoice=null,roomFeedCandidate=null,roomFeedLastVisual=0;
 const ROOM_PETS=[{id:'dino',name:'小恐龍',emoji:'🦖'},{id:'bear',name:'小熊',emoji:'🐻'},{id:'panda',name:'熊貓',emoji:'🐼'},{id:'cat',name:'小貓',emoji:'🐱'},{id:'rabbit',name:'小兔',emoji:'🐰'}];
-let roomPetCandidate=false,roomPetVisualTick=0;
+let roomPetCandidate=false,roomPetVisualTick=0,roomPetWalker=null;
 const roomPetAsset=id=>'/science-fundesk/class-pets/'+id+'.webp';
 const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香蕉',emoji:'🍌'},{id:'strawberry',name:'草莓',emoji:'🍓'},{id:'grapes',name:'葡萄',emoji:'🍇'},{id:'cookie',name:'餅乾',emoji:'🍪'},{id:'donut',name:'甜甜圈',emoji:'🍩'},{id:'juice',name:'果汁',emoji:'🧃'},{id:'milk',name:'牛奶',emoji:'🥛'}];
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
@@ -2184,7 +2191,7 @@ function stopMovingClassroom(){
  roomAnimation=0;roomWalkers=[];roomLastTick=0;
  if(roomObserver){roomObserver.disconnect();roomObserver=null}
  if(roomCardClass!==null)restoreClassroomSelection();
- roomOriginalClass=null;
+ roomOriginalClass=null;roomPetWalker=null;
  if(document.fullscreenElement===document.documentElement&&document.body.classList.contains('roomFullscreen'))document.exitFullscreen().catch(()=>{});
  document.body.classList.remove('roomFullscreen');
 }
@@ -2206,7 +2213,7 @@ function roomBounds(){const geo=roomGeometry(roomWalkers.length);return {w:geo.m
 function populateMovingRoom(){
  const root=$('roomWalkers');if(!root)return;
  root.replaceChildren();roomWalkers=[];
- const people=roomPeople(),geo=roomGeometry(people.length);
+ const people=roomPeople(),hasPet=!!roomPetSelected(),geo=roomGeometry(people.length+(hasPet?1:0));
  $('roomCount').textContent=`${classDisplay(cl)} · ${$('sessionDate')?.value||today()} · 出席 ${people.length} 人`;
  // 預先將格子洗牌，確保初始位置分散且無交疊。
  const cells=Array.from({length:geo.cols*geo.rows},(_,i)=>i);
@@ -2231,13 +2238,24 @@ function populateMovingRoom(){
   roomWalkers.push({el,code,sid:s.id,x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:geo.radius});
  }
  root.appendChild(fragment);
- roomRenderPet();roomRenderFeedHistory();roomRefreshCandidate();
+ roomRenderPet();
+ // 寵物和學生共用格點分散與速度，碰撞物理也使用同一套算法。
+ const petEl=$('roomPet');roomPetWalker=null;
+ if(hasPet&&petEl){
+  const index=cells[people.length],row=Math.floor(index/geo.cols),col=index%geo.cols;
+  const cellW=geo.maxX/Math.max(1,geo.cols-1),cellH=geo.maxY/Math.max(1,geo.rows-1);
+  const angle=Math.random()*Math.PI*2,speed=roomSpeedValue();
+  roomPetWalker={el:petEl,code:cl,isPet:true,x:geo.cols===1?geo.maxX/2:col*cellW,y:geo.rows===1?geo.maxY/2:row*cellH,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:geo.radius};
+  petEl.style.transform=`translate3d(${roomPetWalker.x}px,${roomPetWalker.y}px,0)`;
+ }
+ roomRenderFeedHistory();roomRefreshCandidate();
  roomWalkers.forEach(w=>w.el.style.transform=`translate3d(${w.x}px,${w.y}px,0)`);
 }
 function advanceMovingRoom(dt){
- const g=roomGeometry(roomWalkers.length),radius=g.radius,speed=roomSpeedValue();
+ const walkers=roomPetWalker?[...roomWalkers,roomPetWalker]:roomWalkers;
+ const g=roomGeometry(walkers.length),radius=g.radius,speed=roomSpeedValue();
  // 方向固定到碰撞或撞牆時才改變；不會穿越同學頭像。
- for(const w of roomWalkers){
+ for(const w of walkers){
   w.r=radius;
   const magnitude=Math.hypot(w.vx,w.vy)||1;
   w.vx=w.vx/magnitude*speed;w.vy=w.vy/magnitude*speed;
@@ -2249,8 +2267,8 @@ function advanceMovingRoom(dt){
  }
  // 同質量彈性碰撞：沿兩人中心連線交換速度分量，並立即分開。
  for(let pass=0;pass<3;pass++){
-  for(let i=0;i<roomWalkers.length;i++)for(let j=i+1;j<roomWalkers.length;j++){
-   const a=roomWalkers[i],b=roomWalkers[j];
+  for(let i=0;i<walkers.length;i++)for(let j=i+1;j<walkers.length;j++){
+   const a=walkers[i],b=walkers[j];
    let dx=b.x-a.x,dy=b.y-a.y,dist=Math.hypot(dx,dy),minDist=a.r+b.r;
    if(dist>=minDist)continue;
    if(dist<.0001){const theta=(i*17+j*31)*2.39996;dx=Math.cos(theta);dy=Math.sin(theta);dist=1}
@@ -2269,7 +2287,7 @@ function advanceMovingRoom(dt){
    }
   }
  }
- for(const w of roomWalkers)w.el.style.transform=`translate3d(${w.x.toFixed(1)}px,${w.y.toFixed(1)}px,0)`;
+ for(const w of walkers)w.el.style.transform=`translate3d(${w.x.toFixed(1)}px,${w.y.toFixed(1)}px,0)`;
 }
 /* 教室餵食紀錄隨教師班級雲端資料同步；按學生 ID 分別計算三次與一小時冷卻。 */
 function roomPetSelected(code=cl){return ROOM_PETS.find(p=>p.id===db.classes[code]?.classPetType)||null}
@@ -2518,7 +2536,7 @@ function refreshMovingClassroomCards(){
   roomApplyFeedingAppearance(w.el,w.code,w.sid);
  }
  const selector=$('roomPetSelect');if(selector)selector.value=roomPetSelected()?.id||'';
- roomRenderPet();roomRenderFeedHistory();roomRefreshCandidate();
+ roomRenderPet();if(!!roomPetWalker!==!!roomPetSelected()){populateMovingRoom();return}roomRenderFeedHistory();roomRefreshCandidate();
 }
 function restoreClassroomSelection(){
  if(roomCardClass===null)return;
@@ -2541,7 +2559,7 @@ function startMovingClassroom(){
  if(!$('movingClassroom'))return;
  if(roomOriginalClass===null)roomOriginalClass=cl;
  $('roomShuffle').onclick=populateMovingRoom;
- $('roomPetSelect').onchange=e=>{const id=e.target.value;if(id&&!ROOM_PETS.some(p=>p.id===id))return;db.classes[cl].classPetType=id;save();roomPetCandidate=false;roomRenderPet();roomRefreshCandidate()};
+ $('roomPetSelect').onchange=e=>{const id=e.target.value;if(id&&!ROOM_PETS.some(p=>p.id===id))return;db.classes[cl].classPetType=id;save();roomPetCandidate=false;populateMovingRoom();roomRefreshCandidate()};
  roomBindFoods();roomFoodChoice=null;roomFeedCandidate=null;roomPetCandidate=false;roomRenderFeedHistory();
  const speedSelect=$('roomSpeedSelect');speedSelect.value=roomSpeed;speedSelect.onchange=()=>{roomSpeed=speedSelect.value};
  const fullscreenButton=$('roomFullscreenToggle');
