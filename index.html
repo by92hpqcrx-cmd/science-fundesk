@@ -350,7 +350,20 @@ body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
 .animalTool:fullscreen .randomStudentCard strong{font-size:clamp(24px,3vw,48px)}
 @media(max-width:950px){.animalToolsGrid{grid-template-columns:1fr}.animalTool .toolProgress{width:87%}}
 @media(max-height:630px){.animalTool:fullscreen #timerShow{font-size:clamp(54px,15vh,170px)!important}.animalTool:fullscreen .toolProgress{margin:46px auto 10px}.animalTool:fullscreen .toolStageMascot{width:75px;height:75px}}
-</style><script src="./tool-animals.js"></script></head><body class="cloud-locked">
+</style><script src="./tool-animals.js"></script><style id="animalTimerAlertStyles">
+#toolTimerPanel .timerControlArea{gap:9px;justify-content:center}
+#toolTimerPanel .customTimerLabel{display:inline-flex;gap:5px;align-items:center;background:var(--a-panel);border:2px solid var(--a-border);border-radius:12px;padding:5px 9px;white-space:nowrap;font-weight:900}
+#toolTimerPanel .customTimerLabel input{width:64px;min-height:38px;max-width:18vw;padding:5px 6px;border:1px solid var(--a-border);border-radius:9px;background:#fff;color:var(--a-ink);font-size:18px;text-align:center;font-weight:900}
+#toolTimerPanel .customTimerLabel input:first-of-type{width:76px}
+#toolTimerPanel #timerShow{--timer-zoom:1;transform:scale(var(--timer-zoom));transition:transform .35s cubic-bezier(.2,1.3,.35,1),color .25s;position:relative;z-index:2;overflow:visible!important;white-space:nowrap;transform-origin:center}
+#toolTimerPanel.timerLastTen .animalToolStage{border-color:#d99564!important;background:linear-gradient(130deg,var(--a-panel),#fff0d3)}
+#toolTimerPanel.timerLastTen #timerShow{color:#ad4a39!important;text-shadow:0 2px 0 #fff9ee}
+#toolTimerPanel.timerEnded #timerShow{color:#b64140!important;animation:timerFinishedFlash .5s ease-in-out 5 alternate}
+@keyframes timerFinishedFlash{from{opacity:1}to{opacity:.45}}
+#toolTimerPanel:fullscreen .timerControlArea{padding:7px!important}
+@media(max-width:600px){#toolTimerPanel .customTimerLabel{width:100%;justify-content:center}#toolTimerPanel .customTimerLabel input{max-width:70px}}
+@media(max-height:700px){#toolTimerPanel:fullscreen #timerShow{font-size:clamp(50px,12vh,125px)!important}}
+</style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
  <div role="status" aria-live="polite"><h2 id="replyNoticeTitle">💬 收到導師回應</h2>
@@ -1448,9 +1461,89 @@ const x=examCurrent(entries,now),stage=$('examAnimalStage');if(!stage)return;
 const bindId=x?String(x.id):'';if(examDisplayId!==bindId||stage.dataset.examId!==bindId){stage.dataset.examId=bindId;examDisplayId=bindId;$('examLiveSubject').textContent=x?x.subject:'尚未設定考程';$('examLivePeriod').textContent=x?x.date+'　'+x.start+'～'+x.end:'請先新增考試科目與時間';$('examLiveTip').textContent=x?.tip||'加油！一步一步完成考卷 🌟';examSetAnimalGif(x?.animal||0);$('examLiveExpected').value=x?.expected??students().length;$('examLivePresent').value=x?.present??students().length;}
 const t=x?examRemaining(x,now):null;$('examLiveTime').textContent=t?toMMSS(t.seconds):'--:--';$('examLiveStatus').textContent=t?t.status:'準備開始';const progress=t?t.progress:100,eaten=100-progress;$('examLiveFill').style.width=progress+'%';$('examLiveFill').style.left=eaten+'%';$('examLiveEaten').style.width=eaten+'%';$('examLiveAnimal').style.left=eaten+'%';
 }
-function updateCountdown(){if(timerDeadline!==null){timerSeconds=Math.max(0,Math.ceil((timerDeadline-Date.now())/1000));if(timerSeconds===0){timerDeadline=null;clearInterval(timerTick);timerTick=null;if(!timerNotified){timerNotified=true;setTimeout(()=>alert('時間到！'),0);}}}const display=$('timerShow');if(display)display.textContent=toMMSS(timerSeconds);const fill=$('toolTimerFill');if(fill){const ratio=Math.min(1,Math.max(0,timerSeconds/Math.max(1,timerBaseSeconds)));fill.style.width=(ratio*100)+'%';const bar=fill.parentElement;if(bar){bar.setAttribute('aria-valuenow',String(Math.round(ratio*100)));const pet=bar.querySelector('.toolMascot');if(pet)pet.style.left='calc('+ (ratio*100)+'% - 25px)';}}const start=$('timerStart');if(start)start.textContent=timerDeadline!==null?'暫停':timerSeconds===0?'重新開始':'開始';}
-function setTimer(seconds){clearInterval(timerTick);timerTick=null;timerDeadline=null;timerSeconds=seconds;timerBaseSeconds=seconds;timerNotified=false;updateCountdown();}
-function toggleTimer(){if(timerDeadline!==null){timerSeconds=Math.max(0,Math.ceil((timerDeadline-Date.now())/1000));timerDeadline=null;clearInterval(timerTick);timerTick=null;updateCountdown();return}if(timerSeconds<=0){timerSeconds=300;timerBaseSeconds=300;}timerDeadline=Date.now()+timerSeconds*1000;timerNotified=false;timerTick=setInterval(updateCountdown,250);updateCountdown();}
+// 倒數計時音效由點擊「開始」啟用（瀏覽器須有使用者手勢）。
+let toolTimerAudio=null,toolTimerLastSoundSecond=null;
+function enableToolTimerSound(){
+ try{
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC)return;
+  if(!toolTimerAudio)toolTimerAudio=new AC();
+  if(toolTimerAudio.state==='suspended')toolTimerAudio.resume().catch(()=>{});
+ }catch(e){console.warn('音效無法啟用',e)}
+}
+function toolTimerTone(freq=880,at=0,duration=.13,volume=.15){
+ try{
+  if(!toolTimerAudio||toolTimerAudio.state!=='running')return;
+  const ctx=toolTimerAudio,osc=ctx.createOscillator(),gain=ctx.createGain(),start=ctx.currentTime+at;
+  osc.type='sine';osc.frequency.setValueAtTime(freq,start);
+  gain.gain.setValueAtTime(.0001,start);
+  gain.gain.exponentialRampToValueAtTime(volume,start+.012);
+  gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
+  osc.connect(gain);gain.connect(ctx.destination);
+  osc.start(start);osc.stop(start+duration+.02);
+ }catch(e){console.warn('播放提示音失敗',e)}
+}
+function toolTimerFinalAlarm(){
+ // 三聲清楚的叮叮叮，最後一聲稍長。
+ toolTimerTone(880,0,.24,.20);
+ toolTimerTone(1047,.34,.24,.20);
+ toolTimerTone(1319,.68,.43,.23);
+}
+function updateCountdown(){
+ let previous=timerSeconds;
+ if(timerDeadline!==null){
+  timerSeconds=Math.max(0,Math.ceil((timerDeadline-Date.now())/1000));
+  if(timerSeconds!==previous){
+   // 從 10 秒起每秒一聲，不因 250ms 刷新頻率重複播放。
+   if(timerSeconds<=10&&timerSeconds>0&&toolTimerLastSoundSecond!==timerSeconds){
+    toolTimerLastSoundSecond=timerSeconds;
+    toolTimerTone(timerSeconds<=3?1175:880,0,.11,.14);
+   }
+   if(timerSeconds===0){
+    timerDeadline=null;clearInterval(timerTick);timerTick=null;
+    if(!timerNotified){timerNotified=true;toolTimerFinalAlarm();}
+   }
+  }
+ }
+ const display=$('timerShow');
+ if(display){
+  display.textContent=toMMSS(timerSeconds);
+  const urgent=timerSeconds<=10&&timerSeconds>0&&((timerDeadline!==null)||timerNotified);
+  display.classList.toggle('timerUrgent',urgent);
+  display.classList.toggle('timerFinished',timerSeconds===0&&timerNotified);
+  display.style.setProperty('--timer-zoom',urgent?(1+(11-timerSeconds)*.055).toFixed(3):'1');
+ }
+ const panel=$('toolTimerPanel');
+ if(panel){
+  panel.classList.toggle('timerLastTen',timerSeconds>0&&timerSeconds<=10&&timerDeadline!==null);
+  panel.classList.toggle('timerEnded',timerSeconds===0&&timerNotified);
+ }
+ const fill=$('toolTimerFill');
+ if(fill){
+  const ratio=Math.min(1,Math.max(0,timerSeconds/Math.max(1,timerBaseSeconds)));
+  fill.style.width=(ratio*100)+'%';
+  const bar=fill.parentElement;
+  if(bar){bar.setAttribute('aria-valuenow',String(Math.round(ratio*100)));const pet=bar.querySelector('.toolMascot');if(pet)pet.style.left='calc('+(ratio*100)+'% - 25px)';}
+ }
+ const start=$('timerStart');if(start)start.textContent=timerDeadline!==null?'暫停':timerSeconds===0?'重新開始':'開始';
+}
+function setTimer(seconds){
+ clearInterval(timerTick);timerTick=null;timerDeadline=null;
+ timerSeconds=Math.max(1,Math.min(359999,Math.floor(Number(seconds)||300)));
+ timerBaseSeconds=timerSeconds;timerNotified=false;toolTimerLastSoundSecond=null;
+ updateCountdown();
+}
+function toggleTimer(){
+ enableToolTimerSound();
+ if(timerDeadline!==null){
+  timerSeconds=Math.max(0,Math.ceil((timerDeadline-Date.now())/1000));
+  timerDeadline=null;clearInterval(timerTick);timerTick=null;updateCountdown();return;
+ }
+ if(timerSeconds<=0)timerSeconds=timerBaseSeconds||300;
+ timerDeadline=Date.now()+timerSeconds*1000;
+ timerNotified=false;toolTimerLastSoundSecond=null;
+ timerTick=setInterval(updateCountdown,200);updateCountdown();
+}
 function bindNewFeatures(){
  if(view==='points'){
   document.querySelectorAll('[data-point-person]').forEach(b=>b.onclick=()=>{let id=b.dataset.pointPerson;pointSelection.has(id)?pointSelection.delete(id):pointSelection.add(id);b.classList.toggle('selected',pointSelection.has(id));b.setAttribute('aria-pressed',pointSelection.has(id));$('selectedPointCount').textContent=pointSelection.size});
@@ -1666,7 +1759,7 @@ function renderTools(){
 const choices=['恐龍','小熊','熊貓','兔子','貓咪'].map(n=>'<option value="'+n+'">'+({'恐龍':'🦖','小熊':'🐻','熊貓':'🐼','兔子':'🐰','貓咪':'🐱'}[n])+' '+n+'</option>').join('');
 const pickTheme=()=>'<label class="animalChoiceRow">🐾 選擇小動物 <select class="toolAnimalSelect" aria-label="選擇倒數及抽籤小動物">'+choices+'</select></label>';
 return renderExamClock()+'<div class="animalToolsGrid">'+
-'<section class="panel animalTool" id="toolTimerPanel"><div class="animalToolHead"><h2>⏳ 動物倒數計時</h2><button type="button" class="toolFullButton" data-tool-fullscreen="toolTimerPanel">⛶ 全螢幕</button></div><p class="hint">實驗、習作與課堂活動使用；切換功能頁仍可繼續倒數。</p>'+pickTheme()+'<div class="animalToolStage"><div class="toolDisplay" id="timerShow">'+toMMSS(timerSeconds)+'</div><div class="toolProgress" role="progressbar" aria-label="倒數進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="toolProgressFill" id="toolTimerFill"></div><img class="toolMascot" alt="跳動的小動物"></div></div><div class="animalToolControls"><button class="btn small outline" data-time="300">5 分鐘</button><button class="btn small outline" data-time="600">10 分鐘</button><button class="btn small outline" data-time="1200">20 分鐘</button><button class="btn small" id="timerStart">開始／暫停</button><button class="btn small outline" id="timerReset">重設</button></div></section>'+
+'<section class="panel animalTool" id="toolTimerPanel"><div class="animalToolHead"><h2>⏳ 動物倒數計時</h2><button type="button" class="toolFullButton" data-tool-fullscreen="toolTimerPanel">⛶ 全螢幕</button></div><p class="hint">實驗、習作與課堂活動使用；切換功能頁仍可繼續倒數。</p>'+pickTheme()+'<div class="animalToolStage"><div class="toolDisplay" id="timerShow">'+toMMSS(timerSeconds)+'</div><div class="toolProgress" role="progressbar" aria-label="倒數進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="toolProgressFill" id="toolTimerFill"></div><img class="toolMascot" alt="跳動的小動物"></div></div><div class="animalToolControls timerControlArea"><button class="btn small outline" data-time="60">1 分鐘</button><button class="btn small outline" data-time="180">3 分鐘</button><button class="btn small outline" data-time="300">5 分鐘</button><label class="customTimerLabel">⏱ 自訂 <input id="customTimerMinutes" type="number" min="0" max="5999" step="1" value="2" inputmode="numeric" aria-label="自訂分鐘">分 <input id="customTimerSeconds" type="number" min="0" max="59" step="1" value="0" inputmode="numeric" aria-label="自訂秒數">秒</label><button class="btn small outline" id="timerCustomSet">套用自訂</button><button class="btn small" id="timerStart">開始／暫停</button><button class="btn small outline" id="timerReset">重設</button></div></section>'+
 '<section class="panel animalTool" id="toolRandomPanel"><div class="animalToolHead"><h2>🎲 隨機抽學生</h2><button type="button" class="toolFullButton" data-tool-fullscreen="toolRandomPanel">⛶ 全螢幕</button></div><p class="hint">從目前 '+esc(classDisplay(cl))+'的學生名單抽選，展示設定好的姓名與頭像。</p>'+pickTheme()+'<div class="animalToolStage"><img class="toolStageMascot toolMascotStatic" alt="跳動的小動物"><div class="toolDisplay" id="randomShow"><span class="randomEmpty">準備抽出幸運同學 ✨</span></div></div><div class="animalToolControls"><label>抽出人數 <input type="number" id="randomCount" min="1" max="60" value="1" style="width:80px"></label><button class="btn" id="pickStudent">🎲 隨機抽學生</button></div></section></div>'+
 '<section class="panel"><h2>本節課操作建議</h2><p class="hint">實驗結束 → 當堂書寫習作 → 將還沒寫完的學生記為「未完成」 → 下次補完改成「已補交」；單元考請針對請假者標「缺考／待補考」，補考後再改「補考完成」。</p></section>';
 }
@@ -1756,7 +1849,8 @@ if(view==='students'){
 if(view==='settings'){$('exportJson').onclick=backup;$('importJson').onclick=()=>$('jsonImport').click();$('resetClass').onclick=()=>{if(prompt(`要重設 ${classDisplay(cl)}所有學生、出勤、習作、考試、點數，請輸入班級數字 ${cl}`)===cl){db.classes[cl]=freshClass();save();render()}}}
 if(view==='tools'){
 document.querySelectorAll('[data-time]').forEach(b=>b.onclick=()=>setTimer(Number(b.dataset.time)));
-$('timerStart').onclick=toggleTimer;$('timerReset').onclick=()=>setTimer(300);
+$('timerStart').onclick=toggleTimer;$('timerReset').onclick=()=>setTimer(timerBaseSeconds);
+$('timerCustomSet').onclick=()=>{const min=Number($('customTimerMinutes').value),sec=Number($('customTimerSeconds').value);if(!Number.isInteger(min)||!Number.isInteger(sec)||min<0||min>5999||sec<0||sec>59||min*60+sec<=0){alert('請輸入有效的自訂時間（至少 1 秒，秒數 0～59）。');return;}setTimer(min*60+sec)};
 document.querySelectorAll('.toolAnimalSelect').forEach(select=>{select.value=toolAnimalChoice;select.onchange=()=>{toolAnimalChoice=select.value;try{localStorage.setItem('fundesk-tool-animal',toolAnimalChoice)}catch(_){};refreshToolAnimals()}});
 document.querySelectorAll('[data-tool-fullscreen]').forEach(button=>button.onclick=async()=>{const panel=$(button.dataset.toolFullscreen);try{if(document.fullscreenElement){if(document.fullscreenElement===panel)await document.exitFullscreen();else{await document.exitFullscreen();await panel.requestFullscreen();}}else await panel.requestFullscreen();}catch(e){alert('無法進入全螢幕，請確認瀏覽器是否允許。')}});
 $('pickStudent').onclick=()=>{const pool=[...students()];if(!pool.length){$('randomShow').innerHTML='<span class="randomEmpty">目前班級尚無學生</span>';return;}const n=Math.max(1,Math.min(pool.length,Math.floor(Number($('randomCount').value)||1)));for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}const chosen=pool.slice(0,n);$('randomShow').innerHTML=chosen.map(s=>{const path=studentAvatarPath(s);return '<div class="randomStudentCard">'+(path?'<img src="'+esc(path)+'" alt="'+esc(s.name)+'的設定頭像">':'<span class="noAvatar" aria-hidden="true">😊</span>')+'<strong>'+esc(s.name)+'</strong><small>'+esc(s.no)+' 號</small></div>'}).join('')};
