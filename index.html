@@ -209,6 +209,23 @@ body.roomFullscreen .roomPlayArea>.movingRoomStage{flex:none;height:auto;min-hei
 body.roomFullscreen .roomFeedHistory{flex:0 0 auto;margin-top:6px;padding:5px 9px}
 body.roomFullscreen .roomHistoryList{max-height:70px}
 @media(max-width:680px){.roomHistoryItem{flex-wrap:wrap;gap:4px 8px}.roomHistoryItem time{margin-left:auto}.roomHistoryTitle span{display:none}}
+
+/* 動態教室班級寵物 */
+.roomPetPicker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#f5fff2;border:1px solid #cce8c9;border-radius:12px;padding:8px 12px;margin-bottom:10px;color:#356647;font-size:14px;font-weight:800}
+.roomPetPicker select{font:inherit;padding:7px 12px;border:1px solid #bad5bc;border-radius:9px;background:white;color:#345e4a}
+.roomPetPickerTip{font-size:11px;color:#67856b;font-weight:500}
+.roomPet{position:absolute;z-index:15;right:3%;bottom:8%;width:130px;height:175px;background:#ffffff90;border:2px solid #fff4b2;border-radius:22px;box-shadow:0 7px 22px #2d61443b;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;cursor:pointer;overflow:visible;touch-action:manipulation}
+.roomPet[hidden],.roomPetFull[hidden]{display:none!important}
+.roomPetImage{width:104px;height:104px;background-repeat:no-repeat;background-position:center;background-size:contain;transform:scale(var(--room-pet-grow,1));transition:transform 1s linear;transform-origin:center bottom;image-rendering:auto;pointer-events:none}
+.roomPetName{font-weight:900;color:#315e46;background:#f3ffed;border-radius:6px;padding:2px 5px;font-size:13px}
+.roomPetCount{font-size:10px;color:#597868;margin-bottom:5px}
+.roomPetFull{position:absolute;top:-26px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#ffeb92;border:2px solid white;color:#9c5b1b;font-size:18px;font-weight:1000;border-radius:20px;padding:3px 12px;box-shadow:0 4px 9px #6e733b40;z-index:20}
+.roomPet.roomPetSelected,.roomPet.roomFoodTarget{outline:5px solid #ffd36b;outline-offset:5px;box-shadow:0 0 0 10px #fff4ac55;z-index:22}
+.roomPet.roomPetSelected .roomPetImage{filter:drop-shadow(0 0 7px #ffdc63)}
+.roomPet.roomJustFed .roomPetImage{animation:roomPetYum .4s ease 2}
+@keyframes roomPetYum{50%{transform:scale(calc(var(--room-pet-grow,1) * 1.12)) rotate(5deg)}}
+@media(max-width:700px){.roomPet{width:85px;height:123px;right:1%;bottom:3%}.roomPetImage{width:66px;height:66px}.roomPetName{font-size:10px}.roomPetFull{font-size:13px}.roomPetCount{font-size:9px}}
+body.roomFullscreen .roomPet{right:4%;bottom:8%}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -2146,11 +2163,14 @@ function bindNewFeatures(){
 
 /* 動態教室 - 使用同一份雲端 db，名片開關時不重建走動場景。 */
 let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='',roomOriginalClass=null,roomCardClass=null,roomObserver=null,roomSpeed="medium",roomFoodGhost=null,roomFeedingPointer=null,roomFoodChoice=null,roomFeedCandidate=null,roomFeedLastVisual=0;
+const ROOM_PETS=[{id:'dino',name:'小恐龍',emoji:'🦖'},{id:'bear',name:'小熊',emoji:'🐻'},{id:'panda',name:'熊貓',emoji:'🐼'},{id:'cat',name:'小貓',emoji:'🐱'},{id:'rabbit',name:'小兔',emoji:'🐰'}];
+let roomPetCandidate=false,roomPetVisualTick=0;
+const roomPetAsset=id=>'/science-fundesk/class-pets/'+id+'.webp';
 const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香蕉',emoji:'🍌'},{id:'strawberry',name:'草莓',emoji:'🍓'},{id:'grapes',name:'葡萄',emoji:'🍇'},{id:'cookie',name:'餅乾',emoji:'🍪'},{id:'donut',name:'甜甜圈',emoji:'🍩'},{id:'juice',name:'果汁',emoji:'🧃'},{id:'milk',name:'牛奶',emoji:'🥛'}];
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
 function renderClassroom(){
  return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 ${esc(classDisplay(cl))} · 動態教室</strong><span class="roomCount" id="roomCount"></span><label class="roomSpeedLabel" for="roomSpeedSelect">移動速度 <select id="roomSpeedSelect" aria-label="學生移動速度"><option value="slow">慢</option><option value="medium">中</option><option value="fast">快</option></select></label><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button></div>
- <div class="roomPlayArea"><aside class="roomFoodShelf" aria-label="餵食工具欄"><strong>🍽️ 餵食小站</strong><span class="roomFoodHint">點食物 → 點學生 → 確認餵食；也可拖曳</span><div class="roomFoodGrid">${ROOM_FOODS.map(f=>`<button type="button" draggable="true" class="roomFood" data-food="${f.id}" title="${f.name}：拖到學生頭像">${f.emoji}<small>${f.name}</small></button>`).join('')}</div><p class="roomFoodRule">每人最多餵 3 次<br>吃飽後休息 1 小時</p><div class="roomFeedStatus" id="roomFeedStatus" role="status" aria-live="polite">先選食物，再點學生頭像。</div><div class="roomFeedConfirm" id="roomFeedConfirm" hidden><div id="roomFeedCandidateName"></div><button type="button" class="btn small" id="roomFeedConfirmButton">✅ 確認餵食</button><button type="button" class="btn small outline" id="roomFeedCancelButton">取消</button></div></aside><div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">FunDesk 快樂自然教室 🌱</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div></div></div><section class="roomFeedHistory"><div class="roomHistoryTitle">📋 餵食紀錄 <span>依時間顯示最新紀錄</span></div><div class="roomHistoryList" id="roomFeedHistory"></div></section></section>`;
+ <div class="roomPetPicker"><label for="roomPetSelect">🐾 班級寵物</label><select id="roomPetSelect"><option value="">未選擇寵物</option>${ROOM_PETS.map(p=>`<option value="${p.id}" ${db.classes[cl]?.classPetType===p.id?'selected':''}>${p.emoji} ${p.name}</option>`).join('')}</select><span class="roomPetPickerTip">各班獨立選擇，最多餵 10 次</span></div><div class="roomPlayArea"><aside class="roomFoodShelf" aria-label="餵食工具欄"><strong>🍽️ 餵食小站</strong><span class="roomFoodHint">點食物 → 點學生 → 確認餵食；也可拖曳</span><div class="roomFoodGrid">${ROOM_FOODS.map(f=>`<button type="button" draggable="true" class="roomFood" data-food="${f.id}" title="${f.name}：拖到學生頭像">${f.emoji}<small>${f.name}</small></button>`).join('')}</div><p class="roomFoodRule">每人最多餵 3 次<br>吃飽後休息 1 小時</p><div class="roomFeedStatus" id="roomFeedStatus" role="status" aria-live="polite">先選食物，再點學生頭像。</div><div class="roomFeedConfirm" id="roomFeedConfirm" hidden><div id="roomFeedCandidateName"></div><button type="button" class="btn small" id="roomFeedConfirmButton">✅ 確認餵食</button><button type="button" class="btn small outline" id="roomFeedCancelButton">取消</button></div></aside><div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">FunDesk 快樂自然教室 🌱</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div><button type="button" class="roomPet" id="roomPet" hidden aria-label="選擇班級寵物餵食"><span class="roomPetFull" id="roomPetFull" hidden>吃飽囉!!</span><span class="roomPetImage" id="roomPetImage"></span><span class="roomPetName" id="roomPetName"></span><span class="roomPetCount" id="roomPetCount"></span></button></div></div><section class="roomFeedHistory"><div class="roomHistoryTitle">📋 餵食紀錄 <span>依時間顯示最新紀錄</span></div><div class="roomHistoryList" id="roomFeedHistory"></div></section></section>`;
 }
 function roomPeople(){
  const date=$('sessionDate')?.value||today();
@@ -2159,7 +2179,7 @@ function roomPeople(){
  return (db.classes[cl]?.students||[]).filter(s=>!absent.has(String(s.id))).map(s=>({code:cl,s}));
 }
 function stopMovingClassroom(){
- roomClearFeedingPointer();roomFoodChoice=null;roomFeedCandidate=null;
+ roomClearFeedingPointer();roomFoodChoice=null;roomFeedCandidate=null;roomPetCandidate=false;
  if(roomAnimation)cancelAnimationFrame(roomAnimation);
  roomAnimation=0;roomWalkers=[];roomLastTick=0;
  if(roomObserver){roomObserver.disconnect();roomObserver=null}
@@ -2211,7 +2231,7 @@ function populateMovingRoom(){
   roomWalkers.push({el,code,sid:s.id,x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:geo.radius});
  }
  root.appendChild(fragment);
- roomRenderFeedHistory();roomRefreshCandidate();
+ roomRenderPet();roomRenderFeedHistory();roomRefreshCandidate();
  roomWalkers.forEach(w=>w.el.style.transform=`translate3d(${w.x}px,${w.y}px,0)`);
 }
 function advanceMovingRoom(dt){
@@ -2252,6 +2272,50 @@ function advanceMovingRoom(dt){
  for(const w of roomWalkers)w.el.style.transform=`translate3d(${w.x.toFixed(1)}px,${w.y.toFixed(1)}px,0)`;
 }
 /* 教室餵食紀錄隨教師班級雲端資料同步；按學生 ID 分別計算三次與一小時冷卻。 */
+function roomPetSelected(code=cl){return ROOM_PETS.find(p=>p.id===db.classes[code]?.classPetType)||null}
+function roomPetState(code=cl,now=Date.now()){
+ const record=db.classes[code]?.classPetFeeding||{};
+ const until=Math.max(0,Number(record.until)||0);
+ return until>now?{count:10,until}:{count:until?0:Math.min(10,Math.max(0,Number(record.count)||0)),until:0};
+}
+function roomUpdatePetAppearance(now=Date.now()){
+ const el=$('roomPet'),pet=roomPetSelected();if(!el||!pet)return;
+ const state=roomPetState(cl,now),remaining=Math.max(0,state.until-now);
+ const growth=remaining?1+remaining/3600000:1+state.count/10;
+ el.style.setProperty('--room-pet-grow',growth.toFixed(3));
+ const full=$('roomPetFull');if(full)full.hidden=!remaining;
+ const count=$('roomPetCount');if(count)count.textContent=remaining?'休息中 · '+Math.ceil(remaining/60000)+' 分鐘':'已餵 '+state.count+'/10 次';
+ el.title=pet.name+(remaining?'，吃飽囉!!':'，已餵 '+state.count+'/10 次');
+}
+function roomRenderPet(){
+ const el=$('roomPet'),chosen=roomPetSelected();if(!el)return;
+ el.hidden=!chosen;
+ const img=$('roomPetImage');if(!chosen){roomPetCandidate=false;return}
+ const index=ROOM_PETS.findIndex(p=>p.id===chosen.id);
+ img.style.backgroundImage='url('+JSON.stringify('/science-fundesk/class-pets/pets-sprite.webp')+')';
+ img.style.backgroundSize='500% 100%';
+ img.style.backgroundPosition=(index*25)+'% 50%';
+ img.textContent='';
+ $('roomPetName').textContent=chosen.emoji+' '+chosen.name;
+ el.onclick=()=>{if(!roomFoodChoice)return;roomPetCandidate=true;roomFeedCandidate=null;roomRefreshCandidate();const status=$('roomFeedStatus');if(status)status.textContent='已選班級寵物 '+chosen.name+'，請確認後餵食。'};
+ roomUpdatePetAppearance();
+}
+function roomFeedPet(foodId){
+ const food=ROOM_FOODS.find(f=>f.id===foodId),pet=roomPetSelected(),record=db.classes[cl];
+ if(!food||!pet||!record)return false;
+ const now=Date.now(),state=roomPetState(cl,now),status=$('roomFeedStatus');
+ if(state.until>now){if(status)status.textContent='🐾 '+pet.name+' 吃飽囉!! 再等 '+Math.ceil((state.until-now)/60000)+' 分鐘。';return false}
+ const count=state.count+1;
+ record.classPetFeeding={count,until:count>=10?now+3600000:0};
+ if(!Array.isArray(record.roomFeedingLog))record.roomFeedingLog=[];
+ record.roomFeedingLog.push({kind:'pet',name:pet.name,pet:pet.id,food:food.id,count,at:now});
+ if(record.roomFeedingLog.length>150)record.roomFeedingLog=record.roomFeedingLog.slice(-150);
+ save();roomUpdatePetAppearance(now);roomRenderFeedHistory();
+ const el=$('roomPet');
+ if(el){el.classList.remove('roomJustFed');void el.offsetWidth;el.classList.add('roomJustFed');setTimeout(()=>el.classList.remove('roomJustFed'),850)}
+ if(status)status.textContent=food.emoji+' '+pet.name+' 吃了'+food.name+'！已餵 '+count+'/10 次'+(count===10?'，吃飽囉!! 1 小時後才能再餵。':'。');
+ return true;
+}
 function roomFeedState(code,sid,now=Date.now()){
  const record=db.classes[code]?.roomFeeding?.[String(sid)]||{};
  const until=Math.max(0,Number(record.until)||0);
@@ -2284,12 +2348,12 @@ function roomRenderFeedHistory(){
   const person=db.classes[cl]?.students?.find(st=>String(st.id)===String(entry.sid));
   const stamp=new Date(Number(entry.at)||Date.now());
   const when=Number.isFinite(stamp.getTime())?stamp.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-  return `<div class="roomHistoryItem"><span>${food?.emoji||'🍽️'}</span><strong>${esc(person?person.no+' 號 '+person.name:entry.name||'學生')}</strong><span>吃了${esc(food?.name||entry.food||'食物')}</span><span>第 ${Math.max(1,Math.min(3,Number(entry.count)||1))} 次</span><time>${esc(when)}</time></div>`;
+  return `<div class="roomHistoryItem"><span>${food?.emoji||'🍽️'}</span><strong>${esc(entry.kind==='pet'?'🐾 '+(entry.name||'班級寵物'):person?person.no+' 號 '+person.name:entry.name||'學生')}</strong><span>吃了${esc(food?.name||entry.food||'食物')}</span><span>第 ${Math.max(1,Math.min(entry.kind==='pet'?10:3,Number(entry.count)||1))} 次</span><time>${esc(when)}</time></div>`;
  }).join(''):'<div class="roomHistoryEmpty">尚無餵食紀錄，選擇食物開始吧！</div>';
 }
 function roomSetFoodChoice(foodId){
  roomFoodChoice=ROOM_FOODS.some(f=>f.id===foodId)?foodId:null;
- roomFeedCandidate=null;
+ roomFeedCandidate=null;roomPetCandidate=false;
  document.querySelectorAll('.roomFood').forEach(b=>{
   const selected=b.dataset.food===roomFoodChoice;
   b.classList.toggle('roomFoodSelected',selected);
@@ -2304,6 +2368,7 @@ function roomSelectFeedCandidate(code,sid){
  if(!roomFoodChoice)return;
  const pupil=db.classes[code]?.students?.find(st=>String(st.id)===String(sid));
  if(!pupil||!roomWalkers.some(w=>w.code===code&&String(w.sid)===String(sid)))return;
+ roomPetCandidate=false;
  roomFeedCandidate={code,sid:String(sid)};
  roomRefreshCandidate();
  const status=$('roomFeedStatus');
@@ -2315,12 +2380,16 @@ function roomRefreshCandidate(){
  for(const walker of roomWalkers){
   walker.el.classList.toggle('roomFeedSelected',!!pupil&&walker.code===data.code&&String(walker.sid)===String(data.sid));
  }
+ const pet=$('roomPet');if(pet)pet.classList.toggle('roomPetSelected',roomPetCandidate);
  const panel=$('roomFeedConfirm');
  if(!panel)return;
- panel.hidden=!pupil;
+ panel.hidden=!pupil&&!roomPetCandidate;
  if(pupil){
   const food=ROOM_FOODS.find(f=>f.id===roomFoodChoice);
   $('roomFeedCandidateName').textContent=(food?.emoji||'🍽️')+' 餵給 '+pupil.no+' 號 '+pupil.name;
+ }else if(roomPetCandidate){
+  const food=ROOM_FOODS.find(f=>f.id===roomFoodChoice),type=roomPetSelected();
+  $('roomFeedCandidateName').textContent=(food?.emoji||'🍽️')+' 餵給班級寵物 '+(type?.name||'');
  }
 }
 function roomFeedStudent(code,sid,foodId){
@@ -2355,14 +2424,15 @@ function roomFeedStudent(code,sid,foodId){
  return true;
 }
 function roomFoodDropAt(x,y,foodId){
- const target=document.elementFromPoint(x,y)?.closest?.('.roomWalker');
- if(!target||!$('movingClassroom')?.contains(target)){$('roomFeedStatus').textContent='請把食物放到學生頭像上。';return}
- roomFeedStudent(target.dataset.roomClass,target.dataset.roomStudent,foodId);
+ const target=document.elementFromPoint(x,y)?.closest?.('.roomWalker,.roomPet');
+ if(!target||!$('movingClassroom')?.contains(target)){$('roomFeedStatus').textContent='請把食物放到學生或寵物頭像上。';return}
+ if(target.classList.contains('roomPet'))roomFeedPet(foodId);
+ else roomFeedStudent(target.dataset.roomClass,target.dataset.roomStudent,foodId);
 }
 function roomClearFeedingPointer(){
  if(roomFoodGhost)roomFoodGhost.remove();
  roomFoodGhost=null;roomFeedingPointer=null;
- document.querySelectorAll('.roomWalker.roomFoodTarget').forEach(el=>el.classList.remove('roomFoodTarget'));
+ document.querySelectorAll('.roomWalker.roomFoodTarget,.roomPet.roomFoodTarget').forEach(el=>el.classList.remove('roomFoodTarget'));
 }
 function roomBindFoods(){
  const stage=$('movingClassroom');
@@ -2391,7 +2461,7 @@ function roomBindFoods(){
    if(!roomFeedingPointer||roomFeedingPointer.id!==e.pointerId)return;
    if(roomFoodGhost){roomFoodGhost.style.left=e.clientX+'px';roomFoodGhost.style.top=e.clientY+'px'}
    document.querySelectorAll('.roomWalker.roomFoodTarget').forEach(el=>el.classList.remove('roomFoodTarget'));
-   const target=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('.roomWalker');
+   const target=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('.roomWalker,.roomPet');
    if(target&&stage.contains(target))target.classList.add('roomFoodTarget');
    e.preventDefault();
   };
@@ -2413,7 +2483,9 @@ function roomBindFoods(){
  };
  $('roomFeedConfirmButton').onclick=()=>{
   const target=roomFeedCandidate,food=roomFoodChoice;
-  if(!target||!food)return;
+  if(!food)return;
+  if(roomPetCandidate){if(roomFeedPet(food)){roomPetCandidate=false;roomRefreshCandidate()}return}
+  if(!target)return;
   if(roomFeedStudent(target.code,target.sid,food)){roomFeedCandidate=null;roomRefreshCandidate()}
  };
  $('roomFeedCancelButton').onclick=()=>roomSetFoodChoice(null);
@@ -2439,7 +2511,7 @@ function refreshMovingClassroomCards(){
   w.el.querySelector('.roomName').textContent=`${s.no} ${s.name}`;
   roomApplyFeedingAppearance(w.el,w.code,w.sid);
  }
- roomRenderFeedHistory();roomRefreshCandidate();
+ roomRenderPet();roomRenderFeedHistory();roomRefreshCandidate();
 }
 function restoreClassroomSelection(){
  if(roomCardClass===null)return;
@@ -2462,7 +2534,8 @@ function startMovingClassroom(){
  if(!$('movingClassroom'))return;
  if(roomOriginalClass===null)roomOriginalClass=cl;
  $('roomShuffle').onclick=populateMovingRoom;
- roomBindFoods();roomFoodChoice=null;roomFeedCandidate=null;roomRenderFeedHistory();
+ $('roomPetSelect').onchange=e=>{const id=e.target.value;if(id&&!ROOM_PETS.some(p=>p.id===id))return;db.classes[cl].classPetType=id;save();roomPetCandidate=false;roomRenderPet();roomRefreshCandidate()};
+ roomBindFoods();roomFoodChoice=null;roomFeedCandidate=null;roomPetCandidate=false;roomRenderFeedHistory();
  const speedSelect=$('roomSpeedSelect');speedSelect.value=roomSpeed;speedSelect.onchange=()=>{roomSpeed=speedSelect.value};
  const fullscreenButton=$('roomFullscreenToggle');
  const updateFullscreenButton=()=>{const enabled=document.fullscreenElement===document.documentElement&&view==='classroom';document.body.classList.toggle('roomFullscreen',enabled);if(fullscreenButton.isConnected)fullscreenButton.textContent=enabled?'⛶ 退出全螢幕':'⛶ 全螢幕'};
@@ -2481,7 +2554,7 @@ function startMovingClassroom(){
   if(view!=='classroom'||!$('movingClassroom')){stopMovingClassroom();return}
   const dt=Math.min(.05,Math.max(0,(ts-(roomLastTick||ts))/1000));roomLastTick=ts;
   if(!paused&&dt)advanceMovingRoom(dt);
-  if(ts-roomFeedLastVisual>1000){roomFeedLastVisual=ts;const now=Date.now();for(const w of roomWalkers)roomApplyFeedingAppearance(w.el,w.code,w.sid,now)}
+  if(ts-roomFeedLastVisual>1000){roomFeedLastVisual=ts;const now=Date.now();for(const w of roomWalkers)roomApplyFeedingAppearance(w.el,w.code,w.sid,now);roomUpdatePetAppearance(now)}
   roomAnimation=requestAnimationFrame(animate);
  }
  roomAnimation=requestAnimationFrame(animate);
