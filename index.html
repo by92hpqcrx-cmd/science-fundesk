@@ -1050,6 +1050,22 @@ body.roomFullscreen #content,
   body.roomFullscreen .roomPlayArea{overflow-y:auto!important;min-height:0!important}
   body.roomFullscreen .roomPlayArea>.movingRoomStage{height:clamp(280px,48dvh,520px)!important}
 }
+</style><style id="fundeskRoomTitleAndSidebarSizeFix20261117">
+/* 頂端動態教室橫列只含重複標題，直接隱藏；工具鈕已在班寵選擇列。 */
+.movingRoomPanel > .movingRoomToolbar{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important}
+body.roomFullscreen .movingRoomPanel > .movingRoomToolbar{display:none!important}
+body.roomFullscreen .topbar,body.roomFullscreen .generalFixedHeading:has(.movingRoomToolbar){display:none!important}
+/* 左側班級卡回調適中大小，班級選項依然為最大字體。 */
+.sidebar #classMascotBanner .classMascotLabel{font-size:20px!important;line-height:1.3!important;font-weight:850!important}
+.sidebar #classMascotBanner #classSelect{font-size:24px!important;font-weight:850!important;line-height:1.3!important;min-height:52px!important;padding:8px 9px!important}
+.sidebar #classMascotBanner #classSelect option{font-size:22px!important;font-weight:850!important}
+.sidebar #classMascotBanner .classMascotCaption{font-size:16px!important;font-weight:800!important;line-height:1.3!important}
+@media(max-width:730px){
+.sidebar #classMascotBanner .classMascotLabel{font-size:19px!important}
+.sidebar #classMascotBanner #classSelect{font-size:22px!important;min-height:50px!important}
+.sidebar #classMascotBanner #classSelect option{font-size:21px!important}
+.sidebar #classMascotBanner .classMascotCaption{font-size:15px!important}
+}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
