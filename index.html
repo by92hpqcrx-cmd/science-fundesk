@@ -628,6 +628,30 @@ body.roomFullscreen .shell>.main.compactDashboardMain>#content{height:100vh!impo
 @media(max-width:730px){.shell>.main.compactDashboardMain{height:100dvh!important;max-height:100dvh!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}.shell>.main.compactDashboardMain>#content{min-height:0!important;overflow-y:auto!important}#homeFixedQuicklinks.generalFixedHeading{max-height:28vh!important;padding:8px 10px!important}#homeFixedQuicklinks.generalFixedHeading h2{font-size:20px!important}}
 body.roomFullscreen #homeFixedQuicklinks.generalFixedHeading{display:none!important}
 @media print{.shell>.main.compactDashboardMain>#content{overflow:visible!important}.shell>.main.compactDashboardMain{height:auto!important;max-height:none!important;overflow:visible!important}}
+</style><style id="fundeskMatchedTitleNavColors20261117">
+/* 固定標題欄與左側相應功能項目完全共用底色、字色和邊框色 */
+.shell>.main.compactDashboardMain>#homeFixedQuicklinks:not([hidden]){
+  background:var(--fixed-title-bg,#e8f2ff)!important;
+  color:var(--fixed-title-ink,#174c91)!important;
+  border:2px solid var(--fixed-title-border,#6fa7e5)!important;
+  box-shadow:inset 6px 0 0 var(--fixed-title-ink,#174c91),0 3px 10px #07152b12!important;
+}
+#homeFixedQuicklinks:not([hidden])>.panelHead,
+#homeFixedQuicklinks:not([hidden])>.animalToolHead,
+#homeFixedQuicklinks:not([hidden])>.movingRoomToolbar{
+  background:transparent!important;
+  border-color:transparent!important;
+}
+#homeFixedQuicklinks:not([hidden]) h2,
+#homeFixedQuicklinks:not([hidden]) .movingRoomToolbar>strong,
+#homeFixedQuicklinks:not([hidden]) .tabletHero h2{
+  color:var(--fixed-title-ink,#174c91)!important;
+}
+#homeFixedQuicklinks:not([hidden]) .hint,
+#homeFixedQuicklinks:not([hidden]) .pill,
+#homeFixedQuicklinks:not([hidden]) .roomCount{
+  color:var(--fixed-title-ink,#174c91)!important;
+}
 </style><style id="fundeskMulticolorLargerSidebarNav20261117">
 /* 每項功能依 data-view 使用固定配色，拖曳排序後顏色也不會改變。 */
 #nav button[data-view="seats"]{--nav-item-bg:#e8f2ff;--nav-item-ink:#174c91;--nav-item-border:#6fa7e5}
@@ -1150,7 +1174,19 @@ function navBindLongPress(){
  window.addEventListener('blur',cancel);
  nav.addEventListener('contextmenu',e=>{if(navDragState?.active)e.preventDefault()});
 }
-function render(){const mascot=$('fixedPageMascot');if(mascot){const mascotCode=fundeskMascotCode(cl);const src=FDESK_MASCOT_IMAGE[mascotCode];if(src&&mascot.getAttribute('src')!==src)mascot.src=src;mascot.alt=classDisplay(cl)+' '+(FDESK_MASCOT_NAME[mascotCode]||'')+'吉祥物';}const existingStats=$('stats');const restingPlace=$('statsRestingPlace');if(existingStats&&restingPlace&&existingStats.parentElement!==restingPlace)restingPlace.appendChild(existingStats);document.querySelector('.compactDashboardMain')?.classList.toggle('dashboardHome',view==='seats');const homeFixedHost=$('homeFixedQuicklinks');if(homeFixedHost){homeFixedHost.replaceChildren();homeFixedHost.hidden=true;homeFixedHost.classList.toggle('generalFixedHeading',view!=='seats');}if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();syncNavOrder();cloudRenderQuickClasses();updateClassMascot();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');if(view==='classroom'&&root.querySelector('#movingClassroom')){refreshMovingClassroomCards();return}if(root.querySelector('#movingClassroom'))stopMovingClassroom();root.innerHTML=({seats:renderSeats,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,classroom:renderClassroom,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();if(root)root.scrollTop=0;if(view==='seats'){const fixedHost=$('homeFixedQuicklinks');const homeHeading=root.querySelector('.quicklinksHeader');if(fixedHost&&homeHeading){fixedHost.replaceChildren(homeHeading);fixedHost.hidden=false;}const statsHost=$('quicklinkStatsHost');const stats=$('stats');if(statsHost&&stats){statsHost.appendChild(stats);stats.classList.add('quicklinkStats')}}else{const fixedHost=$('homeFixedQuicklinks');const selector=view==='classroom'?'.movingRoomToolbar':view==='tools'?'.animalToolHead':view==='tabletRules'?'.tabletHero':'.panelHead';const sectionHeading=root.querySelector(selector);if(fixedHost&&sectionHeading){fixedHost.replaceChildren(sectionHeading);fixedHost.hidden=false;}}decorateClassPage();hookView()}
+function syncFixedHeadingColor(){
+ const fixed=$('homeFixedQuicklinks');if(!fixed)return;
+ const aliases={rps:'seats',attention:'tasks',correction:'tasks',board:'tasks'};
+ const key=aliases[view]||view;
+ const nav=document.querySelector('#nav button[data-view="'+key+'"]');
+ const css=nav?getComputedStyle(nav):null;
+ const map=[['--nav-item-bg','--fixed-title-bg'],['--nav-item-ink','--fixed-title-ink'],['--nav-item-border','--fixed-title-border']];
+ for(const [source,target] of map){
+  const value=css?.getPropertyValue(source).trim();
+  if(value)fixed.style.setProperty(target,value);else fixed.style.removeProperty(target);
+ }
+}
+function render(){const mascot=$('fixedPageMascot');if(mascot){const mascotCode=fundeskMascotCode(cl);const src=FDESK_MASCOT_IMAGE[mascotCode];if(src&&mascot.getAttribute('src')!==src)mascot.src=src;mascot.alt=classDisplay(cl)+' '+(FDESK_MASCOT_NAME[mascotCode]||'')+'吉祥物';}const existingStats=$('stats');const restingPlace=$('statsRestingPlace');if(existingStats&&restingPlace&&existingStats.parentElement!==restingPlace)restingPlace.appendChild(existingStats);document.querySelector('.compactDashboardMain')?.classList.toggle('dashboardHome',view==='seats');const homeFixedHost=$('homeFixedQuicklinks');if(homeFixedHost){homeFixedHost.replaceChildren();homeFixedHost.hidden=true;homeFixedHost.classList.toggle('generalFixedHeading',view!=='seats');}if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();syncNavOrder();cloudRenderQuickClasses();updateClassMascot();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');if(view==='classroom'&&root.querySelector('#movingClassroom')){refreshMovingClassroomCards();return}if(root.querySelector('#movingClassroom'))stopMovingClassroom();root.innerHTML=({seats:renderSeats,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,classroom:renderClassroom,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();if(root)root.scrollTop=0;if(view==='seats'){const fixedHost=$('homeFixedQuicklinks');const homeHeading=root.querySelector('.quicklinksHeader');if(fixedHost&&homeHeading){fixedHost.replaceChildren(homeHeading);fixedHost.hidden=false;}const statsHost=$('quicklinkStatsHost');const stats=$('stats');if(statsHost&&stats){statsHost.appendChild(stats);stats.classList.add('quicklinkStats')}}else{const fixedHost=$('homeFixedQuicklinks');const selector=view==='classroom'?'.movingRoomToolbar':view==='tools'?'.animalToolHead':view==='tabletRules'?'.tabletHero':'.panelHead';const sectionHeading=root.querySelector(selector);if(fixedHost&&sectionHeading){fixedHost.replaceChildren(sectionHeading);fixedHost.hidden=false;}}syncFixedHeadingColor();decorateClassPage();hookView()}
 const labGroupOrder=[2,3,4,0,1];
 const labRoleColumns=['組長','副組長','器材長 1／器材長','器材長 2','習作長','清潔長'];
 function labRoles(count){
