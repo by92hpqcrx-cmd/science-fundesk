@@ -1098,6 +1098,32 @@ body.roomFullscreen .topbar,body.roomFullscreen .generalFixedHeading:has(.moving
  }
  body:not(.roomFullscreen) .movingRoomPanel .roomPlayArea{row-gap:6px!important}
 }
+</style><style id="fundeskRoomFullscreenShorterStage20261117">
+/* 全螢幕舞台同步縮短，餵食小站上移；保留學生/班寵移動及捲動功能。 */
+body.roomFullscreen .movingRoomPanel .roomPlayArea{
+ grid-template-rows:auto auto!important;
+ align-content:start!important;
+ row-gap:7px!important;
+ overflow-y:auto!important;
+ overflow-x:hidden!important;
+ min-height:0!important;
+}
+body.roomFullscreen .movingRoomPanel .roomPlayArea>.movingRoomStage{
+ height:clamp(340px,55dvh,640px)!important;
+ min-height:0!important;
+ align-self:start!important;
+}
+@media(min-width:731px) and (max-width:1180px), (pointer:coarse) and (min-width:731px) and (max-width:1366px){
+ body.roomFullscreen .movingRoomPanel .roomPlayArea>.movingRoomStage{
+  height:clamp(280px,43dvh,530px)!important;
+ }
+}
+@media(max-width:730px){
+ body.roomFullscreen .movingRoomPanel .roomPlayArea>.movingRoomStage{
+  height:clamp(250px,40dvh,450px)!important;
+ }
+ body.roomFullscreen .movingRoomPanel .roomPlayArea{row-gap:6px!important}
+}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
