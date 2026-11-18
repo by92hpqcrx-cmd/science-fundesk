@@ -3737,7 +3737,7 @@ function renderContact(){
  <div class="actions"><button type="button" class="btn" id="contactSave">💾 發布／儲存聯絡簿</button><button type="button" class="btn outline" id="contactReload">↻ 重新讀取雲端</button></div>
  <p class="contactStatus" id="contactStatus" role="status">載入中…</p></section>
  <aside><section class="panel contactShare"><h2>🔗 ${esc(classDisplay(code))}專屬閱讀網址</h2><p class="contactMuted">每班都有不同連結。免登入即可閱讀該班的聯絡簿與留言。</p>
- <input type="text" readonly id="contactLink" aria-label="班級聯絡簿網址" value="讀取中…"><div class="actions"><button type="button" class="btn outline" id="contactCopy" disabled>複製網址</button><button type="button" class="btn outline" id="contactOpen" disabled>學生畫面 ↗</button></div><p class="contactMuted">持有本班聯絡簿網址的人都可查看留言並以導師身分留言，請避免在留言中填寫個資。</p></section>
+ <input type="text" readonly id="contactLink" aria-label="班級聯絡簿網址" value="讀取中…"><div class="actions"><button type="button" class="btn outline" id="contactCopy" disabled>複製網址</button><button type="button" class="btn outline" id="contactOpen" disabled>學生畫面 ↗</button><button type="button" class="btn" id="contactEnableRoom" disabled>🏫 啟用學生端動態教室</button></div><p id="contactRoomStatus" class="contactMuted" role="status">啟用後，學生持有本班聯絡簿連結即可免登入使用動態教室。</p><p class="contactMuted">持有本班聯絡簿網址的人都可查看留言並以導師身分留言，請避免在留言中填寫個資。</p></section>
  <section class="panel contactHistory"><h2>📅 已發布日期</h2><div id="contactList">讀取中…</div></section>
 </aside></div>`;
 }
@@ -3774,7 +3774,7 @@ function contactFill(data,code){
  if(cl!==code||view!=='contact')return;
  contactCache[code]={entries:Array.isArray(data?.entries)?data.entries:[],token:String(data?.token||'')};
  const url=contactCache[code].token?contactViewerUrl(contactCache[code].token):'';
- $('contactLink').value=url||'尚未建立專屬連結';$('contactCopy').disabled=!url;$('contactOpen').disabled=!url;
+ $('contactLink').value=url||'尚未建立專屬連結';$('contactCopy').disabled=!url;$('contactOpen').disabled=!url;const roomButton=$('contactEnableRoom');if(roomButton)roomButton.disabled=!url;
  const entries=contactCache[code].entries;
  for(const entry of entries){
   const {points}=contactSplitPoints(entry.reminders);
@@ -3915,6 +3915,7 @@ function contactBind(){
  $('contactReload').onclick=()=>{if(contactDirty()&&!confirm('重新讀取會捨棄未儲存的修改，是否繼續？'))return;contactLoad()};
  $('contactCopy').onclick=async()=>{const url=$('contactLink').value;try{await navigator.clipboard.writeText(url);contactStatus('✅ 已複製班級專屬網址')}catch{ $('contactLink').select();contactStatus('請按 Ctrl+C 複製網址')}};
  $('contactOpen').onclick=()=>window.open($('contactLink').value,'_blank','noopener,noreferrer');
+ $('contactEnableRoom').onclick=async()=>{const token=contactCache[cl]?.token,code=cl,status=$('contactRoomStatus');if(!token)return alert('請先建立本班聯絡簿連結');const button=$('contactEnableRoom');button.disabled=true;status.textContent='正在啟用學生端動態教室…';try{await cloudFetch('/rest/v1/rpc/fundesk_student_room_publish',{method:'POST',body:JSON.stringify({p_token:token,p_class_code:code})});status.textContent='✅ 已啟用！學生從本班聯絡簿即可免登入開啟動態教室。';}catch(e){status.textContent='⚠️ 啟用失敗：'+cloudErr(e)+'。請先於 Supabase SQL Editor 執行 student-classroom-setup.sql';}finally{button.disabled=false}};
  contactLoad();
 }
 
