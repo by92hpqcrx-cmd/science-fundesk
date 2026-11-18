@@ -1524,6 +1524,13 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
 .movingRoomStage.scene-mountain{background:#e8f1e5 url('./backgrounds/mountain-faded.png') center/cover no-repeat!important}
 .movingRoomStage.scene-beach{background:#fff3df url('./backgrounds/beach-faded.png') center/cover no-repeat!important}
 .movingRoomStage:is(.scene-space,.scene-amusement,.scene-park,.scene-mountain,.scene-beach) :is(.movingRoomWall,.movingRoomWindow,.movingRoomBoard,.movingRoomClock,.movingRoomFloor,.movingRoomDesk){display:none!important}
+</style><script src="./default-student-avatars.js?v=20261118b"></script><style>/* 各實驗組學生名片淡色區分（狀態仍由外框表示）。 */
+.personCard[data-lab-group="1"]{background:#fff0e8}
+.personCard[data-lab-group="2"]{background:#e9f4ff}
+.personCard[data-lab-group="3"]{background:#edf9e8}
+.personCard[data-lab-group="4"]{background:#f5edff}
+.personCard[data-lab-group="5"]{background:#fff7df}
+.personCard[data-lab-group].selected{outline:3px solid #477ed6;outline-offset:1px}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
@@ -1670,7 +1677,7 @@ const loadZodiacAvatarAssets=()=>{
  }).catch(err=>console.warn('星座頭像檢查失敗',err));
 };
 loadZodiacAvatarAssets();
-const studentAvatarPath=s=>s&&STUDENT_AVATARS.some(([id])=>id===s.avatar)?avatarFilePath(s.avatar):'';
+const studentAvatarPath=s=>{if(!s)return '';if(s.avatar)return STUDENT_AVATARS.some(([id])=>id===s.avatar)?avatarFilePath(s.avatar):'';const n=Number(s.no);const defaults=window.FUNDESK_UNIFORM_AVATARS||{};return n>=1&&n<=14?(defaults.boy||''):n>=15&&n<=28?(defaults.girl||''):'';};
 const avatarWatermark=s=>{const src=studentAvatarPath(s);return src?'<span class="seatAvatarArt" style="background-image:url('+src+')" aria-hidden="true"></span>':''};
 const avatarThumb=s=>{const src=studentAvatarPath(s);return src?'<img class="studentAvatarThumb" src="'+src+'" alt="自選頭像">':'<span class="studentAvatarPlaceholder" aria-hidden="true">☺</span>'};
 
@@ -2403,7 +2410,7 @@ function bindRedemption(){
 }
 
 function pointAdd(ids,delta,reason){const code=cl,date=$('sessionDate').value;ids.forEach(id=>{if(student(id))cls().points.push({sid:id,date,delta,reason:reason||'課堂表現'})});save();render();contactQueuePointsSync(code,date)}
-function pointCards(){return [...students()].sort((a,b)=>a.no-b.no).map(s=>`<button class="personCard ${pointSelection.has(s.id)?'selected':''}" data-point-person="${s.id}" aria-pressed="${pointSelection.has(s.id)}"><b>${s.no} 號</b>${avatarNamed(s)}<strong>可用 ${ptotal(s.id)} 點</strong><small>待抵扣 ${ppenalty(s.id)} 點</small></button>`).join('')}
+function pointCards(){return [...students()].sort((a,b)=>a.no-b.no).map(s=>`<button class="personCard ${pointSelection.has(s.id)?'selected':''}" data-lab-group="${studentGroupIndex(s.id)+1}" data-point-person="${s.id}" aria-pressed="${pointSelection.has(s.id)}"><b>${s.no} 號</b>${avatarNamed(s)}<strong>可用 ${ptotal(s.id)} 點</strong><small>待抵扣 ${ppenalty(s.id)} 點</small></button>`).join('')}
 function renderPoints(){return `<section class="panel"><div class="panelHead"><h2>★ ${esc(classDisplay(cl))}課堂表現</h2><span class="pill">點學生卡片可多選</span></div><div class="actions"><button class="btn small outline" data-select-points="all">選全班</button><button class="btn small outline" data-select-points="clear">清除選取</button><button class="btn small outline" data-select-points="group">選實驗小組</button><select id="pointGroup">${['第一組','第二組','第三組','第四組','第五組'].map((x,i)=>`<option value="${i}">${x}</option>`).join('')}</select></div><p class="hint"><a href="./remote.html" target="_blank" rel="noopener noreferrer">📱 開啟平板加扣分遙控器 ↗</a>（使用同一個教師帳號，平板操作會同步回這個頁面）</p><p class="hint">已選 <strong id="selectedPointCount">${pointSelection.size}</strong> 位；只影響目前 ${classDisplay(cl)}。點數與原因保留在學生紀錄。</p><div id="pointPeople" class="personGrid">${pointCards()}</div><div class="pointActionSections"><div class="pointActionSection"><h3>🌟 加點行為</h3><label for="pointAddBehavior">選擇加點項目</label><select id="pointAddBehavior">${BEHAVIORS.map(([name,d],i)=>d>0?`<option value="${i}">${esc(name)}（+${d} 點）</option>`:'').join('')}</select><button class="btn" id="applyAddBehavior">＋ 登記加點</button></div><div class="pointActionSection"><h3>📌 扣點行為</h3><label for="pointDeductBehavior">選擇扣點項目</label><select id="pointDeductBehavior">${BEHAVIORS.map(([name,d],i)=>d<0?`<option value="${i}">${esc(name)}（${d} 點）</option>`:'').join('')}</select><button class="btn danger" id="applyDeductBehavior">－ 登記扣點</button></div></div><section class="pointLedgerPanel"><h3>🧾 積點抵扣／誤記取消</h3><p class="hint">請先選擇一位學生。積點抵扣會同時扣除等值可用積點與待抵扣點數；取消誤記保留稽核紀錄。</p><label>選擇學生 <select id="pointLedgerStudent"><option value="">請選擇學生</option>${[...students()].sort((a,b)=>a.no-b.no).map(s=>`<option value="${esc(s.id)}">${s.no} 號 ${esc(s.name)}｜可用 ${ptotal(s.id)}｜待抵扣 ${ppenalty(s.id)}</option>`).join('')}</select></label><div id="pointLedgerDetails"></div></section><div class="actions"><label>自訂點數 <input type="number" id="customPoint" value="1" min="-100" max="100" style="width:90px"></label><button class="btn outline" id="giveCustomPoint">套用</button></div><label class="inlineLabel">補充備註 <input id="pointsReason" placeholder="選填，另可補充行為說明" style="min-width:220px;flex:1"></label><h3>常用行為一鍵記錄（8 格）</h3><div class="behaviorGrid pointQuickEight">${[...BEHAVIORS.filter(row=>row[1]<0).slice(0,4),...BEHAVIORS.filter(row=>row[1]>0).slice(0,4)].map(([name,d,emoji])=>`<button type="button" class="behaviorButton" data-behavior="${esc(name)}" data-value="${d}" aria-label="${esc(name)} ${d>0?'加':'扣'} ${Math.abs(d)} 點"><b>${emoji} ${d>0?'＋':'－'}${Math.abs(d)} 點</b><span>${esc(name)}</span></button>`).join('')}</div><p class="hint">可選個人、全班或某個實驗小組，再按加減分或常用行為。全班可加分；全班扣分會被阻擋，以免誤操作或形成連坐處罰。違規請先提醒並記錄具體行為。</p></section>`}
 function correctionTasks(){return cls().tasks.filter(t=>t.type!=='考試')}
 function correctionStatus(tid,sid){const x=taskStatus(tid,sid);if(x==='未交'||x==='未完成')return '未繳交';if(x==='已補交')return '已完成';return CORRECTION_STATUSES.includes(x)?x:'未登記'}
