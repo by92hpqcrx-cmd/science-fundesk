@@ -2064,6 +2064,12 @@ function printLabDuty(sheet){
 .avatarPickerToggle{margin:10px 0;border:1px solid #d4e5f2;border-radius:12px;background:#f5faff;padding:8px 12px}.avatarPickerToggle>summary{cursor:pointer;font-weight:800;color:#345e76;padding:7px;list-style-position:inside}.avatarPickerToggle:not([open]) .avatarPicker{display:none}.avatarPickerToggle .avatarPicker{margin:10px 0 0}.pointLedgerPanel{margin:16px 0;padding:14px;border:1px solid #b8d8c9;border-radius:12px;background:#f5fcf9}.pointLedgerPanel>label{display:block;margin:8px 0}.pointLedgerPanel select{max-width:100%;padding:7px}.pointLedgerPanel .tablewrap{margin-top:12px;max-height:290px;overflow:auto}.pointLedgerPanel td{vertical-align:middle}
 
 
+</style><style id="roomPersonalHistory20261118">
+/* 餵食紀錄移入名片，獨立頁面不再保留紀錄欄 */
+.movingRoomPanel>.roomPlayArea{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) auto!important;gap:8px!important;align-items:stretch!important}
+.movingRoomPanel>.roomPlayArea>.movingRoomStage,body.roomFullscreen .movingRoomPanel>.roomPlayArea>.movingRoomStage,body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea>.movingRoomStage{grid-column:1!important;grid-row:1!important;min-width:0!important;width:100%!important}
+.movingRoomPanel>.roomPlayArea>.roomFoodShelf,body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFoodShelf,body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea>.roomFoodShelf{grid-column:1!important;grid-row:2!important;width:100%!important;min-width:0!important;max-width:100%!important}
+.roomPersonalHistory{margin:12px 0;border:1px solid #b8d9c5;border-radius:13px;padding:12px;background:#f7fff8}.roomPersonalHistory h3{margin:0 0 9px}.roomPersonalHistoryColumns{display:grid;grid-template-columns:1fr 1fr;gap:10px}.roomPersonalHistoryColumns>div{min-width:0}.roomPersonalHistoryColumns h4{margin:0 0 7px}.roomPersonalHistoryScroll{height:170px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:5px;border:1px solid #dcebe0;border-radius:10px;background:white}.roomPersonalHistoryItem{padding:8px 5px;border-bottom:1px solid #e1ebe6;font-size:12px;line-height:1.5}.roomPersonalHistoryItem:last-child{border-bottom:0}.roomPersonalHistoryItem small{display:block;color:#698072}@media(max-width:580px){.roomPersonalHistoryColumns{grid-template-columns:1fr}.roomPersonalHistoryScroll{height:120px}}
 </style></head>
  <body><h1>${esc(sheet.topic)}｜實驗工作分配</h1><p>${esc(classDisplay(cl))}　實驗日期 ${esc(sheet.date)}</p>
  ${labDutyTable(sheet)}<button type="button" onclick="window.print()">列印／另存 PDF</button><\/body><\/html>`);
@@ -2823,7 +2829,7 @@ const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
 function renderClassroom(){
  return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 ${esc(classDisplay(cl))} · 動態教室</strong><span id="roomFullscreenLinkHint" class="roomFullscreenLinkHint" hidden>已開啟指定班級，請點「⛶ 全螢幕」進入滿版。</span></div>
- <div class="roomPetPicker"><span class="roomCount" id="roomCount"></span><label class="roomSpeedLabel" for="roomSpeedSelect">移動速度 <select id="roomSpeedSelect" aria-label="學生移動速度"><option value="slow">慢</option><option value="medium">中</option><option value="fast">快</option></select></label><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button><label for="roomPetPickerButton">🐾 班級寵物</label><button type="button" id="roomPetPickerButton" class="roomPetPickerButton" aria-haspopup="listbox" aria-expanded="false"><span id="roomPetPickerPreview" class="roomPetPickerPreview">🐾</span><span id="roomPetPickerName">未選擇寵物</span><span aria-hidden="true">▾</span></button><select id="roomPetSelect" class="roomPetNativeSelect" aria-label="班級寵物"><option value="">未選擇寵物</option>${ROOM_PETS.map(p=>`<option value="${p.id}" ${db.classes[cl]?.classPetType===p.id?'selected':''}>${p.emoji} ${p.name}</option>`).join('')}</select><span class="roomPetPickerTip">各班獨立選擇，最多餵 10 次</span><div class="roomPetFeedTopInfo"><p class="roomFoodRule">每人最多餵 3 次<br>吃飽後休息 1 小時</p><div class="roomFeedStatus" id="roomFeedStatus" role="status" aria-live="polite">先開啟學生名片並啟用餵食券，再選食物。</div></div><label class="roomSceneLabel" for="roomSceneSelect">🖼️ 活動背景</label><select class="roomSceneSelect" id="roomSceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></div><div class="roomPlayArea"><section class="roomFeedHistory"><div class="roomHistoryTitle">📋 餵食紀錄 <span>依時間顯示最新紀錄</span></div><div class="roomHistoryList" id="roomFeedHistory"></div><div class="roomPetHistoryPanel" id="roomPetHistoryPanel"></div></section><div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">${esc(classDisplay(cl))} · 動態教室 ♡ 🐾</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div><button type="button" class="roomPet" id="roomPet" hidden aria-label="選擇班級寵物餵食"><span class="roomPetFull" id="roomPetFull" hidden>吃飽囉!!</span><span class="roomPetProgress" id="roomPetProgress" role="progressbar" aria-label="班寵成長點數" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="roomPetProgressBar"><span id="roomPetProgressFill"></span></span><span class="roomPetProgressText" id="roomPetProgressText">0/100</span></span><span class="roomPetImage" id="roomPetImage"></span><span class="roomPetName" id="roomPetName"></span><span class="roomPetCount" id="roomPetCount"></span></button></div><aside class="roomFoodShelf" aria-label="餵食工具欄"><strong>🍽️ 餵食小站</strong><span class="roomFoodHint">點食物 → 點學生 → 確認餵食；也可拖曳</span><div class="roomFoodGrid">${ROOM_FOODS.map(f=>`<button type="button" draggable="true" class="roomFood" data-food="${f.id}" title="${f.name}：拖到學生頭像">${f.emoji}<small>${f.name}</small></button>`).join('')}</div><div class="roomFeedConfirm" id="roomFeedConfirm" hidden><div id="roomFeedCandidateName"></div><button type="button" class="btn small" id="roomFeedConfirmButton">✅ 確認餵食</button><button type="button" class="btn small outline" id="roomFeedCancelButton">取消</button></div></aside></div></section>`;
+ <div class="roomPetPicker"><span class="roomCount" id="roomCount"></span><label class="roomSpeedLabel" for="roomSpeedSelect">移動速度 <select id="roomSpeedSelect" aria-label="學生移動速度"><option value="slow">慢</option><option value="medium">中</option><option value="fast">快</option></select></label><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button><label for="roomPetPickerButton">🐾 班級寵物</label><button type="button" id="roomPetPickerButton" class="roomPetPickerButton" aria-haspopup="listbox" aria-expanded="false"><span id="roomPetPickerPreview" class="roomPetPickerPreview">🐾</span><span id="roomPetPickerName">未選擇寵物</span><span aria-hidden="true">▾</span></button><select id="roomPetSelect" class="roomPetNativeSelect" aria-label="班級寵物"><option value="">未選擇寵物</option>${ROOM_PETS.map(p=>`<option value="${p.id}" ${db.classes[cl]?.classPetType===p.id?'selected':''}>${p.emoji} ${p.name}</option>`).join('')}</select><span class="roomPetPickerTip">各班獨立選擇，最多餵 10 次</span><div class="roomPetFeedTopInfo"><p class="roomFoodRule">每人最多餵 3 次<br>吃飽後休息 1 小時</p><div class="roomFeedStatus" id="roomFeedStatus" role="status" aria-live="polite">先開啟學生名片並啟用餵食券，再選食物。</div></div><label class="roomSceneLabel" for="roomSceneSelect">🖼️ 活動背景</label><select class="roomSceneSelect" id="roomSceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></div><div class="roomPlayArea"><div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">${esc(classDisplay(cl))} · 動態教室 ♡ 🐾</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div><button type="button" class="roomPet" id="roomPet" hidden aria-label="選擇班級寵物餵食"><span class="roomPetFull" id="roomPetFull" hidden>吃飽囉!!</span><span class="roomPetProgress" id="roomPetProgress" role="progressbar" aria-label="班寵成長點數" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="roomPetProgressBar"><span id="roomPetProgressFill"></span></span><span class="roomPetProgressText" id="roomPetProgressText">0/100</span></span><span class="roomPetImage" id="roomPetImage"></span><span class="roomPetName" id="roomPetName"></span><span class="roomPetCount" id="roomPetCount"></span></button></div><aside class="roomFoodShelf" aria-label="餵食工具欄"><strong>🍽️ 餵食小站</strong><span class="roomFoodHint">點食物 → 點學生 → 確認餵食；也可拖曳</span><div class="roomFoodGrid">${ROOM_FOODS.map(f=>`<button type="button" draggable="true" class="roomFood" data-food="${f.id}" title="${f.name}：拖到學生頭像">${f.emoji}<small>${f.name}</small></button>`).join('')}</div><div class="roomFeedConfirm" id="roomFeedConfirm" hidden><div id="roomFeedCandidateName"></div><button type="button" class="btn small" id="roomFeedConfirmButton">✅ 確認餵食</button><button type="button" class="btn small outline" id="roomFeedCancelButton">取消</button></div></aside></div></section>`;
 }
 function roomPeople(){
  const date=$('sessionDate')?.value||today();
@@ -2900,7 +2906,7 @@ function populateMovingRoom(){
  const teacherEl=document.createElement('button');teacherEl.type='button';teacherEl.className='roomWalker roomTeacher';teacherEl.dataset.roomStudent='__teacher__';teacherEl.dataset.roomClass=cl;
  const teacherImg=document.createElement('img');teacherImg.src='./fundesk-rps-teacher.webp';teacherImg.alt='老師頭像';teacherImg.onerror=()=>teacherImg.replaceWith(document.createTextNode('👩‍🏫'));teacherEl.appendChild(teacherImg);
  const teacherName=document.createElement('span');teacherName.className='roomName';teacherName.textContent='👩‍🏫 老師';teacherEl.appendChild(teacherName);
- teacherEl.onclick=()=>{if(roomFoodChoice){roomFeedTeacher(roomFoodChoice);return}roomActivateTeacherFeed()};
+ teacherEl.onclick=()=>{if(roomFoodChoice){roomFeedTeacher(roomFoodChoice);return}roomOpenSpecialCard('teacher')};
  fragment.appendChild(teacherEl);
  const ti=cells[people.length]??0,tx=geo.cols===1?geo.maxX/2:(ti%geo.cols)*geo.maxX/Math.max(1,geo.cols-1),ty=geo.rows===1?geo.maxY/2:Math.floor(ti/geo.cols)*geo.maxY/Math.max(1,geo.rows-1);
  const angle=Math.random()*Math.PI*2;roomWalkers.push({el:teacherEl,code:cl,sid:'__teacher__',isTeacher:true,x:tx,y:ty,vx:Math.cos(angle)*roomSpeedValue(),vy:Math.sin(angle)*roomSpeedValue(),r:geo.radius});
@@ -3057,7 +3063,7 @@ function roomRenderPet(){
  check.onerror=()=>{if(roomPetSelected()?.id===chosen.id&&img.isConnected){img.style.backgroundImage='none';img.textContent=chosen.emoji}};
  check.src=asset;
  $('roomPetName').textContent=chosen.emoji+' '+chosen.name;
- el.onclick=()=>{if(!roomFoodChoice)return;roomPetCandidate=true;roomFeedCandidate=null;roomRefreshCandidate();const status=$('roomFeedStatus');if(status)status.textContent='已選班級寵物 '+chosen.name+'，請確認後餵食。'};
+ el.onclick=()=>{if(!roomFoodChoice){roomOpenSpecialCard('pet');return}roomPetCandidate=true;roomFeedCandidate=null;roomRefreshCandidate();const status=$('roomFeedStatus');if(status)status.textContent='已選班級寵物 '+chosen.name+'，請確認後餵食。'};
  roomUpdatePetAppearance();
 }
 function roomFeedPet(foodId){
@@ -3318,13 +3324,41 @@ function restoreClassroomSelection(){
  }
  document.querySelectorAll('.roomPicked').forEach(x=>x.classList.remove('roomPicked'));
 }
+function roomHistoryTargetName(entry){
+ if(entry.kind==='pet')return '🐾 '+(ROOM_PETS.find(p=>p.id===entry.pet)?.name||entry.name||'班寵');
+ if(entry.kind==='teacher')return '👩‍🏫 老師';
+ return String(entry.name||db.classes[cl]?.students?.find(s=>String(s.id)===String(entry.sid))?.name||'學生');
+}
+function roomPersonalHistory(type,id){
+ const entries=(db.classes[cl]?.roomFeedingLog||[]);
+ const isRecipient=e=>type==='student'?String(e.sid)===String(id)&&e.kind!=='pet'&&e.kind!=='teacher':type==='teacher'?e.kind==='teacher':e.kind==='pet'&&String(e.pet)===String(id);
+ const isFeeder=e=>type==='student'?String(e.feederSid)===String(id):type==='teacher'?e.feederSid==='__teacher__':false;
+ const format=(e,outgoing)=>{
+  const food=ROOM_FOODS.find(f=>f.id===e.food),who=outgoing?roomHistoryTargetName(e):(e.feederName||'未記錄餵食者');
+  const date=new Date(Number(e.at)||0);
+  const time=Number.isFinite(date.getTime())?date.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+  return '<div class="roomPersonalHistoryItem"><strong>'+esc(outgoing?'餵了 '+who:'由 '+who+' 餵食')+'</strong> · '+esc((food?.emoji||'🍽️')+' '+(food?.name||e.food||'食物'))+' <small>'+esc(time)+'</small></div>';
+ };
+ const received=entries.filter(isRecipient).slice(-40).reverse();
+ const given=entries.filter(isFeeder).slice(-40).reverse();
+ return '<section class="roomPersonalHistory"><h3>📋 餵食紀錄</h3><div class="roomPersonalHistoryColumns"><div><h4>🍽️ '+(type==='pet'?'誰餵過我':'誰餵食自己')+'</h4><div class="roomPersonalHistoryScroll">'+(received.map(e=>format(e,false)).join('')||'<p class="hint">目前沒有被餵食紀錄</p>')+'</div></div><div><h4>🎁 我餵過誰</h4><div class="roomPersonalHistoryScroll">'+(given.map(e=>format(e,true)).join('')||'<p class="hint">'+(type==='pet'?'班寵沒有餵食他人紀錄':'目前沒有餵食他人紀錄')+'</p>')+'</div></div></div></section>';
+}
+function roomOpenSpecialCard(type){
+ const pet=type==='pet'?roomPetSelected():null;
+ if(type==='pet'&&!pet)return;
+ const title=type==='pet'?pet.emoji+' '+pet.name:'👩‍🏫 老師';
+ $('modalContent').innerHTML='<div class="studentHeader"><h2>'+esc(title)+'</h2></div>'+roomPersonalHistory(type,type==='pet'?pet.id:'__teacher__')+
+ (type==='teacher'?'<button class="btn" type="button" id="roomTeacherAuth">🔐 輸入動態教室密碼，老師餵食</button>':'');
+ $('modal').classList.remove('hidden');
+ if(type==='teacher')$('roomTeacherAuth').onclick=()=>{if(roomActivateTeacherFeed()){$('modal').classList.add('hidden');restoreClassroomSelection()}};
+}
 function openClassroomStudentCard(id){
  const s=student(id);if(!s)return;
  studentId=id;
  const feedingHistory=(cls().roomFeedingLog||[]).filter(x=>String(x.sid)===String(id)).slice(-8).reverse();
  $('modalContent').innerHTML=`<div class="studentHeader"><div class="studentAvatarHeader">${avatarThumb(s)}<div><span class="pill">${esc(classDisplay(cl))} · ${esc(s.no)} 號</span><h2>${esc(s.name)}</h2></div></div></div>
  <section class="roomTicketCard"><h3>🎟️ 餵食券</h3><p>目前有 <strong>${roomTicketBalance(cl,id)}</strong> 張餵食券</p><button type="button" class="btn" id="roomActivateTicket" ${roomTicketBalance(cl,id)<1?'disabled':''}>🎟️ 使用一張餵食券</button><p class="hint">啟用後關閉名片，再點選食物及餵食對象。餵食成功才扣除一張。</p></section>
- <section class="roomAvatarProtected"><button type="button" class="btn outline" id="roomUnlockAvatar" aria-expanded="false">🔒 更換頭像（輸入動態教室密碼）</button><div id="roomAvatarHidden" hidden>${avatarChooser(s)}</div></section>`;
+ <section class="roomAvatarProtected"><button type="button" class="btn outline" id="roomUnlockAvatar" aria-expanded="false">🔒 更換頭像（輸入動態教室密碼）</button><div id="roomAvatarHidden" hidden>${avatarChooser(s)}</div></section>${roomPersonalHistory('student',id)}`;
  $('modal').classList.remove('hidden');
  $('roomActivateTicket').onclick=()=>{if(!roomTicketUse(cl,id))return alert('餵食券不足，請先兌換。');$('modal').classList.add('hidden');restoreClassroomSelection()};
  const unlock=$('roomUnlockAvatar'),area=$('roomAvatarHidden');
