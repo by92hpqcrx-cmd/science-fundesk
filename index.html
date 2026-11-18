@@ -1497,6 +1497,25 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
 @media(max-width:730px){
  .movingRoomPanel>.roomPlayArea>.roomFeedHistory{margin-top:0!important;overflow-y:auto!important;}
 }
+</style><style id="fundeskRoomFoodFullWidthFix20261118">
+/* 餵食小站橫向拉至舞台右端，紀錄改排下一列，避免互相擠壓。 */
+@media (min-width:731px){
+ body:not(.roomFullscreen) .movingRoomPanel>.roomPlayArea,
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea,
+ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea{
+  grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) auto auto!important
+ }
+ body:not(.roomFullscreen) .movingRoomPanel>.roomPlayArea>.roomFoodShelf,
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFoodShelf,
+ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea>.roomFoodShelf{
+  grid-column:1/-1!important;grid-row:2!important;width:100%!important;max-width:100%!important;justify-self:stretch!important
+ }
+ body:not(.roomFullscreen) .movingRoomPanel>.roomPlayArea>.roomFeedHistory,
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFeedHistory,
+ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea>.roomFeedHistory{
+  grid-column:1/-1!important;grid-row:3!important;width:100%!important;max-width:100%!important
+ }
+}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
