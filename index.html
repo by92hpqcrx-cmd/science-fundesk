@@ -1444,6 +1444,15 @@ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>
 #toolTimerPanel:fullscreen .animalToolHead{flex:0 0 auto}
 #toolTimerPanel:fullscreen .animalToolControls{flex-wrap:wrap;justify-content:center}
 @media(max-width:600px){#toolTimerPanel .animalToolHead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}#toolTimerPanel .animalToolHead .toolFullButton{font-size:14px;padding:8px 10px}}
+</style><style>
+/* 餵食紀錄使用獨立縱向捲軸，不隨歷史筆數撐開舞台。 */
+.movingRoomPanel .roomPlayArea>.roomFeedHistory{overflow-y:auto!important;overflow-x:hidden!important;min-height:0!important;max-height:clamp(130px,28vh,230px)!important;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#a7cbb4 #f0f8f5}
+.movingRoomPanel .roomPlayArea>.roomFeedHistory .roomHistoryList{max-height:none!important;overflow:visible!important;display:grid;gap:5px}
+.movingRoomPanel .roomPlayArea>.roomFeedHistory .roomHistoryTitle{position:sticky;top:0;z-index:2;background:#f7fbff;padding:4px 0}
+.movingRoomPanel .roomPlayArea>.roomFeedHistory .roomPetHistoryPanel{max-height:none!important;overflow:visible!important}
+body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp(98px,18dvh,165px)!important;max-height:clamp(98px,18dvh,165px)!important;overflow-y:auto!important}
+@media(max-width:700px){.movingRoomPanel .roomPlayArea>.roomFeedHistory{max-height:155px!important;overflow-y:auto!important}}
+.roomFullscreenLinkHint{font-size:12px;font-weight:750;color:#27644a;background:#eff9ec;border:1px solid #bad9bd;border-radius:8px;padding:5px 9px}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
@@ -2779,7 +2788,7 @@ const roomPetAsset=id=>'/science-fundesk/class-pets/'+id+'.svg';
 const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香蕉',emoji:'🍌'},{id:'strawberry',name:'草莓',emoji:'🍓'},{id:'grapes',name:'葡萄',emoji:'🍇'},{id:'cookie',name:'餅乾',emoji:'🍪'},{id:'donut',name:'甜甜圈',emoji:'🍩'},{id:'juice',name:'果汁',emoji:'🧃'},{id:'milk',name:'牛奶',emoji:'🥛'},{id:'bamboo',name:'竹葉',emoji:'🎋'},{id:'fish',name:'小魚',emoji:'🐟'},{id:'bone',name:'骨頭',emoji:'🦴'},{id:'pinecone',name:'松果',emoji:'🌰'},{id:'carrot',name:'紅蘿蔔',emoji:'🥕'}];
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
 function renderClassroom(){
- return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 ${esc(classDisplay(cl))} · 動態教室</strong></div>
+ return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 ${esc(classDisplay(cl))} · 動態教室</strong><span id="roomFullscreenLinkHint" class="roomFullscreenLinkHint" hidden>已開啟指定班級，請點「⛶ 全螢幕」進入滿版。</span></div>
  <div class="roomPetPicker"><span class="roomCount" id="roomCount"></span><label class="roomSpeedLabel" for="roomSpeedSelect">移動速度 <select id="roomSpeedSelect" aria-label="學生移動速度"><option value="slow">慢</option><option value="medium">中</option><option value="fast">快</option></select></label><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button><label for="roomPetPickerButton">🐾 班級寵物</label><button type="button" id="roomPetPickerButton" class="roomPetPickerButton" aria-haspopup="listbox" aria-expanded="false"><span id="roomPetPickerPreview" class="roomPetPickerPreview">🐾</span><span id="roomPetPickerName">未選擇寵物</span><span aria-hidden="true">▾</span></button><select id="roomPetSelect" class="roomPetNativeSelect" aria-label="班級寵物"><option value="">未選擇寵物</option>${ROOM_PETS.map(p=>`<option value="${p.id}" ${db.classes[cl]?.classPetType===p.id?'selected':''}>${p.emoji} ${p.name}</option>`).join('')}</select><span class="roomPetPickerTip">各班獨立選擇，最多餵 10 次</span><div class="roomPetFeedTopInfo"><p class="roomFoodRule">每人最多餵 3 次<br>吃飽後休息 1 小時</p><div class="roomFeedStatus" id="roomFeedStatus" role="status" aria-live="polite">先開啟學生名片並啟用餵食券，再選食物。</div></div><label class="roomSceneLabel" for="roomSceneSelect">🖼️ 活動背景</label><select class="roomSceneSelect" id="roomSceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></div><div class="roomPlayArea"><section class="roomFeedHistory"><div class="roomHistoryTitle">📋 餵食紀錄 <span>依時間顯示最新紀錄</span></div><div class="roomHistoryList" id="roomFeedHistory"></div><div class="roomPetHistoryPanel" id="roomPetHistoryPanel"></div></section><div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">${esc(classDisplay(cl))} · 動態教室 ♡ 🐾</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div><button type="button" class="roomPet" id="roomPet" hidden aria-label="選擇班級寵物餵食"><span class="roomPetFull" id="roomPetFull" hidden>吃飽囉!!</span><span class="roomPetProgress" id="roomPetProgress" role="progressbar" aria-label="班寵成長點數" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="roomPetProgressBar"><span id="roomPetProgressFill"></span></span><span class="roomPetProgressText" id="roomPetProgressText">0/100</span></span><span class="roomPetImage" id="roomPetImage"></span><span class="roomPetName" id="roomPetName"></span><span class="roomPetCount" id="roomPetCount"></span></button></div><aside class="roomFoodShelf" aria-label="餵食工具欄"><strong>🍽️ 餵食小站</strong><span class="roomFoodHint">點食物 → 點學生 → 確認餵食；也可拖曳</span><div class="roomFoodGrid">${ROOM_FOODS.map(f=>`<button type="button" draggable="true" class="roomFood" data-food="${f.id}" title="${f.name}：拖到學生頭像">${f.emoji}<small>${f.name}</small></button>`).join('')}</div><div class="roomFeedConfirm" id="roomFeedConfirm" hidden><div id="roomFeedCandidateName"></div><button type="button" class="btn small" id="roomFeedConfirmButton">✅ 確認餵食</button><button type="button" class="btn small outline" id="roomFeedCancelButton">取消</button></div></aside></div></section>`;
 }
 function roomPeople(){
@@ -4012,6 +4021,9 @@ function cloudUnlock(){
  $('cloudGate').hidden=true;document.body.classList.remove('cloud-locked');
  cloudStatus('✅ 雲端已同步');
  render();
+ if(view==='classroom'&&new URL(location.href).searchParams.get('fullscreen')==='1'){
+  const bar=$('roomFullscreenLinkHint');if(bar)bar.hidden=false;
+ }
  pollReplyNotices();
 }
 function cloudQueueSave(){
@@ -4075,7 +4087,8 @@ async function cloudPollRemotePoints(){
 setInterval(cloudPollRemotePoints,8000);
 window.addEventListener('focus',cloudPollRemotePoints);
 async function cloudBoot(){
- const requested=new URL(location.href).searchParams.get('class');if(requested&&/^[A-Za-z0-9_-]{1,40}$/.test(requested))cl=requested;
+ const requestedUrl=new URL(location.href);const requested=requestedUrl.searchParams.get('class');if(requested&&/^[A-Za-z0-9_-]{1,40}$/.test(requested))cl=requested;
+ if(requestedUrl.searchParams.get('view')==='classroom')view='classroom';
  cloudRenderQuickClasses();
  $('cloudLogout').onclick=cloudLogout;
  const sess=sessionStorage.getItem('fundesk_cloud_session');
