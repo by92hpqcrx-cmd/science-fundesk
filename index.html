@@ -358,6 +358,12 @@ body.roomFullscreen .movingRoomPanel{gap:0}
 @media(max-width:700px){.roomPetProgress{width:115px;top:-27px}.roomPetProgressText{font-size:10px}}
 
 .roomTicketCard{margin:12px 0;padding:12px;border:1px solid #aed4bf;border-radius:12px;background:#f4fff3}.roomTicketCard h3{margin:0 0 5px}.roomTicketCard strong{font-size:20px;color:#297047}.roomPetHistoryPanel{margin-top:12px;border-top:1px solid #cadccf;padding-top:8px}.roomPetHistoryPanel h4{margin:4px 0 8px;font-size:13px}
+
+/* Dynamic classroom teacher and pet name layer */
+.movingRoomStage .roomTeacher{z-index:16}
+.movingRoomStage .roomTeacher .roomName{position:relative;z-index:30;background:#fff9d7;border:1px solid #eccd72;border-radius:8px;font-weight:900}
+.movingRoomStage .roomPet .roomPetName{position:absolute!important;left:50%;bottom:calc(8px * var(--room-avatar-scale,1));transform:translateX(-50%);z-index:999!important;display:block!important;isolation:isolate;overflow:visible!important;white-space:nowrap;background:#fff!important;border:2px solid #7db898;box-shadow:0 2px 9px #194a3980;pointer-events:none}
+.movingRoomStage .roomPet .roomPetImage{z-index:1!important}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -2763,6 +2769,9 @@ let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='',roomOriginalClas
 const ROOM_PETS=[{id:'dino',name:'小恐龍',emoji:'🦖'},{id:'bear',name:'小熊',emoji:'🐻'},{id:'panda',name:'小貓',emoji:'🐱'},{id:'cat',name:'小兔',emoji:'🐰'},{id:'rabbit',name:'熊貓',emoji:'🐼'},{id:'501',name:'企鵝',emoji:'🐧'},{id:'502',name:'兔兔',emoji:'🐰'},{id:'503',name:'松鼠',emoji:'🐿️'},{id:'504',name:'小鳥',emoji:'🐦'},{id:'505',name:'貓貓',emoji:'🐱'},{id:'506',name:'小狗',emoji:'🐶'},{id:'507',name:'大象',emoji:'🐘'}];
 let roomPetCandidate=false,roomPetVisualTick=0,roomPetWalker=null;
 let roomTicketFeeder=null;
+const roomFeedingPassword=()=>String(db.teacherFeedingPassword||'13579');
+function roomActivateTeacherFeed(){const input=prompt('輸入老師餵食密碼');if(input===null)return false;if(input!==roomFeedingPassword()){roomTicketStatus('餵食密碼不正確');return false}roomTicketFeeder={kind:'teacher',code:cl};roomFoodChoice=null;roomFeedCandidate=null;roomPetCandidate=false;roomRefreshCandidate();roomTicketStatus('👩‍🏫 老師已驗證，請選食物與餵食對象。');return true}
+
 const roomPetAsset=id=>'/science-fundesk/class-pets/'+id+'.svg';
 const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香蕉',emoji:'🍌'},{id:'strawberry',name:'草莓',emoji:'🍓'},{id:'grapes',name:'葡萄',emoji:'🍇'},{id:'cookie',name:'餅乾',emoji:'🍪'},{id:'donut',name:'甜甜圈',emoji:'🍩'},{id:'juice',name:'果汁',emoji:'🧃'},{id:'milk',name:'牛奶',emoji:'🥛'},{id:'bamboo',name:'竹葉',emoji:'🎋'},{id:'fish',name:'小魚',emoji:'🐟'},{id:'bone',name:'骨頭',emoji:'🦴'},{id:'pinecone',name:'松果',emoji:'🌰'},{id:'carrot',name:'紅蘿蔔',emoji:'🥕'}];
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
@@ -2818,7 +2827,7 @@ function roomClampWalker(w,g){
 function populateMovingRoom(){
  const root=$('roomWalkers');if(!root)return;
  root.replaceChildren();roomWalkers=[];
- const people=roomPeople(),hasPet=!!roomPetSelected(),geo=roomGeometry(people.length+(hasPet?1:0));
+ const people=roomPeople(),hasPet=!!roomPetSelected(),geo=roomGeometry(people.length+1+(hasPet?1:0));
  $('roomCount').textContent=`${classDisplay(cl)} · ${$('sessionDate')?.value||today()} · 出席 ${people.length} 人`;
  // 預先將格子洗牌，確保初始位置分散且無交疊。
  const cells=Array.from({length:geo.cols*geo.rows},(_,i)=>i);
@@ -2842,6 +2851,13 @@ function populateMovingRoom(){
   const angle=Math.random()*Math.PI*2,speed=roomSpeedValue();
   roomWalkers.push({el,code,sid:s.id,x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:geo.radius});
  }
+ const teacherEl=document.createElement('button');teacherEl.type='button';teacherEl.className='roomWalker roomTeacher';teacherEl.dataset.roomStudent='__teacher__';teacherEl.dataset.roomClass=cl;
+ const teacherImg=document.createElement('img');teacherImg.src='./fundesk-rps-teacher.webp';teacherImg.alt='老師頭像';teacherImg.onerror=()=>teacherImg.replaceWith(document.createTextNode('👩‍🏫'));teacherEl.appendChild(teacherImg);
+ const teacherName=document.createElement('span');teacherName.className='roomName';teacherName.textContent='👩‍🏫 老師';teacherEl.appendChild(teacherName);
+ teacherEl.onclick=()=>{if(roomFoodChoice){roomFeedTeacher(roomFoodChoice);return}roomActivateTeacherFeed()};
+ fragment.appendChild(teacherEl);
+ const ti=cells[people.length]??0,tx=geo.cols===1?geo.maxX/2:(ti%geo.cols)*geo.maxX/Math.max(1,geo.cols-1),ty=geo.rows===1?geo.maxY/2:Math.floor(ti/geo.cols)*geo.maxY/Math.max(1,geo.rows-1);
+ const angle=Math.random()*Math.PI*2;roomWalkers.push({el:teacherEl,code:cl,sid:'__teacher__',isTeacher:true,x:tx,y:ty,vx:Math.cos(angle)*roomSpeedValue(),vy:Math.sin(angle)*roomSpeedValue(),r:geo.radius});
  root.appendChild(fragment);
  roomRenderPet();
  // 班寵由中央區域開始移動，學生仍使用原本全教室座位分散配置。
@@ -2902,6 +2918,7 @@ function roomTicketBalance(code,sid){
 }
 function roomTicketActor(){
  const a=roomTicketFeeder;if(!a)return null;
+ if(a.kind==='teacher'&&a.code===cl)return {...a,pupil:{name:'老師'},teacher:true};
  const pupil=db.classes[a.code]?.students?.find(s=>String(s.id)===String(a.sid));
  return pupil&&roomTicketBalance(a.code,a.sid)>0?{...a,pupil}:null;
 }
@@ -3000,7 +3017,7 @@ function roomRenderPet(){
 function roomFeedPet(foodId){
  const food=ROOM_FOODS.find(f=>f.id===foodId),pet=roomPetSelected(),record=db.classes[cl];
  if(!food||!pet||!record)return false;
- const actor=roomTicketActor();if(!actor||actor.code!==cl){roomTicketStatus('請先在學生名片啟用餵食券。');return false}
+ const actor=roomTicketActor();if(!actor||actor.code!==cl){roomTicketStatus('請先啟用餵食券或驗證老師密碼。');return false}
  const now=Date.now(),state=roomPetState(cl,now),status=$('roomFeedStatus');
  if(state.until>now){if(status)status.textContent='🐾 '+pet.name+' 吃飽囉!! 再等 '+Math.ceil((state.until-now)/60000)+' 分鐘。';return false}
  const count=state.count+1;
@@ -3012,8 +3029,8 @@ function roomFeedPet(foodId){
  record.classPetProgress[pet.id]={points:points>=100?0:points,cycles:Math.max(0,Number(oldProgress.cycles)||0)+(points>=100?1:0)};
  if(!Array.isArray(record.roomFeedingLog))record.roomFeedingLog=[];
  const ledgerId=uid();if(!Array.isArray(record.points))record.points=[];
- record.points.push({id:ledgerId,sid:String(actor.sid),date:today(),delta:0,kind:'feeding-ticket-used',reason:'餵食券使用：'+actor.pupil.name+' 餵 '+pet.name+' '+food.name,petId:pet.id});
- record.roomFeedingLog.push({kind:'pet',name:pet.name,pet:pet.id,food:food.id,count,at:now,feederSid:String(actor.sid),feederName:actor.pupil.name,ticketUsed:true,ledgerId});
+ if(!actor.teacher)record.points.push({id:ledgerId,sid:String(actor.sid),date:today(),delta:0,kind:'feeding-ticket-used',reason:'餵食券使用：'+actor.pupil.name+' 餵 '+pet.name+' '+food.name,petId:pet.id});
+ record.roomFeedingLog.push({kind:'pet',name:pet.name,pet:pet.id,food:food.id,count,at:now,feederSid:actor.teacher?'__teacher__':String(actor.sid),feederName:actor.pupil.name,ticketUsed:!actor.teacher,ledgerId});
  roomTicketFeeder=null;roomFoodChoice=null;
  if(record.roomFeedingLog.length>150)record.roomFeedingLog=record.roomFeedingLog.slice(-150);
  save();roomUpdatePetAppearance(now);roomRenderFeedHistory();roomRefreshCandidate();
@@ -3101,10 +3118,23 @@ function roomRefreshCandidate(){
   $('roomFeedCandidateName').textContent=(food?.emoji||'🍽️')+' 餵給班級寵物 '+(type?.name||'');
  }
 }
+function roomFeedTeacher(foodId){
+ const actor=roomTicketActor(),food=ROOM_FOODS.find(f=>f.id===foodId),record=db.classes[cl];
+ if(!actor||actor.teacher||!food||!record){roomTicketStatus('學生須先啟用餵食券才能餵老師。');return false}
+ const now=Date.now(),state=record.roomTeacherFeed||{};
+ if(Number(state.until)>now){roomTicketStatus('老師吃飽囉！'+Math.ceil((Number(state.until)-now)/60000)+' 分鐘後再餵。');return false}
+ const count=(Number(state.until)>0?0:Number(state.count)||0)+1;
+ record.roomTeacherFeed={count:Math.min(3,count),until:count>=3?now+3600000:0};
+ if(!Array.isArray(record.points))record.points=[];if(!Array.isArray(record.roomFeedingLog))record.roomFeedingLog=[];
+ const ledgerId=uid();record.points.push({id:ledgerId,sid:String(actor.sid),date:today(),delta:0,kind:'feeding-ticket-used',reason:'餵食券使用：'+actor.pupil.name+' 餵老師 '+food.name});
+ record.roomFeedingLog.push({kind:'teacher',name:'老師',food:food.id,count,at:now,feederSid:String(actor.sid),feederName:actor.pupil.name,ticketUsed:true,ledgerId});
+ if(record.roomFeedingLog.length>150)record.roomFeedingLog=record.roomFeedingLog.slice(-150);
+ roomTicketFeeder=null;roomFoodChoice=null;save();roomRenderFeedHistory();roomRefreshCandidate();roomTicketStatus('👩‍🏫 '+actor.pupil.name+' 餵老師吃了'+food.name+'，已扣一張餵食券。');return true;
+}
 function roomFeedStudent(code,sid,foodId){
  const food=ROOM_FOODS.find(f=>f.id===foodId),record=db.classes[code];
  if(!food||!record||!record.students?.some(st=>String(st.id)===String(sid)))return false;
- const actor=roomTicketActor();if(!actor||actor.code!==code){roomTicketStatus('請先在學生名片啟用餵食券。');return false}
+ const actor=roomTicketActor();if(!actor||actor.code!==code){roomTicketStatus('請先啟用餵食券或驗證老師密碼。');return false}
  const now=Date.now(),state=roomFeedState(code,sid,now);
  const status=$('roomFeedStatus');
  const pupil=record.students.find(st=>String(st.id)===String(sid));
@@ -3121,8 +3151,8 @@ function roomFeedStudent(code,sid,foodId){
  record.roomFeeding[String(sid)]={count,until:count===3?now+3600000:0};
  if(!Array.isArray(record.roomFeedingLog))record.roomFeedingLog=[];
  const ledgerId=uid();if(!Array.isArray(record.points))record.points=[];
- record.points.push({id:ledgerId,sid:String(actor.sid),date:today(),delta:0,kind:'feeding-ticket-used',reason:'餵食券使用：'+actor.pupil.name+' 餵 '+pupil.name+' '+food.name});
- record.roomFeedingLog.push({kind:'student',sid:String(sid),name:String(pupil.name||''),food:food.id,count,at:now,feederSid:String(actor.sid),feederName:actor.pupil.name,ticketUsed:true,ledgerId});
+ if(!actor.teacher)record.points.push({id:ledgerId,sid:String(actor.sid),date:today(),delta:0,kind:'feeding-ticket-used',reason:'餵食券使用：'+actor.pupil.name+' 餵 '+pupil.name+' '+food.name});
+ record.roomFeedingLog.push({kind:'student',sid:String(sid),name:String(pupil.name||''),food:food.id,count,at:now,feederSid:actor.teacher?'__teacher__':String(actor.sid),feederName:actor.pupil.name,ticketUsed:!actor.teacher,ledgerId});
  roomTicketFeeder=null;roomFoodChoice=null;
  if(record.roomFeedingLog.length>150)record.roomFeedingLog=record.roomFeedingLog.slice(-150);
  save();
@@ -3141,6 +3171,7 @@ function roomFoodDropAt(x,y,foodId){
  if(!target||!$('movingClassroom')?.contains(target)){$('roomFeedStatus').textContent='請把食物放到學生或寵物頭像上。';return}
  if(!roomTicketActor()){roomTicketStatus('必須先啟用餵食券。');return}
  if(target.classList.contains('roomPet'))roomFeedPet(foodId);
+ else if(target.classList.contains('roomTeacher'))roomFeedTeacher(foodId);
  else roomFeedStudent(target.dataset.roomClass,target.dataset.roomStudent,foodId);
 }
 function roomClearFeedingPointer(){
@@ -3199,7 +3230,7 @@ function roomBindFoods(){
  };
  $('roomFeedConfirmButton').onclick=()=>{
   const target=roomFeedCandidate,food=roomFoodChoice;
-  if(!food||!roomTicketActor()){roomTicketStatus('請先啟用餵食券，再選食物。');return}
+  if(!food||!roomTicketActor()){roomTicketStatus('請先啟用餵食券或驗證教師密碼。');return}
   if(roomPetCandidate){if(roomFeedPet(food)){roomPetCandidate=false;roomRefreshCandidate()}return}
   if(!target)return;
   if(roomFeedStudent(target.code,target.sid,food)){roomFeedCandidate=null;roomRefreshCandidate()}
@@ -3217,6 +3248,7 @@ function refreshMovingClassroomCards(){
  const wanted=new Set(people.map(p=>String(p.code)+'|'+String(p.s.id)));
  if(displayed.size!==wanted.size||[...wanted].some(id=>!displayed.has(id))){populateMovingRoom();return}
  for(const w of roomWalkers){
+  if(w.isTeacher)continue;
   const s=db.classes[w.code]?.students?.find(x=>x.id===w.sid);
   if(!s)continue;
   const src=studentAvatarPath(s),image=w.el.querySelector('img');
@@ -3369,7 +3401,7 @@ function hookClassManager(){
  $('manageStudents').onclick=()=>{view='students';render()};
  $('manageSeats').onclick=()=>{view='seats';render()};
 }
-function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
+function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>👩‍🏫 教師餵食密碼</h2><p class="hint">教師在動態教室點擊老師頭像時輸入密碼，驗證後可餵食一次。初始密碼 13579，建議立即修改。</p><div class="formgrid"><label>目前密碼<input id="feedOldPassword" type="password" autocomplete="off"></label><label>新密碼<input id="feedNewPassword" type="password" autocomplete="new-password" placeholder="至少 5 位數字"></label><label>確認新密碼<input id="feedNewPasswordConfirm" type="password" autocomplete="new-password"></label></div><div class="actions"><button class="btn" type="button" id="feedPasswordSave">修改餵食密碼</button></div></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
 function hookView(){if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();$('editQuickLinks').onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings);document.querySelectorAll('[data-fundesk-monopoly]').forEach(x=>x.addEventListener('click',openFunDeskMonopoly))}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='seats'){
  const toggleLast=$('toggleSeatLastRow');
  if(toggleLast)toggleLast.onclick=()=>{
@@ -3416,7 +3448,7 @@ if(view==='students'){
   button.onclick=()=>removeStudent(button.dataset.deleteStudent);
  });
 }
-if(view==='settings'){$('exportJson').onclick=backup;$('importJson').onclick=()=>$('jsonImport').click();$('resetClass').onclick=()=>{if(prompt(`要重設 ${classDisplay(cl)}所有學生、出勤、習作、考試、點數，請輸入班級數字 ${cl}`)===cl){db.classes[cl]=freshClass();save();render()}}}
+if(view==='settings'){$('feedPasswordSave').onclick=()=>{const old=$('feedOldPassword').value,pass=$('feedNewPassword').value,again=$('feedNewPasswordConfirm').value;if(old!==roomFeedingPassword())return alert('原密碼錯誤');if(!/^\d{5,12}$/.test(pass))return alert('請輸入 5 至 12 位數字密碼');if(pass!==again)return alert('確認密碼不一致');db.teacherFeedingPassword=pass;save();alert('教師餵食密碼已更新');render()};$('exportJson').onclick=backup;$('importJson').onclick=()=>$('jsonImport').click();$('resetClass').onclick=()=>{if(prompt(`要重設 ${classDisplay(cl)}所有學生、出勤、習作、考試、點數，請輸入班級數字 ${cl}`)===cl){db.classes[cl]=freshClass();save();render()}}}
 if(view==='tools'){
 document.querySelectorAll('[data-time]').forEach(b=>b.onclick=()=>setTimer(Number(b.dataset.time)));
 $('timerStart').onclick=toggleTimer;$('timerReset').onclick=()=>setTimer(timerBaseSeconds);
