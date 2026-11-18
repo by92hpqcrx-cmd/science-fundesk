@@ -2701,6 +2701,12 @@ function bindNewFeatures(){
     <div class="tablewrap"><table><thead><tr><th>日期</th><th>原因</th><th>點數</th><th>修正</th></tr></thead><tbody>${records.map(x=>`<tr><td>${esc(x.date||'')}</td><td>${esc(x.reason||'課堂表現')}${x.cancelled?'（已取消）':''}</td><td>${Number(x.delta)>0?'+':''}${Number(x.delta)||0}</td><td>${x.cancelled?'—':`<button type="button" class="btn small outline" data-void-point="${x._index}">取消誤記</button>`}</td></tr>`).join('')}</tbody></table></div>`;
    $('pointOffsetApply').onclick=()=>{const amount=Number($('pointOffsetAmount').value);if(!Number.isInteger(amount)||amount<1||amount>Math.min(ptotal(sid),ppenalty(sid)))return alert('抵扣點數超出可用積點或待抵扣點數');if(!confirm(`確認使用 ${amount} 積點抵扣 ${amount} 扣點？`))return;const date=$('sessionDate').value;cls().points.push({sid,date,delta:-amount,offsetAmount:amount,kind:'penalty-offset',reason:'積點抵扣扣點',id:uid()});save();contactQueuePointsSync(cl,date);render()};
    ledgerDetails.querySelectorAll('[data-void-point]').forEach(button=>button.onclick=()=>{const index=Number(button.dataset.voidPoint),entry=cls().points[index];if(!entry||entry.cancelled||String(entry.sid)!==String(sid))return;const isOffset=entry.kind==='penalty-offset';if(isOffset){const following=cls().points.slice(index+1).some(x=>!x.cancelled&&x.kind==='penalty-offset'&&String(x.sid)===String(sid));if(following)return alert('請先取消這位學生較新的抵扣紀錄，避免帳目錯亂。')}
+   if(entry.kind!=='redemption'&&entry.kind!=='penalty-offset'&&Number(entry.delta)<0){
+    const remainingPenalty=cls().points.filter(x=>String(x.sid)===String(sid)&&!x.cancelled&&x!==entry&&x.kind!=='redemption'&&x.kind!=='penalty-offset'&&x.kind!=='correction-log').reduce((sum,x)=>sum+Math.max(0,-(Number(x.delta)||0)),0);
+    const offsets=cls().points.filter(x=>String(x.sid)===String(sid)&&!x.cancelled&&x.kind==='penalty-offset').reduce((sum,x)=>sum+(Number(x.offsetAmount)||0),0);
+    if(offsets>remainingPenalty)return alert('此扣點已有積點抵扣，請先取消相關抵扣紀錄，再取消原始扣點。');
+   }
+   if(Number(entry.delta)>0&&entry.kind!=='penalty-offset'&&ptotal(sid)<Number(entry.delta))return alert('這筆加點已被使用，請先取消後續兌換或抵扣紀錄。');
    if(!confirm(`確認取消這筆「${entry.reason||'課堂表現'}」(${entry.delta} 點)？原始資料會保留並標註取消。`))return;
    entry.cancelled=true;entry.cancelledAt=new Date().toISOString();
    cls().points.push({sid,date:$('sessionDate').value,delta:0,kind:'correction-log',reason:'取消誤記：'+(entry.reason||'課堂表現'),targetIndex:index,id:uid()});
