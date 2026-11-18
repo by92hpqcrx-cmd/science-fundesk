@@ -11,24 +11,24 @@
     const style=document.createElement("style");
     style.id=styleId;
     style.textContent=`
-      .tabletPptLauncher{display:block}
+      .tabletPptLauncher{display:block;width:100%;min-width:0}
       .tabletPptTabs{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
       .tabletPptTabs button{border:1px solid #bad8ee;background:#fff;color:#23537f;border-radius:13px;padding:11px 18px;font-weight:850;cursor:pointer;font-size:16px}
       .tabletPptTabs button.active{background:#255b91;border-color:#255b91;color:white}
-      .tabletPptStage{background:#101e34;border-radius:16px;overflow:hidden;position:relative;min-height:260px}
-      .tabletPptStage iframe{display:block;width:100%;height:100%;min-height:350px;border:0;background:white}
-      .tabletPptScreen{position:relative;aspect-ratio:16 / 9;min-height:280px}
-      .tabletPptStage:fullscreen,.tabletPptStage:-webkit-full-screen{border-radius:0;width:100vw;height:100vh;display:flex;flex-direction:column}
-      .tabletPptStage:fullscreen .tabletPptScreen,.tabletPptStage:-webkit-full-screen .tabletPptScreen{flex:1;aspect-ratio:auto;min-height:0}
-      .tabletPptStage:fullscreen iframe,.tabletPptStage:-webkit-full-screen iframe{min-height:0;height:100%}
+      .tabletPptStage{position:relative;width:100%;max-width:1280px;margin:0 auto;background:#101e34;border-radius:16px;overflow:hidden;min-height:0}
+      .tabletPptScreen{position:relative;width:100%;height:auto;aspect-ratio:16 / 9;overflow:hidden;min-height:0;background:#101e34}
+      .tabletPptScreen iframe{position:absolute;inset:0;display:block;width:100%;height:100%;min-height:0;max-height:none;border:0;margin:0;padding:0;background:#fff}
       .tabletPptControls{display:flex;gap:9px;flex-wrap:wrap;align-items:center;justify-content:space-between;background:#eef6ff;padding:12px;border-radius:12px;margin:10px 0}
-      .tabletPptControls button,.tabletPptControls a{border:0;border-radius:10px;padding:9px 13px;background:#fff;color:#26547f;cursor:pointer;text-decoration:none;font-size:14px;font-weight:750;border:1px solid #c8ddec}
+      .tabletPptControls button,.tabletPptControls a{border:1px solid #c8ddec;border-radius:10px;padding:9px 13px;background:#fff;color:#26547f;cursor:pointer;text-decoration:none;font-size:14px;font-weight:750}
       .tabletPptControls button:hover,.tabletPptControls a:hover{background:#d5e9ff}
       .tabletPptMeta{color:#54718d;font-size:13px;line-height:1.6;margin:8px 0}
-      .tabletPptStage:fullscreen .tabletPptFullscreenBar{display:flex}
-      .tabletPptFullscreenBar{display:none;align-items:center;justify-content:space-between;gap:12px;background:#132944;color:white;padding:8px 14px}
+      .tabletPptFullscreenBar{display:none;align-items:center;justify-content:space-between;gap:12px;background:#132944;color:white;padding:8px 14px;flex-shrink:0;width:100%}
       .tabletPptFullscreenBar button{background:#f2f7ff;color:#173855;border:0;border-radius:7px;padding:7px 11px;cursor:pointer}
-      @media(max-width:680px){.tabletPptScreen{min-height:210px}.tabletPptStage iframe{min-height:210px}.tabletPptTabs button{flex:1}}
+      .tabletPptStage:fullscreen,.tabletPptStage:-webkit-full-screen{width:100vw;height:100vh;max-width:none;min-height:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#101e34}
+      .tabletPptStage:fullscreen .tabletPptFullscreenBar,.tabletPptStage:-webkit-full-screen .tabletPptFullscreenBar{display:flex}
+      .tabletPptStage:fullscreen .tabletPptScreen,.tabletPptStage:-webkit-full-screen .tabletPptScreen{flex:0 0 auto;width:min(100vw,calc((100vh - 60px) * 16 / 9));height:auto;aspect-ratio:16 / 9;min-height:0}
+      .tabletPptStage:fullscreen iframe,.tabletPptStage:-webkit-full-screen iframe{min-height:0;height:100%}
+      @media(max-width:680px){.tabletPptTabs button{flex:1}.tabletPptScreen{min-height:0}.tabletPptScreen iframe{min-height:0}}
     `;
     document.head.appendChild(style);
   }
@@ -38,8 +38,8 @@
   };
   function init(){
     document.querySelectorAll(".tabletPptLauncher").forEach(panel=>{
-      if(panel.dataset.initialized==="embed-v2") return;
-      panel.dataset.initialized="embed-v2";
+      if(panel.dataset.initialized==="embed-v3") return;
+      panel.dataset.initialized="embed-v3";
       panel.innerHTML="";
       const heading=document.createElement("strong");
       heading.textContent="📽️ 平板守則｜網頁直接播放";
