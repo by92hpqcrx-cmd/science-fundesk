@@ -3123,7 +3123,8 @@ function roomFeedTeacher(foodId){
  if(!actor||actor.teacher||!food||!record){roomTicketStatus('學生須先啟用餵食券才能餵老師。');return false}
  const now=Date.now(),state=record.roomTeacherFeed||{};
  if(Number(state.until)>now){roomTicketStatus('老師吃飽囉！'+Math.ceil((Number(state.until)-now)/60000)+' 分鐘後再餵。');return false}
- const count=(Number(state.until)>0?0:Number(state.count)||0)+1;
+ if(!state.until&&Number(state.count)>=3){roomTicketStatus('老師已吃飽，請稍後再餵。');return false}
+ const count=(Number(state.until)>0?0:Math.min(3,Math.max(0,Number(state.count)||0)))+1;
  record.roomTeacherFeed={count:Math.min(3,count),until:count>=3?now+3600000:0};
  if(!Array.isArray(record.points))record.points=[];if(!Array.isArray(record.roomFeedingLog))record.roomFeedingLog=[];
  const ledgerId=uid();record.points.push({id:ledgerId,sid:String(actor.sid),date:today(),delta:0,kind:'feeding-ticket-used',reason:'餵食券使用：'+actor.pupil.name+' 餵老師 '+food.name});
@@ -3244,7 +3245,7 @@ function refreshMovingClassroomCards(){
  if(view!=='classroom'||!$('movingClassroom'))return;
  if(roomCardClass===null&&roomOriginalClass!==cl){roomOriginalClass=cl;populateMovingRoom();return}
  const people=roomPeople();
- const displayed=new Set(roomWalkers.map(w=>String(w.code)+'|'+String(w.sid)));
+ const displayed=new Set(roomWalkers.filter(w=>!w.isTeacher).map(w=>String(w.code)+'|'+String(w.sid)));
  const wanted=new Set(people.map(p=>String(p.code)+'|'+String(p.s.id)));
  if(displayed.size!==wanted.size||[...wanted].some(id=>!displayed.has(id))){populateMovingRoom();return}
  for(const w of roomWalkers){
