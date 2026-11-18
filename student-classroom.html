@@ -133,16 +133,17 @@ function openStudent(id){
  const p=st().students.find(x=>String(x.id)===String(id));if(!p)return;
  openModal(p.no+" 號 · "+p.name,'<section><h3>🎟️ 我的餵食券</h3><p>剩餘 <strong>'+tickets(id)+'</strong> 張</p><button class="btn primary" id="useTicket" '+(tickets(id)<1?"disabled":"")+'>🎟️ 使用一張餵食券</button><p class="hint">餵食成功才扣券，每張可餵一次。</p></section><section><button class="btn" id="unlockAvatar">🔒 更換頭像（動態教室密碼）</button><div id="avatarChoices" hidden class="options"></div></section>');
  $("useTicket").onclick=()=>{if(tickets(id)<1)return;actor={type:"student",sid:String(id),name:p.name};foodId=null;renderFoods();closeModal();setStatus("🎟️ 已選 "+p.name+" 的餵食券，請選食物及餵食對象。")};
- $("unlockAvatar").onclick=()=>{const area=$("avatarChoices");if(!area.hidden){area.hidden=true;return}
+ $("unlockAvatar").onclick=async()=>{const area=$("avatarChoices");if(!area.hidden){area.hidden=true;return}
  const key=prompt("請輸入動態教室密碼");if(key===null)return;
- // 密碼只送至雲端比對，不向學生端揭露目前密碼。
+ try{await rpc("fundesk_student_room_action",{p_token:token,p_action:"check_password",p_passcode:key});}catch(e){alert("密碼驗證失敗："+e.message);return}
  area.hidden=false;area.innerHTML=STUDENT_AVATARS.map(x=>'<button type="button" data-avatar="'+esc(x[0])+'"><img src="'+esc(avatarPath(x[0]))+'" alt=""><small>'+esc(x[1])+'</small></button>').join("")+'<button id="clearAvatar" class="btn">不使用頭像</button>';
  area.querySelectorAll("[data-avatar]").forEach(b=>b.onclick=async()=>{if(await action("avatar",{p_feeder:String(id),p_avatar:b.dataset.avatar,p_passcode:key})){closeModal();setStatus("已更新學生頭像")}});
  $("clearAvatar").onclick=async()=>{if(await action("avatar",{p_feeder:String(id),p_avatar:null,p_passcode:key})){closeModal();setStatus("已清除學生頭像")}};
  };
 }
-function activateTeacher(){
+async function activateTeacher(){
  const key=prompt("請輸入動態教室密碼（老師餵食）");if(key===null)return;
+ try{await rpc("fundesk_student_room_action",{p_token:token,p_action:"check_password",p_passcode:key});}catch(e){setStatus("動態教室密碼錯誤");return}
  actor={type:"teacher",sid:"__teacher__",name:"老師",passcode:key};foodId=null;renderFoods();setStatus("👩‍🏫 已選老師餵食，請選食物與餵食對象；成功時驗證密碼。");
 }
 function renderFoods(){
