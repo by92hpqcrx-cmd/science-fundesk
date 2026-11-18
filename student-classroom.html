@@ -4,6 +4,32 @@
 *{box-sizing:border-box}body{margin:0;background:#eff7ee;color:#274337;font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}[hidden]{display:none!important}
 #app{height:100dvh;display:flex;flex-direction:column;gap:8px;padding:9px;overflow:hidden}.top{display:flex;align-items:center;flex-wrap:wrap;gap:8px;background:#fff;border:1px solid #c4e1d1;padding:9px 14px;border-radius:16px;box-shadow:0 2px 12px #486c511c}.top h1{margin:0 12px 0 0;font-size:clamp(17px,2.4vw,26px)}.top .sub{color:#698272;font-size:13px}.grow{flex:1}.btn{border:1px solid #a7cbb4;border-radius:10px;padding:8px 12px;background:#f1fff2;color:#245a3c;font-weight:800}.btn.primary{background:#3c9a70;color:#fff;border-color:#3c9a70}.btn.danger{background:#fff1ef;color:#8b433a;border-color:#efb8b2}
 .panel{background:#fff;border:1px solid #c4e1d1;border-radius:15px;padding:9px;min-height:0}.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.toolbar select{border:1px solid #bcd3c3;padding:8px;border-radius:9px;background:#fff}.toolbar label{display:flex;gap:5px;align-items:center;font-weight:700;font-size:13px}.foodShelf{display:flex;gap:6px;max-width:100%;overflow-x:auto;scrollbar-width:thin;padding:3px 0}.food{flex:0 0 auto;border:2px solid #e2ecd9;background:#fcfff7;border-radius:12px;min-width:70px;padding:7px 9px;font-weight:700}.food.sel{border-color:#e9a444;background:#fff3cd}.food .emoji{display:block;font-size:28px}.status{color:#345e49;font-size:13px;flex:1;min-width:190px;line-height:1.5}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,255px);gap:9px;min-height:0;flex:1}.stage{position:relative;overflow:hidden;min-width:0;min-height:240px;border:4px solid #a5d4b8;border-radius:20px;background:#fbf8f4 url("./backgrounds/classroom.png") center/cover no-repeat;isolation:isolate}.stage.scene-playground{background:#eaf7ea url("./backgrounds/playground-faded-48.png") center/cover}.stage.scene-activity{background:#f7f3df url("./backgrounds/activity-center-faded-48.png") center/cover}.board{position:absolute;top:16px;left:50%;transform:translateX(-50%);border:8px solid #ae8054;background:#2e816b;border-radius:10px;padding:6px 18px;color:#fff;font-weight:900;white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis;z-index:1}.window{position:absolute;top:65px;left:3%;width:12%;height:24%;background:linear-gradient(90deg,transparent 48%,#fff 48% 52%,transparent 52%),linear-gradient(#9ed9f2 48%,#fff 48% 52%,#9ed9f2 52%);border:8px solid #fff;border-radius:8px;box-shadow:0 3px 12px #366c8a44;opacity:.6}.walker{position:absolute;left:0;top:0;display:flex;align-items:center;flex-direction:column;gap:3px;width:var(--walker-w,82px);background:transparent;border:0;padding:1px;will-change:transform;z-index:6;touch-action:manipulation}.walker img,.walker .fallback{width:var(--walker-img,66px);height:var(--walker-img,66px);object-fit:contain;border:3px solid #fff;background:#ffffffdf;box-shadow:0 3px 9px #3d5a4966;border-radius:50%;transition:transform .3s;flex:0 0 auto}.walker .fallback{display:grid;place-items:center;font-size:34px}.name{max-width:100%;background:#fffef3;border:1px solid #d4e4cb;border-radius:8px;padding:3px 5px;font-size:clamp(9px,1vw,13px);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:80;box-shadow:0 2px 5px #28503f2b}.walker.chosen img,.walker.chosen .fallback{outline:5px solid #ffcd5d}.teacher .name{background:#ffefbb}.pet .name{position:relative;z-index:999!important;background:#fff;outline:2px solid #62b081;overflow:visible;font-size:13px}.pet .meter{width:110px;max-width:100%;border-radius:20px;background:#fafff1;border:1px solid #83cda2;display:flex;align-items:center;gap:4px;padding:3px;font-size:10px;font-weight:900;z-index:100}.meter span{flex:1;background:#d8e6d9;height:8px;border-radius:10px;overflow:hidden}.meter i{display:block;height:100%;background:#44b96c}.pet img{border-color:#e8fac5}
+/* 保持與教師主程式相同的尺寸，改善小頭像的清晰度與辨識。 */
+.walker.student img,.walker.teacher img{
+ object-fit:contain;
+ object-position:center center;
+ border:1px solid #e0ede7;
+ border-radius:15px;
+ background:rgba(255,255,255,.96);
+ padding:0;
+ image-rendering:auto;
+ filter:none;
+ box-shadow:0 2px 5px rgba(19,58,42,.2);
+}
+.walker.student .fallback,.walker.teacher .fallback{
+ border-radius:15px;background:#fff;filter:none;
+}
+.walker.student .name,.walker.teacher .name{
+ background:#fffef8;
+ color:#153f30;
+ font-weight:900;
+ font-size:clamp(11px,1.1vw,15px);
+ line-height:1.2;
+ text-shadow:none;
+}
+@media(min-resolution:2dppx){
+ .walker.student img,.walker.teacher img{border-width:1px}
+}
 /* 班寵初始圖像為學生的兩倍；放大邊界也納入移動計算。 */
 .walker.pet{width:calc(var(--walker-w,82px) * 2)}
 .walker.pet img,.walker.pet .fallback{width:calc(var(--walker-img,66px) * 2);height:calc(var(--walker-img,66px) * 2)}
@@ -181,7 +207,7 @@ function renderWalkers(){
   const prog=Math.max(0,Math.min(99,Number(st().classPetProgress&&st().classPetProgress[pet.id]&&st().classPetProgress[pet.id].points)||0));
   const bar=document.createElement("div");bar.className="meter";bar.innerHTML='<span><i style="width:'+prog+'%"></i></span>'+prog+'/100';w.el.insertBefore(bar,w.el.firstChild);movers.push(w);
  }
- movers.forEach((m,i)=>{root.appendChild(m.el);const bounds=moveBounds(m.el);m.x=(i%cols)/Math.max(1,cols-1)*bounds.x;m.y=Math.floor(i/cols)/Math.max(1,rows-1)*bounds.y;m.el.style.transform="translate("+m.x+"px,"+m.y+"px)"});
+ movers.forEach((m,i)=>{root.appendChild(m.el);const bounds=moveBounds(m.el);m.x=(i%cols)/Math.max(1,cols-1)*bounds.x;m.y=Math.floor(i/cols)/Math.max(1,rows-1)*bounds.y;m.el.style.transform="translate("+Math.round(m.x)+"px,"+Math.round(m.y)+"px)"});
  refreshFeedingGrowth();last=0;frame=requestAnimationFrame(tick);
 }
 let lastGrowthUpdate=0;
@@ -193,7 +219,7 @@ function tick(t){
   for(const m of movers){const box=moveBounds(m.el);m.x+=m.vx*pace*dt;m.y+=m.vy*pace*dt;
    if(m.x<0){m.x=0;m.vx=Math.abs(m.vx)}if(m.x>box.x){m.x=box.x;m.vx=-Math.abs(m.vx)}
    if(m.y<0){m.y=0;m.vy=Math.abs(m.vy)}if(m.y>box.y){m.y=box.y;m.vy=-Math.abs(m.vy)}
-   m.el.style.transform="translate3d("+m.x+"px,"+m.y+"px,0)";
+   m.el.style.transform="translate3d("+Math.round(m.x)+"px,"+Math.round(m.y)+"px,0)";
   }
  }
  frame=requestAnimationFrame(tick);
