@@ -51,6 +51,16 @@
  .topControls .status{font-size:11px}
  .foot{display:none}
 }
+/* 所有選單、狀態與標題同一行；窄螢幕可左右捲動，不換成第二排。 */
+.top{display:block!important;width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;overscroll-behavior-x:contain;white-space:nowrap}
+.top .topHeading{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;width:max-content!important;min-width:100%;max-width:none!important}
+.top .topHeading>h1,.top .topHeading>strong,.top .topHeading>.sub,.top .topHeading>.btn{flex:0 0 auto;white-space:nowrap}
+.top .topControls{display:flex!important;flex:0 0 auto!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;gap:8px!important;width:max-content!important;max-width:none!important}
+.top .topControls .petChoice{display:flex;flex:0 0 auto;flex-wrap:nowrap}
+.top .topControls label{flex:0 0 auto}
+.top .topControls select{max-width:180px}
+.top .topControls .status{flex:0 0 auto!important;min-width:0!important;max-width:none!important;white-space:nowrap;line-height:1.3}
+@media(max-width:700px){.top .topHeading,.top .topControls{gap:5px!important}.top .topControls select{max-width:135px}.top .topControls .status{flex:0 0 auto!important}}
 /* 學生端背景與教師主程式採相同素材；隱藏疊加的黑板與窗戶。 */
 .stage.scene-classroom{background:#fbf8f4 url("./backgrounds/classroom.png") center/cover no-repeat}
 .stage.scene-playground{background:#eaf7ea url("./backgrounds/playground-faded-48.png") center/cover no-repeat}
@@ -58,7 +68,7 @@
 .stage .window,.stage .board{display:none!important}
 </style></head><body>
 <div id="app">
-<header class="top"><div class="topHeading"><h1>🏫 FunDesk 學生端動態教室</h1><strong id="classTitle">讀取班級中…</strong><span class="sub" id="classCount"></span><span class="grow"></span><span id="sync" class="sub">準備連線</span><button class="btn" id="reload" type="button">↻ 同步</button><button class="btn primary" id="fullscreen" type="button">⛶ 全螢幕</button></div><div class="topControls"><div class="petChoice"><label for="petSelect">🐾 班寵</label><select id="petSelect"></select></div><label>背景<select id="sceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></label><label>速度<select id="speed"><option value="slow">慢</option><option value="medium" selected>中</option><option value="fast">快</option></select></label><button class="btn" type="button" id="pause">⏸ 暫停</button><span class="status" id="status">請點學生名片使用餵食券，或點老師頭像輸入動態教室密碼。</span></div></header>
+<header class="top"><div class="topHeading"><h1>🏫 FunDesk 學生端動態教室</h1><strong id="classTitle">讀取班級中…</strong><span class="sub" id="classCount"></span><div class="topControls"><div class="petChoice"><label for="petSelect">🐾 班寵</label><select id="petSelect"></select></div><label>背景<select id="sceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></label><label>速度<select id="speed"><option value="slow">慢</option><option value="medium" selected>中</option><option value="fast">快</option></select></label><button class="btn" type="button" id="pause">⏸ 暫停</button><span class="status" id="status">請點學生名片使用餵食券，或點老師頭像輸入動態教室密碼。</span></div><span id="sync" class="sub">準備連線</span><button class="btn" id="reload" type="button">↻ 同步</button><button class="btn primary" id="fullscreen" type="button">⛶ 全螢幕</button></div></header>
 <main class="layout"><aside class="panel foodShelf" id="foodShelf" aria-label="左側餵食工具欄"></aside><div class="stage" id="stage"><div class="window"></div><div class="board" id="board">動態教室</div><div id="walkers"></div></div></main><div class="foot">學生端免登入 · 需持有本班聯絡簿專屬連結 · 不開啟主程式</div>
 </div>
 <div class="loginCurtain" id="login" hidden><form class="loginBox" id="loginForm"><h2>🏫 動態教室登入</h2><p class="hint">請使用 FunDesk 教師帳號。此頁面只顯示指定班級的動態教室，不開啟主程式。</p><label>教師電子郵件<input type="email" id="email" autocomplete="username" required></label><label>教師密碼<input type="password" id="password" autocomplete="current-password" required></label><button class="btn primary" type="submit">登入並開啟動態教室</button><p id="loginError" class="hint" role="alert"></p></form></div>
