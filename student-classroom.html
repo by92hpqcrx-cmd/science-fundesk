@@ -166,9 +166,14 @@ function renderWalkers(){
  const ppl=(st().students||[]).filter(x=>!abs.has(String(x.id)));
  const pet=getPet();
  const count=ppl.length+1+(pet?1:0);
- const stage=$("stage");const cols=Math.max(1,Math.ceil(Math.sqrt(count*stage.clientWidth/Math.max(1,stage.clientHeight))));
- const rows=Math.ceil(count/cols);const scale=Math.min(1,Math.max(.4,Math.min(stage.clientWidth/cols/103,stage.clientHeight/rows/112)));
- stage.style.setProperty("--walker-w",Math.round(86*scale)+"px");stage.style.setProperty("--walker-img",Math.round(70*scale)+"px");
+ const stage=$("stage");
+ const width=stage.clientWidth||900,height=stage.clientHeight||560;
+ const cols=Math.max(1,Math.ceil(Math.sqrt(Math.max(1,count)*width/height)));
+ const rows=Math.max(1,Math.ceil(count/cols));
+ // 與主程式 roomGeometry 一致：頭像以 76px 為基準，依場景容量同步縮放。
+ const scale=Math.min(1,Math.max(.36,Math.min((width-20)/cols/106,(height-20)/rows/125)));
+ stage.style.setProperty("--walker-w",Math.round(94*scale)+"px");
+ stage.style.setProperty("--walker-img",Math.round(76*scale)+"px");
  ppl.forEach(p=>movers.push(makeMover(p.id,p.no+" "+p.name,p.avatar?avatarPath(p.avatar):"./avatars/girl-1.svg","student","🙂")));
  movers.push(makeMover("__teacher__","👩‍🏫 老師","./fundesk-rps-teacher.webp","teacher","👩‍🏫"));
  if(pet){
