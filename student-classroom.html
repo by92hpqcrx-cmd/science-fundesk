@@ -15,12 +15,46 @@
 
 /* 餵食紀錄僅於頭像名片顯示，完整教室舞台不被旁欄占用 */
 .layout{display:flex!important;flex:1;min-height:0;width:100%}.layout>.stage{flex:1;min-width:0;min-height:0;height:100%}.personalHistory h3{margin:0 0 8px}.historyColumns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}.historyColumns>div{min-width:0}.historyColumns h4{margin:3px 0 7px;font-size:13px}.historyScroll{max-height:190px;min-height:100px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:5px;border-radius:9px;background:#fff;border:1px solid #d7e7dc}.historyScroll .entry{padding:8px;margin-bottom:5px}.modal section.personalHistory{background:#f5fff7}@media(max-width:540px){.historyColumns{grid-template-columns:1fr}.historyScroll{max-height:120px;min-height:70px}}
+
+/* 2026-11-18: 合併操控列與標題，餵食工具改為舞台左側直欄。 */
+#app{gap:7px}
+.top{flex:0 0 auto;display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:9px 12px;min-width:0}
+.topHeading{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.topHeading h1{margin:0 8px 0 0}
+.topControls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.topControls label{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:13px;white-space:nowrap}
+.topControls select{border:1px solid #bcd3c3;border-radius:9px;background:#fff;padding:7px 9px;min-width:0;max-width:min(190px,35vw)}
+.topControls .petChoice{flex-wrap:nowrap;min-width:0}
+.topControls .petChoice select{max-width:min(190px,34vw)}
+.topControls .status{flex:1 1 230px;min-width:0;font-size:12px;line-height:1.35}
+.layout{display:grid!important;grid-template-columns:clamp(82px,12vw,148px) minmax(0,1fr);align-items:stretch;gap:8px;flex:1;min-height:0;width:100%}
+.layout>.stage{min-width:0;min-height:0;height:100%}
+.layout>.foodShelf{display:flex;flex-direction:column;gap:6px;min-width:0;max-width:100%;height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:8px;scrollbar-width:thin}
+.foodShelfTitle{font-size:14px;font-weight:900;text-align:center;color:#315f46}
+.layout>.foodShelf .food{width:100%;min-width:0;flex:0 0 auto;white-space:normal;padding:6px 3px;font-size:12px;line-height:1.2;overflow-wrap:anywhere}
+.layout>.foodShelf .food .emoji{font-size:clamp(21px,3vw,29px);line-height:1.2;margin-bottom:2px}
+@media(max-width:700px){
+ .top{padding:6px;gap:5px}
+ .topHeading h1{font-size:16px}
+ .topControls{gap:5px}
+ .topControls label{font-size:11px}
+ .topControls select{padding:5px;font-size:12px;max-width:120px}
+ .topControls .petChoice select{max-width:135px}
+ .topControls .status{flex:1 1 100%;font-size:11px}
+ .layout{grid-template-columns:76px minmax(0,1fr);gap:5px}
+ .layout>.foodShelf{padding:4px;gap:4px}
+ .layout>.foodShelf .food{font-size:10px;padding:5px 2px}
+ .foodShelfTitle{font-size:12px}
+}
+@media(max-height:550px){
+ .top{padding:5px;gap:4px}
+ .topControls .status{font-size:11px}
+ .foot{display:none}
+}
 </style></head><body>
 <div id="app">
-<header class="top"><h1>🏫 FunDesk 學生端動態教室</h1><strong id="classTitle">讀取班級中…</strong><span class="sub" id="classCount"></span><span class="grow"></span><span id="sync" class="sub">準備連線</span><button class="btn" id="reload" type="button">↻ 同步</button><button class="btn primary" id="fullscreen" type="button">⛶ 全螢幕</button></header>
-<section class="panel toolbar"><div class="petChoice"><label for="petSelect">🐾 班寵</label><select id="petSelect"></select></div><label>背景<select id="sceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></label><label>速度<select id="speed"><option value="slow">慢</option><option value="medium" selected>中</option><option value="fast">快</option></select></label><button class="btn" type="button" id="pause">⏸ 暫停</button><span class="status" id="status">請點學生名片使用餵食券，或點老師頭像輸入動態教室密碼。</span></section>
-<div class="panel foodShelf" id="foodShelf"></div>
-<main class="layout"><div class="stage" id="stage"><div class="window"></div><div class="board" id="board">動態教室</div><div id="walkers"></div></div></main><div class="foot">學生端免登入 · 需持有本班聯絡簿專屬連結 · 不開啟主程式</div>
+<header class="top"><div class="topHeading"><h1>🏫 FunDesk 學生端動態教室</h1><strong id="classTitle">讀取班級中…</strong><span class="sub" id="classCount"></span><span class="grow"></span><span id="sync" class="sub">準備連線</span><button class="btn" id="reload" type="button">↻ 同步</button><button class="btn primary" id="fullscreen" type="button">⛶ 全螢幕</button></div><div class="topControls"><div class="petChoice"><label for="petSelect">🐾 班寵</label><select id="petSelect"></select></div><label>背景<select id="sceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></label><label>速度<select id="speed"><option value="slow">慢</option><option value="medium" selected>中</option><option value="fast">快</option></select></label><button class="btn" type="button" id="pause">⏸ 暫停</button><span class="status" id="status">請點學生名片使用餵食券，或點老師頭像輸入動態教室密碼。</span></div></header>
+<main class="layout"><aside class="panel foodShelf" id="foodShelf" aria-label="左側餵食工具欄"></aside><div class="stage" id="stage"><div class="window"></div><div class="board" id="board">動態教室</div><div id="walkers"></div></div></main><div class="foot">學生端免登入 · 需持有本班聯絡簿專屬連結 · 不開啟主程式</div>
 </div>
 <div class="loginCurtain" id="login" hidden><form class="loginBox" id="loginForm"><h2>🏫 動態教室登入</h2><p class="hint">請使用 FunDesk 教師帳號。此頁面只顯示指定班級的動態教室，不開啟主程式。</p><label>教師電子郵件<input type="email" id="email" autocomplete="username" required></label><label>教師密碼<input type="password" id="password" autocomplete="current-password" required></label><button class="btn primary" type="submit">登入並開啟動態教室</button><p id="loginError" class="hint" role="alert"></p></form></div>
 <div class="modalBack" id="modal" hidden><div class="modal"><div class="modalHead"><h2 id="modalTitle">學生名片</h2><button class="btn" type="button" id="modalClose">✕ 關閉</button></div><div id="modalContent"></div></div></div>
@@ -177,7 +211,7 @@ async function activateTeacher(){
  actor={type:"teacher",sid:"__teacher__",name:"老師",passcode:key};foodId=null;renderFoods();setStatus("👩‍🏫 已選老師餵食，請選食物與餵食對象；成功時驗證密碼。");
 }
 function renderFoods(){
- $("foodShelf").innerHTML=ROOM_FOODS.map(x=>'<button type="button" class="food '+(foodId===x.id?"sel":"")+'" data-food="'+x.id+'"><span class="emoji">'+x.emoji+'</span>'+esc(x.name)+'</button>').join("");
+ $("foodShelf").innerHTML='<div class="foodShelfTitle">🍽️ 餵食小站</div>'+ROOM_FOODS.map(x=>'<button type="button" class="food '+(foodId===x.id?"sel":"")+'" data-food="'+x.id+'"><span class="emoji">'+x.emoji+'</span>'+esc(x.name)+'</button>').join("");
  $("foodShelf").querySelectorAll("[data-food]").forEach(b=>b.onclick=()=>{if(!actor){setStatus("請先點學生使用餵食券，或點老師輸入密碼。");return}foodId=b.dataset.food;renderFoods();setStatus("已選 "+ROOM_FOODS.find(f=>f.id===foodId).name+"，請點選想餵的對象。")});
 }
 async function feed(){
