@@ -78,6 +78,10 @@ begin
  select d.payload into v_shared from public.fundesk_teacher_data d where d.user_id=v_link.owner_id and d.class_code='shared';
  v_points:=coalesce(v_payload->'points','[]'::jsonb);v_log:=coalesce(v_payload->'roomFeedingLog','[]'::jsonb);
  v_now:=(extract(epoch from clock_timestamp())*1000)::bigint;
+ if p_action='check_password' then
+   if p_passcode is distinct from coalesce(v_shared->>'teacherFeedingPassword','13579') then raise exception '動態教室密碼錯誤';end if;
+   return jsonb_build_object('ok',true);
+ end if;
  if p_action='avatar' then
    if p_passcode is distinct from coalesce(v_shared->>'teacherFeedingPassword','13579') then raise exception '動態教室密碼錯誤';end if;
    if p_avatar is not null and (length(p_avatar)>60 or p_avatar !~ '^[A-Za-z0-9_-]+$') then raise exception '頭像名稱不正確';end if;
