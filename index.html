@@ -1441,9 +1441,9 @@ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>
  .movingRoomPanel .roomPetPicker #roomCount{font-size:16px!important}
 }
 </style><style id="fundeskCountdownRightToLeft20261118">
-/* Remaining time stays attached to the left edge; the right boundary recedes leftward. */
-#toolTimerPanel .toolProgress{direction:ltr!important}
-#toolTimerPanel .toolProgressFill{left:0!important;right:auto!important;transform-origin:left center!important;transition:width .3s linear!important}
+/* 動物從右往左移動，經過的進度條直接消失（透明），只保留尚未倒數的彩色部分。 */
+#toolTimerPanel .toolProgress{direction:ltr!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+#toolTimerPanel .toolProgressFill{left:0!important;right:auto!important;transform-origin:left center!important;transition:width .2s linear!important;overflow:hidden}
 #toolTimerPanel .toolProgress>.toolMascot{transition:left .3s linear;will-change:left}
 #toolTimerPanel .animalToolHead .toolFullButton{min-height:44px;padding:9px 14px;font-weight:850;white-space:nowrap;cursor:pointer}
 #toolTimerPanel:fullscreen{box-sizing:border-box;background:var(--a-bg,#eaf3e8);width:100vw;height:100dvh;overflow:auto;padding:clamp(12px,2vw,28px);padding-bottom:max(12px,env(safe-area-inset-bottom))}
