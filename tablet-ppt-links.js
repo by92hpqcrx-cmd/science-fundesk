@@ -1,130 +1,167 @@
-/* FunDesk 內嵌 PowerPoint 播放器：領取／歸還平板 */
-(() => {
-  "use strict";
-  const ROOT = "https://by92hpqcrx-cmd.github.io/science-fundesk/tablet-ppt/";
-  const slides = {
-    pickup: {name:"📥 領取平板", ppt:"fundesk-tablet-pickup.pptx", count:18},
-    returns:{name:"🔌 歸還平板", ppt:"fundesk-tablet-return.pptx", count:15}
-  };
-  const styleId="fundeskTabletEmbeddedViewerStyle";
-  if(!document.getElementById(styleId)){
-    const style=document.createElement("style");
-    style.id=styleId;
-    style.textContent=`
-      .tabletPptLauncher{display:block;width:100%;min-width:0}
-      .tabletPptTabs{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
-      .tabletPptTabs button{border:1px solid #bad8ee;background:#fff;color:#23537f;border-radius:13px;padding:11px 18px;font-weight:850;cursor:pointer;font-size:16px}
-      .tabletPptTabs button.active{background:#255b91;border-color:#255b91;color:white}
-      .tabletPptStage{position:relative;width:100%;max-width:1280px;margin:0 auto;background:#101e34;border-radius:16px;overflow:hidden;min-height:0}
-      .tabletPptScreen{position:relative;width:100%;height:auto;aspect-ratio:16 / 9;overflow:hidden;min-height:0;background:#101e34}
-      .tabletPptScreen iframe{position:absolute;inset:0;display:block;width:100%;height:100%;min-height:0;max-height:none;border:0;margin:0;padding:0;background:#fff}
-      .tabletPptControls{display:flex;gap:9px;flex-wrap:wrap;align-items:center;justify-content:space-between;background:#eef6ff;padding:12px;border-radius:12px;margin:10px 0}
-      .tabletPptControls button,.tabletPptControls a{border:1px solid #c8ddec;border-radius:10px;padding:9px 13px;background:#fff;color:#26547f;cursor:pointer;text-decoration:none;font-size:14px;font-weight:750}
-      .tabletPptControls button:hover,.tabletPptControls a:hover{background:#d5e9ff}
-      .tabletPptMeta{color:#54718d;font-size:13px;line-height:1.6;margin:8px 0}
-      .tabletPptFullscreenBar{display:none;align-items:center;justify-content:space-between;gap:12px;background:#132944;color:white;padding:8px 14px;flex-shrink:0;width:100%}
-      .tabletPptFullscreenBar button{background:#f2f7ff;color:#173855;border:0;border-radius:7px;padding:7px 11px;cursor:pointer}
-      .tabletPptStage:fullscreen,.tabletPptStage:-webkit-full-screen{width:100vw;height:100vh;max-width:none;min-height:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#101e34}
-      .tabletPptStage:fullscreen .tabletPptFullscreenBar,.tabletPptStage:-webkit-full-screen .tabletPptFullscreenBar{display:flex}
-      .tabletPptStage:fullscreen .tabletPptScreen,.tabletPptStage:-webkit-full-screen .tabletPptScreen{flex:0 0 auto;width:min(100vw,calc((100vh - 60px) * 16 / 9));height:auto;aspect-ratio:16 / 9;min-height:0}
-      .tabletPptStage:fullscreen iframe,.tabletPptStage:-webkit-full-screen iframe{min-height:0;height:100%}
-      @media(max-width:680px){.tabletPptTabs button{flex:1}.tabletPptScreen{min-height:0}.tabletPptScreen iframe{min-height:0}}
-    `;
-    document.head.appendChild(style);
-  }
-  const officeEmbed = (file) => {
-    const pptUrl = ROOT + encodeURIComponent(file);
-    return "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(pptUrl);
-  };
-  function init(){
-    document.querySelectorAll(".tabletPptLauncher").forEach(panel=>{
-      if(panel.dataset.initialized==="embed-v3") return;
-      panel.dataset.initialized="embed-v3";
-      panel.innerHTML="";
-      const heading=document.createElement("strong");
-      heading.textContent="📽️ 平板守則｜網頁直接播放";
-      heading.style.cssText="display:block;font-size:20px;color:#194c79;margin-bottom:9px";
-      const note=document.createElement("div");
-      note.className="tabletPptMeta";
-      note.textContent="選擇領取或歸還簡報，直接在下方播放；投影片切換請使用播放器內建控制。";
-      const tabs=document.createElement("div");
-      tabs.className="tabletPptTabs";
-      const controls=document.createElement("div");
-      controls.className="tabletPptControls";
-      const label=document.createElement("span");
-      label.style.cssText="font-size:14px;font-weight:800;color:#22537d";
-      const right=document.createElement("div");
-      right.style.cssText="display:flex;gap:8px;flex-wrap:wrap";
-      const full=document.createElement("button");
-      full.type="button";
-      full.textContent="⛶ 全螢幕播放";
-      const dl=document.createElement("a");
-      dl.textContent="⬇ 下載 PPT";
-      dl.target="_blank";dl.rel="noopener noreferrer";
-      const newWindow=document.createElement("a");
-      newWindow.textContent="↗ 新分頁播放";
-      newWindow.target="_blank";newWindow.rel="noopener noreferrer";
-      right.append(full, newWindow, dl);
-      controls.append(label,right);
-      const stage=document.createElement("div");
-      stage.className="tabletPptStage";
-      const fullscreenBar=document.createElement("div");
-      fullscreenBar.className="tabletPptFullscreenBar";
-      const barLabel=document.createElement("span");
-      barLabel.textContent="📱 FunDesk 平板使用守則";
-      const exitButton=document.createElement("button");
-      exitButton.type="button";exitButton.textContent="✕ 離開全螢幕";
-      fullscreenBar.append(barLabel,exitButton);
-      const screen=document.createElement("div");
-      screen.className="tabletPptScreen";
-      const iframe=document.createElement("iframe");
-      iframe.title="平板使用守則 PowerPoint 播放器";
-      iframe.setAttribute("allowfullscreen","");
-      iframe.setAttribute("webkitallowfullscreen","");
-      iframe.setAttribute("allow","fullscreen");
-      iframe.referrerPolicy="no-referrer";
-      iframe.loading="lazy";
-      screen.appendChild(iframe);
-      stage.append(fullscreenBar,screen);
-      const help=document.createElement("p");
-      help.className="tabletPptMeta";
-      help.textContent="若無法載入線上預覽，請點「新分頁播放」或「下載 PPT」。網路預覽需能連線至 Microsoft Office。";
-      const btns={};
-      let current="pickup";
-      const choose=(key)=>{
-        current=key;
-        const item=slides[key];
-        const pptURL=ROOT+encodeURIComponent(item.ppt);
-        const viewURL=officeEmbed(item.ppt);
-        label.textContent=item.name+"（"+item.count+" 張）";
-        dl.href=pptURL;
-        newWindow.href=viewURL;
-        iframe.src=viewURL;
-        Object.entries(btns).forEach(([id,btn])=>{btn.classList.toggle("active",id===key);btn.setAttribute("aria-pressed",String(id===key));});
-      };
-      Object.entries(slides).forEach(([key,item])=>{
-        const b=document.createElement("button");
-        b.type="button";b.textContent=item.name+"（"+item.count+" 張）";
-        b.addEventListener("click",()=>choose(key));
-        tabs.appendChild(b);btns[key]=b;
-      });
-      const close=()=>{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});else if(document.webkitFullscreenElement&&document.webkitExitFullscreen)document.webkitExitFullscreen();};
-      full.addEventListener("click",()=>{
-        if(document.fullscreenElement===stage){close();return;}
-        if(stage.requestFullscreen)stage.requestFullscreen().catch(()=>{window.open(officeEmbed(slides[current].ppt),"_blank","noopener");});
-        else if(stage.webkitRequestFullscreen)stage.webkitRequestFullscreen();
-        else window.open(officeEmbed(slides[current].ppt),"_blank","noopener");
-      });
-      exitButton.addEventListener("click",close);
-      panel.append(heading,note,tabs,controls,stage,help);
-      choose("pickup");
+/* FunDesk native tablet slide player (does not use Office preview) */
+(()=>{'use strict';
+const ROOT='./tablet-ppt/';
+const DECKS={pickup:{title:'📥 領取平板',file:'fundesk-tablet-pickup.pptx',count:18},
+returns:{title:'🔌 歸還平板',file:'fundesk-tablet-return.pptx',count:15}};
+const ID='fundesk-native-ppt-v4';
+if(!document.getElementById(ID)){
+ const el=document.createElement('style');el.id=ID;el.textContent=".tabletPptLauncher{width:100%;min-width:0}\n.fdTabs,.fdControls,.fdFullBar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:10px 0}\n.fdTabs button,.fdControls button,.fdControls a,.fdFullBar button{border:1px solid #c2d8ed;background:#fff;color:#23517c;padding:10px 14px;border-radius:11px;font-size:15px;font-weight:750;text-decoration:none;cursor:pointer}\n.fdTabs button[aria-pressed=true]{background:#255b91;color:white}\n.fdControls{justify-content:space-between;padding:10px;background:#eff7ff;border-radius:12px}\n.fdControls strong{color:#23517c}\n.fdStage{position:relative;max-width:1280px;width:100%;margin:auto;background:#101a29;overflow:hidden;border-radius:14px}\n.fdScreen{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative}\n.fdScreen img{display:block;width:100%;height:100%;object-fit:contain;position:absolute;inset:0}\n.fdStatus{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;background:#101a29;color:#fff;font-size:18px;font-weight:750}\n.fdStatus[hidden]{display:none}\n.fdFullBar{display:none;justify-content:center;background:#192b44;color:#fff;padding:8px;margin:0;width:100%}\n.fdStage:fullscreen,.fdStage:-webkit-full-screen{max-width:none;width:100vw;height:100vh;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center}\n.fdStage:fullscreen .fdFullBar,.fdStage:-webkit-full-screen .fdFullBar{display:flex}\n.fdStage:fullscreen .fdScreen,.fdStage:-webkit-full-screen .fdScreen{flex:0 0 auto;width:min(100vw,calc((100vh - 55px) * 16 / 9));height:auto;aspect-ratio:16/9}\n.fdHelp{font-size:13px;color:#667f98;line-height:1.5}";
+ document.head.append(el);
+}
+let zipLoader=null;
+function getZip(){
+ if(window.JSZip)return Promise.resolve(window.JSZip);
+ if(zipLoader)return zipLoader;
+ zipLoader=(async()=>{
+  for(const url of ['https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+   'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js']){
+   try{
+    await new Promise((ok,fail)=>{
+     const s=document.createElement('script');s.src=url;s.onload=ok;s.onerror=fail;
+     document.head.append(s);
     });
+    if(window.JSZip)return window.JSZip;
+   }catch(e){}
   }
-  let queued=false;
-  new MutationObserver(()=>{
-    if(queued)return;
-    queued=true;
-    queueMicrotask(()=>{queued=false;init();});
-  }).observe(document.body,{subtree:true,childList:true});
-  init();
+  throw Error('無法載入投影片解壓縮元件，請先下載 PPT。');
+ })();
+ return zipLoader;
+}
+function resolvePath(p,rel){
+ const segments=p.split('/');segments.pop();
+ for(const part of rel.split('/')){
+  if(part==='..')segments.pop();
+  else if(part && part!=='.')segments.push(part);
+ }
+ return segments.join('/');
+}
+const cache=new Map();
+async function unpack(key){
+ if(cache.has(key))return cache.get(key);
+ const promise=(async()=>{
+  const deck=DECKS[key],Zip=await getZip();
+  const response=await fetch(ROOT+encodeURIComponent(deck.file));
+  if(!response.ok)throw Error('PPT 檔案無法取得 (HTTP '+response.status+')');
+  const zip=await Zip.loadAsync(await response.arrayBuffer()),list=[];
+  for(let n=1;n<=deck.count;n++){
+   const slide='ppt/slides/slide'+n+'.xml';
+   const rel=zip.file('ppt/slides/_rels/slide'+n+'.xml.rels');
+   if(!rel)throw Error('缺少第 '+n+' 張的圖片關聯');
+   const xml=new DOMParser().parseFromString(await rel.async('string'),'application/xml');
+   const image=[...xml.getElementsByTagName('*')].find(e=>e.localName==='Relationship' &&
+      (e.getAttribute('Type')||'').endsWith('/image'));
+   if(!image)throw Error('第 '+n+' 張沒有圖片');
+   const media=resolvePath(slide,image.getAttribute('Target'));
+   if(!zip.file(media))throw Error('圖片不存在: '+media);
+   const ext=media.split('.').pop().toLowerCase();
+   const mime=ext==='gif'?'image/gif':ext==='jpg'||ext==='jpeg'?'image/jpeg':'image/png';
+   const blob=await zip.file(media).async('blob');
+   const url=URL.createObjectURL(new Blob([blob],{type:mime}));
+   let duration=3000;const slideEntry=zip.file(slide);
+   if(slideEntry){
+    const xmltext=await slideEntry.async('string');
+    const m=xmltext.match(/advTm=["'](\d+)["']/);
+    if(m)duration=Number(m[1]);
+   }
+   list.push({url,duration:Math.min(120000,Math.max(1000,duration))});
+  }
+  return list;
+ })();
+ cache.set(key,promise);
+ try{return await promise;}catch(e){cache.delete(key);throw e;}
+}
+function setup(root){
+ if(root.dataset.fdNative==='v4')return;
+ root.dataset.fdNative='v4';root.replaceChildren();
+ const title=document.createElement('h3');title.textContent='📽️ 平板守則｜網頁直接播放';
+ const tabs=document.createElement('div');tabs.className='fdTabs';
+ const controls=document.createElement('div');controls.className='fdControls';
+ const indicator=document.createElement('strong');
+ const actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+ function btn(text,parent){const b=document.createElement('button');b.type='button';b.textContent=text;parent.append(b);return b;}
+ const back=btn('◀ 上一張',actions),forward=btn('下一張 ▶',actions),
+       play=btn('▶ 自動播放',actions),fullscreen=btn('⛶ 全螢幕',actions);
+ const download=document.createElement('a');download.textContent='⬇ 下載 PPT';
+ download.target='_blank';download.rel='noopener noreferrer';actions.append(download);
+ controls.append(indicator,actions);
+ const stage=document.createElement('div');stage.className='fdStage';
+ const screen=document.createElement('div');screen.className='fdScreen';
+ const image=document.createElement('img');image.alt='平板守則投影片';
+ const status=document.createElement('div');status.className='fdStatus';status.setAttribute('role','status');
+ screen.append(image,status);
+ const fullbar=document.createElement('div');fullbar.className='fdFullBar';
+ const fullBack=btn('◀ 上一張',fullbar),fullForward=btn('下一張 ▶',fullbar),
+       fullPlay=btn('▶ 播放',fullbar),fullExit=btn('✕ 離開全螢幕',fullbar);
+ stage.append(screen,fullbar);
+ const help=document.createElement('p');help.className='fdHelp';
+ help.textContent='直接顯示 PPT 內的原始圖片，避免 Office 預覽變形；GIF 動圖可繼續播放。自動播放依原簡報秒數切換。';
+ root.append(title,tabs,controls,stage,help);
+ let key='pickup',list=[],index=0,playing=false,timer=0,seq=0;
+ const tabButtons={};
+ function stop(){playing=false;clearTimeout(timer);play.textContent='▶ 自動播放';fullPlay.textContent='▶ 播放';}
+ function draw(i){
+  if(!list.length)return;
+  index=(i+list.length)%list.length;
+  image.src=list[index].url;
+  image.alt=DECKS[key].title+' 第 '+(index+1)+' 張';
+  indicator.textContent=DECKS[key].title+' · '+(index+1)+' / '+list.length;
+  if(playing)schedule();
+ }
+ function schedule(){
+  clearTimeout(timer);
+  if(!playing||!list.length)return;
+  timer=setTimeout(()=>{
+   if(index===list.length-1){stop();return;}
+   draw(index+1);
+  },list[index].duration);
+ }
+ function toggle(){
+  if(!list.length)return;
+  if(playing){stop();return;}
+  if(index===list.length-1)draw(0);
+  playing=true;play.textContent='⏸ 暫停';fullPlay.textContent='⏸ 暫停';schedule();
+ }
+ async function choose(k){
+  stop();key=k;list=[];index=0;
+  const token=++seq;image.removeAttribute('src');
+  status.hidden=false;status.textContent='正在載入 '+DECKS[k].title+'…';
+  indicator.textContent=DECKS[k].title;
+  download.href=ROOT+encodeURIComponent(DECKS[k].file);
+  Object.entries(tabButtons).forEach(([id,b])=>b.setAttribute('aria-pressed',String(id===k)));
+  try{
+   const slides=await unpack(k);
+   if(token!==seq||!root.isConnected)return;
+   list=slides;status.hidden=true;draw(0);
+  }catch(error){
+   if(token!==seq)return;
+   status.hidden=false;status.textContent='讀取失敗：'+error.message+'。請使用下載 PPT。';
+  }
+ }
+ Object.entries(DECKS).forEach(([k,v])=>{
+  const b=btn(v.title+'（'+v.count+' 張）',tabs);tabButtons[k]=b;
+  b.addEventListener('click',()=>choose(k));
+ });
+ for(const b of [back,fullBack])b.addEventListener('click',()=>draw(index-1));
+ for(const b of [forward,fullForward])b.addEventListener('click',()=>draw(index+1));
+ for(const b of [play,fullPlay])b.addEventListener('click',toggle);
+ function exit(){
+  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+  else if(document.webkitExitFullscreen)document.webkitExitFullscreen();
+ }
+ fullExit.addEventListener('click',exit);
+ fullscreen.addEventListener('click',()=>{
+  if(document.fullscreenElement===stage){exit();return;}
+  if(stage.requestFullscreen)stage.requestFullscreen().catch(()=>{});
+  else if(stage.webkitRequestFullscreen)stage.webkitRequestFullscreen();
+ });
+ choose('pickup');
+}
+let pending=false;
+new MutationObserver(()=>{
+ if(pending)return;
+ pending=true;queueMicrotask(()=>{
+  pending=false;document.querySelectorAll('.tabletPptLauncher').forEach(setup);
+ });
+}).observe(document.body,{childList:true,subtree:true});
+document.querySelectorAll('.tabletPptLauncher').forEach(setup);
 })();
