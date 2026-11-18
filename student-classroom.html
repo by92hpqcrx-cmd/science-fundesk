@@ -200,7 +200,7 @@ function renderWalkers(){
  const scale=Math.min(1,Math.max(.36,Math.min((width-20)/cols/106,(height-20)/rows/125)));
  stage.style.setProperty("--walker-w",Math.round(94*scale)+"px");
  stage.style.setProperty("--walker-img",Math.round(76*scale)+"px");
- ppl.forEach(p=>movers.push(makeMover(p.id,p.no+" "+p.name,p.avatar?avatarPath(p.avatar):"./avatars/girl-1.svg","student","🙂")));
+ ppl.forEach(p=>{const n=Number(p.no);const def=n>=1&&n<=14?"./avatars/default-boy.svg":n>=15&&n<=28?"./avatars/default-girl.svg":"./avatars/girl-1.svg";movers.push(makeMover(p.id,p.no+" "+p.name,p.avatar?avatarPath(p.avatar):def,"student","🙂"));});
  movers.push(makeMover("__teacher__","👩‍🏫 老師","./fundesk-rps-teacher.webp","teacher","👩‍🏫"));
  if(pet){
   const w=makeMover(pet.id,pet.emoji+" "+pet.name,petPath(pet.id),"pet",pet.emoji);
