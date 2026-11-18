@@ -1531,6 +1531,14 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
 .personCard[data-lab-group="4"]{background:#f5edff}
 .personCard[data-lab-group="5"]{background:#fff7df}
 .personCard[data-lab-group].selected{outline:3px solid #477ed6;outline-offset:1px}
+</style><style id="fundesk-group-label-colors">
+/* 實驗座位學生名片：各組標籤獨立底色，不改變座號與分組 */
+.seatStudentSummary .seatGroup{display:inline-block;border-radius:999px;padding:4px 13px;font-weight:900;border:1.5px solid transparent;white-space:nowrap;position:relative;z-index:1}
+.seatStudentSummary .seatGroup[data-group="第一組"]{background:#ffe5df;color:#9c3427;border-color:#edaa9a}
+.seatStudentSummary .seatGroup[data-group="第二組"]{background:#deefff;color:#1857a1;border-color:#a3c8ed}
+.seatStudentSummary .seatGroup[data-group="第三組"]{background:#e0f5dc;color:#256e39;border-color:#a3d4ac}
+.seatStudentSummary .seatGroup[data-group="第四組"]{background:#f0e2ff;color:#753aa0;border-color:#cfafe8}
+.seatStudentSummary .seatGroup[data-group="第五組"]{background:#fff1c5;color:#875914;border-color:#e5c773}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
@@ -1820,7 +1828,7 @@ function seatStudentSummary(id){
  const idx=layoutMap('lab').findIndex(sid=>String(sid)===String(id));
  const group=idx<0?'未分組':['第四組','第五組','第一組','第二組','第三組'][Math.floor(idx/6)]||'未分組';
  const absent=cls().attendance.filter(x=>String(x.sid)===String(id)&&x.status==='缺席').length;
- return `<div class="seatStudentSummary"><span class="seatGroup">🧪 ${group}</span><span class="seatStats">可用積點 ${ptotal(id)} · 待抵扣 ${ppenalty(id)} · 缺席 ${absent} 次 · 待追蹤 ${pending(id).length} 項</span></div>`;
+ return `<div class="seatStudentSummary"><span class="seatGroup" data-group="${group}">🧪 ${group}</span><span class="seatStats">可用積點 ${ptotal(id)} · 待抵扣 ${ppenalty(id)} · 缺席 ${absent} 次 · 待追蹤 ${pending(id).length} 項</span></div>`;
 }
 function labCell(index,seatIds){
  const no=db.labTemplate.flat()[index],sid=seatIds[index],s=student(sid);
