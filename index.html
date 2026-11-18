@@ -1453,6 +1453,40 @@ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>
 body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp(98px,18dvh,165px)!important;max-height:clamp(98px,18dvh,165px)!important;overflow-y:auto!important}
 @media(max-width:700px){.movingRoomPanel .roomPlayArea>.roomFeedHistory{max-height:155px!important;overflow-y:auto!important}}
 .roomFullscreenLinkHint{font-size:12px;font-weight:750;color:#27644a;background:#eff9ec;border:1px solid #bad9bd;border-radius:8px;padding:5px 9px}
+</style><style id="roomHistoryAlignedWithFoodShelf20261118">
+/* 2026-11-18：餵食紀錄下降至餵食小站同一水平上緣；舞台維持在上方。 */
+@media(min-width:731px){
+ body:not(.roomFullscreen) .movingRoomPanel>.roomPlayArea,
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea,
+ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea{
+  display:grid!important;grid-template-columns:minmax(0,3fr) minmax(225px,1fr)!important;
+  grid-template-rows:minmax(0,1fr) auto!important;align-items:start!important;
+  column-gap:10px!important;row-gap:8px!important;
+ }
+ body:not(.roomFullscreen) .movingRoomPanel>.roomPlayArea>.movingRoomStage,
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea>.movingRoomStage,
+ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea>.movingRoomStage{
+  grid-column:1 / -1!important;grid-row:1!important;min-width:0!important;
+ }
+ body:not(.roomFullscreen) .movingRoomPanel>.roomPlayArea>.roomFoodShelf,
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFoodShelf,
+ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea>.roomFoodShelf{
+  grid-column:1!important;grid-row:2!important;align-self:start!important;margin:0!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+ }
+ body:not(.roomFullscreen) .movingRoomPanel>.roomPlayArea>.roomFeedHistory,
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFeedHistory,
+ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>.roomPlayArea>.roomFeedHistory{
+  grid-column:2!important;grid-row:2!important;align-self:start!important;margin:0!important;
+  width:100%!important;min-width:0!important;height:130px!important;max-height:130px!important;
+  overflow-y:auto!important;overflow-x:hidden!important;padding:8px!important;
+ }
+ body.roomFullscreen .movingRoomPanel>.roomPlayArea>.roomFeedHistory .roomHistoryList{max-height:none!important;overflow:visible!important}
+}
+/* 窄螢幕沿用直式：舞台、餵食小站、可捲動餵食紀錄。 */
+@media(max-width:730px){
+ .movingRoomPanel>.roomPlayArea>.roomFeedHistory{margin-top:0!important;overflow-y:auto!important;}
+}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
