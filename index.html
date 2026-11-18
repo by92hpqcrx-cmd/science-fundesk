@@ -3973,7 +3973,7 @@ function cloudRenderQuickClasses(){
  const url=new URL(location.href);root.innerHTML=activeCodes().map(c=>{const u=new URL(url.href);u.searchParams.set('class',c);return `<a href="${esc(u.href)}" class="${cl===c?'selected':''}" title="${c} 班專屬網址">${esc(className(c))}</a>`}).join('');
  root.querySelectorAll('a').forEach(a=>{a.onclick=e=>{e.preventDefault();const code=new URL(a.href).searchParams.get('class');changeClass(code)}});
 }
-function cloudPayload(code){return code==='shared'?{labTemplate:db.labTemplate,classCodes:[...CLASSES],classMeta:db.classMeta,retiredClassCodes:[...retiredClassCodes]}:db.classes[code]}
+function cloudPayload(code){return code==='shared'?{labTemplate:db.labTemplate,classCodes:[...CLASSES],classMeta:db.classMeta,retiredClassCodes:[...retiredClassCodes],teacherFeedingPassword:String(db.teacherFeedingPassword||'13579')}:db.classes[code]}
 async function cloudGetAll(){return await cloudFetch('/rest/v1/fundesk_teacher_data?select=class_code,payload,revision&order=class_code.asc')}
 async function cloudLoad(){
  cloudStatus('正在讀取個人雲端紀錄…');
@@ -3987,6 +3987,7 @@ async function cloudLoad(){
  const rowCodes=rows.filter(r=>r.class_code!=='shared'&&!retiredClassCodes.includes(r.class_code)&&/^[A-Za-z0-9_-]{1,40}$/.test(r.class_code)).map(r=>r.class_code);
  CLASSES=[...new Set([...(stored?.length?stored:DEFAULT_CLASSES),...rowCodes])].filter(c=>!retiredClassCodes.includes(c));
  const fresh=makeState();
+ if(/^\d{5,12}$/.test(String(shared?.teacherFeedingPassword||'')))fresh.teacherFeedingPassword=String(shared.teacherFeedingPassword);
  if(shared?.classMeta&&typeof shared.classMeta==='object'){
   for(const code of CLASSES){const item=shared.classMeta[code];if(item&&typeof item.name==='string'&&item.name.trim())fresh.classMeta[code]={name:item.name.slice(0,35),active:item.active!==false}}
  }
