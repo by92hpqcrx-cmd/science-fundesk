@@ -5,12 +5,15 @@
 #app{height:100dvh;display:flex;flex-direction:column;gap:8px;padding:9px;overflow:hidden}.top{display:flex;align-items:center;flex-wrap:wrap;gap:8px;background:#fff;border:1px solid #c4e1d1;padding:9px 14px;border-radius:16px;box-shadow:0 2px 12px #486c511c}.top h1{margin:0 12px 0 0;font-size:clamp(17px,2.4vw,26px)}.top .sub{color:#698272;font-size:13px}.grow{flex:1}.btn{border:1px solid #a7cbb4;border-radius:10px;padding:8px 12px;background:#f1fff2;color:#245a3c;font-weight:800}.btn.primary{background:#3c9a70;color:#fff;border-color:#3c9a70}.btn.danger{background:#fff1ef;color:#8b433a;border-color:#efb8b2}
 .panel{background:#fff;border:1px solid #c4e1d1;border-radius:15px;padding:9px;min-height:0}.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.toolbar select{border:1px solid #bcd3c3;padding:8px;border-radius:9px;background:#fff}.toolbar label{display:flex;gap:5px;align-items:center;font-weight:700;font-size:13px}.foodShelf{display:flex;gap:6px;max-width:100%;overflow-x:auto;scrollbar-width:thin;padding:3px 0}.food{flex:0 0 auto;border:2px solid #e2ecd9;background:#fcfff7;border-radius:12px;min-width:70px;padding:7px 9px;font-weight:700}.food.sel{border-color:#e9a444;background:#fff3cd}.food .emoji{display:block;font-size:28px}.status{color:#345e49;font-size:13px;flex:1;min-width:190px;line-height:1.5}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,255px);gap:9px;min-height:0;flex:1}.stage{position:relative;overflow:hidden;min-width:0;min-height:240px;border:4px solid #a5d4b8;border-radius:20px;background:linear-gradient(#e0f3ff 0 30%,#fdf9dd 30% 64%,#e9dabd 64%);isolation:isolate}.stage.scene-playground{background:#eaf7ea url("./backgrounds/playground-faded-48.png") center/cover}.stage.scene-activity{background:#f7f3df url("./backgrounds/activity-center-faded-48.png") center/cover}.board{position:absolute;top:16px;left:50%;transform:translateX(-50%);border:8px solid #ae8054;background:#2e816b;border-radius:10px;padding:6px 18px;color:#fff;font-weight:900;white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis;z-index:1}.window{position:absolute;top:65px;left:3%;width:12%;height:24%;background:linear-gradient(90deg,transparent 48%,#fff 48% 52%,transparent 52%),linear-gradient(#9ed9f2 48%,#fff 48% 52%,#9ed9f2 52%);border:8px solid #fff;border-radius:8px;box-shadow:0 3px 12px #366c8a44;opacity:.6}.walker{position:absolute;left:0;top:0;display:flex;align-items:center;flex-direction:column;gap:3px;width:var(--walker-w,82px);background:transparent;border:0;padding:1px;will-change:transform;z-index:6;touch-action:manipulation}.walker img,.walker .fallback{width:var(--walker-img,66px);height:var(--walker-img,66px);object-fit:contain;border:3px solid #fff;background:#ffffffdf;box-shadow:0 3px 9px #3d5a4966;border-radius:50%;transition:transform .3s;flex:0 0 auto}.walker .fallback{display:grid;place-items:center;font-size:34px}.name{max-width:100%;background:#fffef3;border:1px solid #d4e4cb;border-radius:8px;padding:3px 5px;font-size:clamp(9px,1vw,13px);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:80;box-shadow:0 2px 5px #28503f2b}.walker.chosen img,.walker.chosen .fallback{outline:5px solid #ffcd5d}.teacher .name{background:#ffefbb}.pet .name{position:relative;z-index:999!important;background:#fff;outline:2px solid #62b081;overflow:visible;font-size:13px}.pet .meter{width:110px;max-width:100%;border-radius:20px;background:#fafff1;border:1px solid #83cda2;display:flex;align-items:center;gap:4px;padding:3px;font-size:10px;font-weight:900;z-index:100}.meter span{flex:1;background:#d8e6d9;height:8px;border-radius:10px;overflow:hidden}.meter i{display:block;height:100%;background:#44b96c}.pet img{border-color:#e8fac5}.history{display:flex;flex-direction:column;min-width:0;overflow:hidden}.history h2{font-size:16px;margin:3px 1px 8px}.scroll{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#8dbca2 #eff8ef}.entry{background:#f3fbf5;border:1px solid #cfe5d7;border-radius:10px;padding:9px;margin:0 0 7px;font-size:12px;line-height:1.55}.entry b{color:#21633f}.entry small{color:#698775}.hint{font-size:12px;color:#667c70}.petChoice{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.petChoice label{font-size:13px;font-weight:900}.loginCurtain{position:fixed;inset:0;background:#e7f3eaf5;z-index:900;display:grid;place-items:center;padding:20px}.loginBox{width:min(410px,100%);background:white;padding:22px;border-radius:20px;box-shadow:0 12px 40px #233b3240}.loginBox h2{margin:4px 0 8px}.loginBox input{width:100%;border:1px solid #b8d5bf;border-radius:10px;padding:12px;margin:6px 0 12px}.modalBack{position:fixed;inset:0;background:#203b3699;z-index:1000;display:grid;place-items:center;padding:15px}.modal{width:min(600px,100%);max-height:90dvh;overflow:auto;background:white;border-radius:20px;padding:18px;box-shadow:0 15px 50px #1f47365c}.modalHead{display:flex;gap:14px;align-items:center;justify-content:space-between}.modal h2{margin:4px 0}.modal section{border:1px solid #cde2d2;background:#f5fbf6;border-radius:12px;padding:12px;margin:12px 0}.modal .options{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px;max-height:34vh;overflow:auto}.options button{min-width:0;display:flex;flex-direction:column;gap:3px;border:1px solid #d3e4d3;border-radius:8px;background:#fff;padding:5px}.options img{height:64px;width:100%;object-fit:contain}.options small{font-size:11px;color:#345b42}.modal .btn{margin:3px}.foot{color:#608572;font-size:11px;text-align:right}#sync.error{color:#ae4444}.modal[hidden],.modalBack[hidden]{display:none}.empty{padding:20px;text-align:center;color:#6d8976}
 @media(max-width:700px){#app{padding:5px;gap:5px}.top{padding:6px;gap:5px}.top h1{font-size:17px}.layout{grid-template-columns:1fr;grid-template-rows:minmax(230px,1fr) minmax(95px,24vh)}.history h2{font-size:13px}.history{padding:6px}.entry{padding:5px;font-size:11px}.board{font-size:12px;padding:4px}.toolbar{padding:6px}.food{min-width:56px;padding:3px}.food .emoji{font-size:22px}}
+
+/* 餵食紀錄僅於頭像名片顯示，完整教室舞台不被旁欄占用 */
+.layout{display:flex!important;flex:1;min-height:0;width:100%}.layout>.stage{flex:1;min-width:0;min-height:0;height:100%}.personalHistory h3{margin:0 0 8px}.historyColumns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}.historyColumns>div{min-width:0}.historyColumns h4{margin:3px 0 7px;font-size:13px}.historyScroll{max-height:190px;min-height:100px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:5px;border-radius:9px;background:#fff;border:1px solid #d7e7dc}.historyScroll .entry{padding:8px;margin-bottom:5px}.modal section.personalHistory{background:#f5fff7}@media(max-width:540px){.historyColumns{grid-template-columns:1fr}.historyScroll{max-height:120px;min-height:70px}}
 </style></head><body>
 <div id="app">
 <header class="top"><h1>🏫 FunDesk 獨立動態教室</h1><strong id="classTitle">讀取班級中…</strong><span class="sub" id="classCount"></span><span class="grow"></span><span id="sync" class="sub">準備連線</span><button class="btn" id="reload" type="button">↻ 同步</button><button class="btn primary" id="fullscreen" type="button">⛶ 全螢幕</button></header>
 <section class="panel toolbar"><div class="petChoice"><label for="petSelect">🐾 班寵</label><select id="petSelect"></select></div><label>背景<select id="sceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></label><label>速度<select id="speed"><option value="slow">慢</option><option value="medium" selected>中</option><option value="fast">快</option></select></label><button class="btn" type="button" id="pause">⏸ 暫停</button><span class="status" id="status">請點學生名片使用餵食券，或點老師頭像輸入動態教室密碼。</span></section>
 <div class="panel foodShelf" id="foodShelf"></div>
-<main class="layout"><div class="stage" id="stage"><div class="window"></div><div class="board" id="board">動態教室</div><div id="walkers"></div></div><aside class="panel history"><h2>📋 餵食紀錄 <span class="hint">捲動查看更多</span></h2><div class="scroll" id="history"></div></aside></main><div class="foot">獨立頁面 · 不需開啟 FunDesk 主程式 · 教師登入保護班級資料</div>
+<main class="layout"><div class="stage" id="stage"><div class="window"></div><div class="board" id="board">動態教室</div><div id="walkers"></div></div></main><div class="foot">獨立頁面 · 不需開啟 FunDesk 主程式 · 教師登入保護班級資料</div>
 </div>
 <div class="loginCurtain" id="login"><form class="loginBox" id="loginForm"><h2>🏫 動態教室登入</h2><p class="hint">請使用 FunDesk 教師帳號。此頁面只顯示指定班級的動態教室，不開啟主程式。</p><label>教師電子郵件<input type="email" id="email" autocomplete="username" required></label><label>教師密碼<input type="password" id="password" autocomplete="current-password" required></label><button class="btn primary" type="submit">登入並開啟動態教室</button><p id="loginError" class="hint" role="alert"></p></form></div>
 <div class="modalBack" id="modal" hidden><div class="modal"><div class="modalHead"><h2 id="modalTitle">學生名片</h2><button class="btn" type="button" id="modalClose">✕ 關閉</button></div><div id="modalContent"></div></div></div>
@@ -57,7 +60,7 @@ async function load(){
  $("petSelect").value=ROOM_PETS.some(x=>x.id===data.classPetType)?data.classPetType:"";
  $("sceneSelect").value=["classroom","playground","activity"].includes(data.roomScene)?data.roomScene:"classroom";
  $("stage").className="stage scene-"+$("sceneSelect").value;
- renderWalkers();renderHistory();setSync("✅ 雲端已同步");
+ renderWalkers();setSync("✅ 雲端已同步");
 }
 async function change(mutator){
  if(busy)return false;busy=true;setSync("⏳ 儲存中");
@@ -66,10 +69,10 @@ async function change(mutator){
   if(!Array.isArray(latest)||!latest.length)throw Error("無法取得最新班級資料");
   const next=latest[0].payload,v=Number(latest[0].revision)||0;
   const result=mutator(next);
-  if(result===false){data=next;revision=v;setSync("✅ 無資料變更");renderHistory();return false}
+  if(result===false){data=next;revision=v;setSync("✅ 無資料變更");return false}
   const saved=await request("/rest/v1/rpc/fundesk_save_teacher_data",{method:"POST",body:JSON.stringify({p_class_code:code,p_payload:next,p_expected_revision:v})});
   if(typeof saved!=="number")throw Error("儲存版本驗證失敗");
-  data=next;revision=saved;setSync("✅ 已儲存");renderHistory();renderWalkers();return true;
+  data=next;revision=saved;setSync("✅ 已儲存");renderWalkers();return true;
  }catch(e){setSync("⚠️ 儲存失敗",true);alert("操作未完成，未扣除餵食券。\n"+e.message);return false}
  finally{busy=false}
 }
@@ -125,27 +128,34 @@ function tick(t){
  }
  frame=requestAnimationFrame(tick);
 }
-function renderHistory(){
- const rows=(st().roomFeedingLog||[]).slice(-90).reverse(),out=$("history");
- if(!rows.length){out.innerHTML='<div class="empty">尚無餵食紀錄</div>';return}
- out.innerHTML=rows.map(x=>{
- const who=x.feederName||"先前未記錄",target=x.kind==="pet"?"🐾 "+(ROOM_PETS.find(p=>p.id===x.pet)||{}).name:x.kind==="teacher"?"👩‍🏫 老師":x.name||"學生",food=ROOM_FOODS.find(f=>f.id===x.food);
- const time=new Date(Number(x.at)||Date.now()).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
- return '<div class="entry"><b>'+esc(who)+'</b> 餵 '+esc(target)+' · '+esc(food?food.emoji+" "+food.name:x.food)+'<br><small>'+esc(time)+(x.ticketUsed?" · 餵食券":" · 老師餵食")+'</small></div>';
- }).join("");
+function personalHistory(type,id){
+ const entries=st().roomFeedingLog||[];
+ const received=e=>type==="student"?e.kind!=="teacher"&&e.kind!=="pet"&&String(e.sid)===String(id):type==="teacher"?e.kind==="teacher":e.kind==="pet"&&String(e.pet)===String(id);
+ const given=e=>type==="student"?String(e.feederSid)===String(id):type==="teacher"?e.feederSid==="__teacher__":false;
+ const target=e=>e.kind==="pet"?"🐾 "+(ROOM_PETS.find(p=>p.id===e.pet)?.name||e.name||"班寵"):e.kind==="teacher"?"👩‍🏫 老師":e.name||"學生";
+ const row=(e,own)=>{
+  const food=ROOM_FOODS.find(f=>f.id===e.food);
+  const date=new Date(Number(e.at)||0),time=Number.isFinite(date.getTime())?date.toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}):"";
+  return '<div class="entry"><b>'+esc(own?"餵了 "+target(e):"由 "+(e.feederName||"未記錄餵食者")+" 餵食")+'</b> · '+esc((food?.emoji||"🍽️")+" "+(food?.name||e.food||"食物"))+'<br><small>'+esc(time)+'</small></div>';
+ };
+ const receivedItems=entries.filter(received).slice(-40).reverse(),givenItems=entries.filter(given).slice(-40).reverse();
+ return '<section class="personalHistory"><h3>📋 餵食紀錄</h3><div class="historyColumns"><div><h4>🍽️ '+(type==="pet"?"誰餵過我":"誰餵食自己")+'</h4><div class="historyScroll">'+(receivedItems.map(e=>row(e,false)).join("")||'<div class="empty">沒有被餵食紀錄</div>')+'</div></div><div><h4>🎁 我餵過誰</h4><div class="historyScroll">'+(givenItems.map(e=>row(e,true)).join("")||'<div class="empty">'+(type==="pet"?"班寵沒有餵別人的紀錄":"沒有餵食他人的紀錄")+'</div>')+'</div></div></div></section>';
+}
+function openSpecialCard(type){
+ const pet=getPet();if(type==="pet"&&!pet)return;
+ openModal(type==="teacher"?"👩‍🏫 老師":pet.emoji+" "+pet.name,personalHistory(type,type==="pet"?pet.id:"__teacher__")+(type==="teacher"?'<section><button id="teacherFeedFromCard" class="btn primary">🔐 老師餵食（輸入動態教室密碼）</button></section>':""));
+ if(type==="teacher")$("teacherFeedFromCard").onclick=async()=>{await activateTeacher();if(actor&&actor.type==="teacher")closeModal()};
 }
 function openModal(title,body){$("modalTitle").textContent=title;$("modalContent").innerHTML=body;$("modal").hidden=false}
 function closeModal(){$("modal").hidden=true}
 function onPerson(type,id){
- if(type==="teacher"&&!foodId){activateTeacher();return}
- if(foodId){choice={type,id};document.querySelectorAll(".walker").forEach(m=>m.classList.toggle("chosen",m.dataset.type===type&&m.dataset.id===String(id)));feed();return}
- if(type==="teacher"){activateTeacher();return}
- if(type==="pet"){setStatus("請先選擇食物，才能餵班寵。");return}
+ if(foodId&&actor){choice={type,id};document.querySelectorAll(".walker").forEach(m=>m.classList.toggle("chosen",m.dataset.type===type&&m.dataset.id===String(id)));feed();return}
+ if(type==="teacher"||type==="pet"){openSpecialCard(type);return}
  openStudent(id);
 }
 function openStudent(id){
  const p=st().students.find(x=>String(x.id)===String(id));if(!p)return;
- openModal(p.no+" 號 · "+p.name,'<section><h3>🎟️ 我的餵食券</h3><p>剩餘 <strong>'+tickets(id)+'</strong> 張</p><button class="btn primary" id="useTicket" '+(tickets(id)<1?"disabled":"")+'>🎟️ 使用一張餵食券</button><p class="hint">餵食成功才扣券，每張可餵一次。</p></section><section><button class="btn" id="unlockAvatar">🔒 更換頭像（動態教室密碼）</button><div id="avatarChoices" hidden class="options"></div></section>');
+ openModal(p.no+" 號 · "+p.name,'<section><h3>🎟️ 我的餵食券</h3><p>剩餘 <strong>'+tickets(id)+'</strong> 張</p><button class="btn primary" id="useTicket" '+(tickets(id)<1?"disabled":"")+'>🎟️ 使用一張餵食券</button><p class="hint">餵食成功才扣券，每張可餵一次。</p></section><section><button class="btn" id="unlockAvatar">🔒 更換頭像（動態教室密碼）</button><div id="avatarChoices" hidden class="options"></div></section>'+personalHistory("student",id));
  $("useTicket").onclick=()=>{if(tickets(id)<1)return;actor={type:"student",sid:String(id),name:p.name};foodId=null;renderFoods();closeModal();setStatus("🎟️ 已選 "+p.name+" 的餵食券，請選食物及餵食對象。")};
  $("unlockAvatar").onclick=()=>{const area=$("avatarChoices");if(!area.hidden){area.hidden=true;return}const key=prompt("請輸入動態教室密碼");if(key===null)return;if(key!==String(shared&&shared.teacherFeedingPassword||"13579")){alert("密碼不正確");return}
  area.hidden=false;area.innerHTML=STUDENT_AVATARS.map(x=>'<button type="button" data-avatar="'+esc(x[0])+'"><img src="'+esc(avatarPath(x[0]))+'" alt=""><small>'+esc(x[1])+'</small></button>').join("")+'<button id="clearAvatar" class="btn">不使用頭像</button>';
