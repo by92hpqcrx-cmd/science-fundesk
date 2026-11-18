@@ -46,7 +46,7 @@ begin
  return jsonb_build_object('class_code',v_link.class_code,
  'class_name',coalesce(v_shared->'classMeta'->v_link.class_code->>'name',v_link.class_code),
  'students',v_students,'points',v_points,
- 'attendance',coalesce(v_payload->'attendance','[]'::jsonb),
+ 'attendance',coalesce((select jsonb_agg(jsonb_build_object('sid',x->>'sid','date',x->>'date','status',x->>'status')) from jsonb_array_elements(coalesce(v_payload->'attendance','[]'::jsonb)) x),'[]'::jsonb),
  'classPetType',coalesce(v_payload->'classPetType','null'::jsonb),
  'roomScene',coalesce(v_payload->'roomScene','"classroom"'::jsonb),
  'roomFeedingLog',coalesce(v_payload->'roomFeedingLog','[]'::jsonb),
@@ -127,9 +127,12 @@ begin
    v_count:=v_count+1;
    v_record:=jsonb_build_object('count',v_count,'until',case when v_count>=v_n then v_now+3600000 else 0 end);
    if p_target_type='student' then
+     v_payload:=jsonb_set(v_payload,'{roomFeeding}',coalesce(v_payload->'roomFeeding','{}'::jsonb),true);
      v_payload:=jsonb_set(v_payload,array['roomFeeding',p_target_id],v_record,true);
    elsif p_target_type='pet' then
+     v_payload:=jsonb_set(v_payload,'{classPetFeedings}',coalesce(v_payload->'classPetFeedings','{}'::jsonb),true);
      v_payload:=jsonb_set(v_payload,array['classPetFeedings',v_pet],v_record,true);
+     v_payload:=jsonb_set(v_payload,'{classPetProgress}',coalesce(v_payload->'classPetProgress','{}'::jsonb),true);
      v_progress:=coalesce(v_payload->'classPetProgress'->v_pet,'{}'::jsonb);
      v_oldpoints:=least(99,greatest(0,coalesce((v_progress->>'points')::int,0)))+1;
      v_payload:=jsonb_set(v_payload,array['classPetProgress',v_pet],
@@ -147,11 +150,9 @@ begin
    v_log:=v_log||jsonb_build_array(jsonb_build_object('kind',p_target_type,'name',v_name,'sid',case when p_target_type='student' then p_target_id else null end,
      'pet',case when p_target_type='pet' then v_pet else null end,'food',p_food,'count',v_count,
      'at',v_now,'feederSid',p_feeder,'feederName',v_feedername,'ticketUsed',v_ticket,'ledgerId',v_id));
-   if jsonb_array_length(v_log)>150 then select coalesce(jsonb_agg(x),'[]'::jsonb) into v_log from
-     (select x from jsonb_array_elements(v_log) with ordinality t(x,n) order by n desc limit 150) a;
-     -- 始終按時間順序保存，以供教師端 slice(-N) 使用
-     select coalesce(jsonb_agg(x),'[]'::jsonb) into v_log from
-       (select x from jsonb_array_elements(v_log) with ordinality t(x,n) order by n asc) z;
+   if jsonb_array_length(v_log)>150 then
+     select coalesce(jsonb_agg(x order by n),'[]'::jsonb) into v_log from
+       (select x,n from jsonb_array_elements(v_log) with ordinality t(x,n) order by n desc limit 150) recent;
    end if;
    v_payload:=jsonb_set(v_payload,'{roomFeedingLog}',v_log,true);
  else
