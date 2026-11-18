@@ -66,9 +66,16 @@
 .stage.scene-playground{background:#eaf7ea url("./backgrounds/playground-faded-48.png") center/cover no-repeat}
 .stage.scene-activity{background:#f7f3df url("./backgrounds/activity-center-faded-48.png") center/cover no-repeat}
 .stage .window,.stage .board{display:none!important}
+
+/* 學生端與主程式共用相同五款淡色背景 PNG。 */
+.stage.scene-space{background:#e6e7fa url('./backgrounds/space-faded.png') center/cover no-repeat}
+.stage.scene-amusement{background:#fff0f3 url('./backgrounds/amusement-faded.png') center/cover no-repeat}
+.stage.scene-park{background:#eaf6dc url('./backgrounds/park-faded.png') center/cover no-repeat}
+.stage.scene-mountain{background:#e8f1e5 url('./backgrounds/mountain-faded.png') center/cover no-repeat}
+.stage.scene-beach{background:#fff3df url('./backgrounds/beach-faded.png') center/cover no-repeat}
 </style></head><body>
 <div id="app">
-<header class="top"><div class="topHeading"><h1>🏫 FunDesk 學生端動態教室</h1><strong id="classTitle">讀取班級中…</strong><span class="sub" id="classCount"></span><div class="topControls"><div class="petChoice"><label for="petSelect">🐾 班寵</label><select id="petSelect"></select></div><label>背景<select id="sceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></label><label>速度<select id="speed"><option value="slow">慢</option><option value="medium" selected>中</option><option value="fast">快</option></select></label><button class="btn" type="button" id="pause">⏸ 暫停</button><span class="status" id="status">請點學生名片使用餵食券，或點老師頭像輸入動態教室密碼。</span></div><span id="sync" class="sub">準備連線</span><button class="btn" id="reload" type="button">↻ 同步</button><button class="btn primary" id="fullscreen" type="button">⛶ 全螢幕</button></div></header>
+<header class="top"><div class="topHeading"><h1>🏫 FunDesk 學生端動態教室</h1><strong id="classTitle">讀取班級中…</strong><span class="sub" id="classCount"></span><div class="topControls"><div class="petChoice"><label for="petSelect">🐾 班寵</label><select id="petSelect"></select></div><label>背景<select id="sceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option><option value="space">🚀 太空</option><option value="amusement">🎡 遊樂園</option><option value="park">🌳 公園</option><option value="mountain">⛰️ 山上風景區</option><option value="beach">🏖️ 海邊</option></select></label><label>速度<select id="speed"><option value="slow">慢</option><option value="medium" selected>中</option><option value="fast">快</option></select></label><button class="btn" type="button" id="pause">⏸ 暫停</button><span class="status" id="status">請點學生名片使用餵食券，或點老師頭像輸入動態教室密碼。</span></div><span id="sync" class="sub">準備連線</span><button class="btn" id="reload" type="button">↻ 同步</button><button class="btn primary" id="fullscreen" type="button">⛶ 全螢幕</button></div></header>
 <main class="layout"><aside class="panel foodShelf" id="foodShelf" aria-label="左側餵食工具欄"></aside><div class="stage" id="stage"><div class="window"></div><div class="board" id="board">動態教室</div><div id="walkers"></div></div></main><div class="foot">學生端免登入 · 需持有本班聯絡簿專屬連結 · 不開啟主程式</div>
 </div>
 <div class="loginCurtain" id="login" hidden><form class="loginBox" id="loginForm"><h2>🏫 動態教室登入</h2><p class="hint">請使用 FunDesk 教師帳號。此頁面只顯示指定班級的動態教室，不開啟主程式。</p><label>教師電子郵件<input type="email" id="email" autocomplete="username" required></label><label>教師密碼<input type="password" id="password" autocomplete="current-password" required></label><button class="btn primary" type="submit">登入並開啟動態教室</button><p id="loginError" class="hint" role="alert"></p></form></div>
@@ -107,7 +114,7 @@ async function load(){
  if(previewPetId===null)previewPetId=ROOM_PETS.some(x=>x.id===data.classPetType)?data.classPetType:"";
  $("petSelect").value=ROOM_PETS.some(x=>x.id===previewPetId)?previewPetId:"";
  $("petSelect").disabled=false;
- $("sceneSelect").value=["classroom","playground","activity"].includes(data.roomScene)?data.roomScene:"classroom";
+ $("sceneSelect").value=["classroom","playground","activity","space","amusement","park","mountain","beach"].includes(data.roomScene)?data.roomScene:"classroom";
  $("stage").className="stage scene-"+$("sceneSelect").value;
  renderWalkers();setSync("✅ 學生端已連線");
 }
