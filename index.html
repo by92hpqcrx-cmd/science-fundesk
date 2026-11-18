@@ -1440,10 +1440,10 @@ body.roomFullscreen .shell>.main.compactDashboardMain>#content>.movingRoomPanel>
  }
  .movingRoomPanel .roomPetPicker #roomCount{font-size:16px!important}
 }
-</style><style id="fundeskCountdownRightToLeft20261118">
-/* 動物從右往左移動，經過的進度條直接消失（透明），只保留尚未倒數的彩色部分。 */
+</style><style id="fundeskCountdownLeftToRight20261118">
+/* 動物從左往右移動；走過的左側變透明，右側僅保留剩餘時間條。 */
 #toolTimerPanel .toolProgress{direction:ltr!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important}
-#toolTimerPanel .toolProgressFill{left:0!important;right:auto!important;transform-origin:left center!important;transition:width .2s linear!important;overflow:hidden}
+#toolTimerPanel .toolProgressFill{left:auto!important;right:0!important;transform-origin:right center!important;transition:width .2s linear!important;overflow:hidden}
 #toolTimerPanel .toolProgress>.toolMascot{transition:left .3s linear;will-change:left}
 #toolTimerPanel .animalToolHead .toolFullButton{min-height:44px;padding:9px 14px;font-weight:850;white-space:nowrap;cursor:pointer}
 #toolTimerPanel:fullscreen{box-sizing:border-box;background:var(--a-bg,#eaf3e8);width:100vw;height:100dvh;overflow:auto;padding:clamp(12px,2vw,28px);padding-bottom:max(12px,env(safe-area-inset-bottom))}
@@ -2742,7 +2742,7 @@ function updateCountdown(){
   const ratio=Math.min(1,Math.max(0,timerSeconds/Math.max(1,timerBaseSeconds)));
   fill.style.width=(ratio*100)+'%';
   const bar=fill.parentElement;
-  if(bar){bar.setAttribute('aria-valuenow',String(Math.round(ratio*100)));const pet=bar.querySelector('.toolMascot');if(pet)pet.style.left='clamp(0px, calc('+(ratio*100)+'% - 38px), calc(100% - 76px))';}
+  if(bar){bar.setAttribute('aria-valuenow',String(Math.round(ratio*100)));const pet=bar.querySelector('.toolMascot');if(pet)pet.style.left='clamp(0px, calc('+((1-ratio)*100)+'% - 38px), calc(100% - 76px))';}
  }
  const start=$('timerStart');if(start)start.textContent=timerDeadline!==null?'暫停':timerSeconds===0?'重新開始':'開始';
 }
