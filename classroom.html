@@ -79,7 +79,7 @@ function tickets(sid){const pts=data&&data.points||[],logs=data&&data.roomFeedin
  const legacy=logs.filter(p=>p.ticketUsed&&String(p.feederSid)===String(sid)&&!p.ledgerId).length;
  return Math.max(0,bought-used-legacy);
 }
-function getPet(){return ROOM_PETS.find(p=>p.id===data&&data.classPetType)}
+function getPet(){return ROOM_PETS.find(p=>p.id===(data&&data.classPetType))}
 function moveBounds(el){return {x:Math.max(0,$("stage").clientWidth-el.offsetWidth-5),y:Math.max(0,$("stage").clientHeight-el.offsetHeight-5)}}
 function makeMover(id,name,img,type,icon){
  const el=document.createElement("button");el.type="button";el.className="walker "+type;
