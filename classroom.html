@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>FunDesk｜獨立動態教室</title>
+<link rel="icon" href="./fundesk-app-icon.svg"><style>
+*{box-sizing:border-box}body{margin:0;background:#eff7ee;color:#274337;font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}[hidden]{display:none!important}
+#app{height:100dvh;display:flex;flex-direction:column;gap:8px;padding:9px;overflow:hidden}.top{display:flex;align-items:center;flex-wrap:wrap;gap:8px;background:#fff;border:1px solid #c4e1d1;padding:9px 14px;border-radius:16px;box-shadow:0 2px 12px #486c511c}.top h1{margin:0 12px 0 0;font-size:clamp(17px,2.4vw,26px)}.top .sub{color:#698272;font-size:13px}.grow{flex:1}.btn{border:1px solid #a7cbb4;border-radius:10px;padding:8px 12px;background:#f1fff2;color:#245a3c;font-weight:800}.btn.primary{background:#3c9a70;color:#fff;border-color:#3c9a70}.btn.danger{background:#fff1ef;color:#8b433a;border-color:#efb8b2}
+.panel{background:#fff;border:1px solid #c4e1d1;border-radius:15px;padding:9px;min-height:0}.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.toolbar select{border:1px solid #bcd3c3;padding:8px;border-radius:9px;background:#fff}.toolbar label{display:flex;gap:5px;align-items:center;font-weight:700;font-size:13px}.foodShelf{display:flex;gap:6px;max-width:100%;overflow-x:auto;scrollbar-width:thin;padding:3px 0}.food{flex:0 0 auto;border:2px solid #e2ecd9;background:#fcfff7;border-radius:12px;min-width:70px;padding:7px 9px;font-weight:700}.food.sel{border-color:#e9a444;background:#fff3cd}.food .emoji{display:block;font-size:28px}.status{color:#345e49;font-size:13px;flex:1;min-width:190px;line-height:1.5}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,255px);gap:9px;min-height:0;flex:1}.stage{position:relative;overflow:hidden;min-width:0;min-height:240px;border:4px solid #a5d4b8;border-radius:20px;background:linear-gradient(#e0f3ff 0 30%,#fdf9dd 30% 64%,#e9dabd 64%);isolation:isolate}.stage.scene-playground{background:#eaf7ea url("./backgrounds/playground-faded-48.png") center/cover}.stage.scene-activity{background:#f7f3df url("./backgrounds/activity-center-faded-48.png") center/cover}.board{position:absolute;top:16px;left:50%;transform:translateX(-50%);border:8px solid #ae8054;background:#2e816b;border-radius:10px;padding:6px 18px;color:#fff;font-weight:900;white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis;z-index:1}.window{position:absolute;top:65px;left:3%;width:12%;height:24%;background:linear-gradient(90deg,transparent 48%,#fff 48% 52%,transparent 52%),linear-gradient(#9ed9f2 48%,#fff 48% 52%,#9ed9f2 52%);border:8px solid #fff;border-radius:8px;box-shadow:0 3px 12px #366c8a44;opacity:.6}.walker{position:absolute;left:0;top:0;display:flex;align-items:center;flex-direction:column;gap:3px;width:var(--walker-w,82px);background:transparent;border:0;padding:1px;will-change:transform;z-index:6;touch-action:manipulation}.walker img,.walker .fallback{width:var(--walker-img,66px);height:var(--walker-img,66px);object-fit:contain;border:3px solid #fff;background:#ffffffdf;box-shadow:0 3px 9px #3d5a4966;border-radius:50%;transition:transform .3s;flex:0 0 auto}.walker .fallback{display:grid;place-items:center;font-size:34px}.name{max-width:100%;background:#fffef3;border:1px solid #d4e4cb;border-radius:8px;padding:3px 5px;font-size:clamp(9px,1vw,13px);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:80;box-shadow:0 2px 5px #28503f2b}.walker.chosen img,.walker.chosen .fallback{outline:5px solid #ffcd5d}.teacher .name{background:#ffefbb}.pet .name{position:relative;z-index:999!important;background:#fff;outline:2px solid #62b081;overflow:visible;font-size:13px}.pet .meter{width:110px;max-width:100%;border-radius:20px;background:#fafff1;border:1px solid #83cda2;display:flex;align-items:center;gap:4px;padding:3px;font-size:10px;font-weight:900;z-index:100}.meter span{flex:1;background:#d8e6d9;height:8px;border-radius:10px;overflow:hidden}.meter i{display:block;height:100%;background:#44b96c}.pet img{border-color:#e8fac5}.history{display:flex;flex-direction:column;min-width:0;overflow:hidden}.history h2{font-size:16px;margin:3px 1px 8px}.scroll{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#8dbca2 #eff8ef}.entry{background:#f3fbf5;border:1px solid #cfe5d7;border-radius:10px;padding:9px;margin:0 0 7px;font-size:12px;line-height:1.55}.entry b{color:#21633f}.entry small{color:#698775}.hint{font-size:12px;color:#667c70}.petChoice{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.petChoice label{font-size:13px;font-weight:900}.loginCurtain{position:fixed;inset:0;background:#e7f3eaf5;z-index:900;display:grid;place-items:center;padding:20px}.loginBox{width:min(410px,100%);background:white;padding:22px;border-radius:20px;box-shadow:0 12px 40px #233b3240}.loginBox h2{margin:4px 0 8px}.loginBox input{width:100%;border:1px solid #b8d5bf;border-radius:10px;padding:12px;margin:6px 0 12px}.modalBack{position:fixed;inset:0;background:#203b3699;z-index:1000;display:grid;place-items:center;padding:15px}.modal{width:min(600px,100%);max-height:90dvh;overflow:auto;background:white;border-radius:20px;padding:18px;box-shadow:0 15px 50px #1f47365c}.modalHead{display:flex;gap:14px;align-items:center;justify-content:space-between}.modal h2{margin:4px 0}.modal section{border:1px solid #cde2d2;background:#f5fbf6;border-radius:12px;padding:12px;margin:12px 0}.modal .options{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px;max-height:34vh;overflow:auto}.options button{min-width:0;display:flex;flex-direction:column;gap:3px;border:1px solid #d3e4d3;border-radius:8px;background:#fff;padding:5px}.options img{height:64px;width:100%;object-fit:contain}.options small{font-size:11px;color:#345b42}.modal .btn{margin:3px}.foot{color:#608572;font-size:11px;text-align:right}#sync.error{color:#ae4444}.modal[hidden],.modalBack[hidden]{display:none}.empty{padding:20px;text-align:center;color:#6d8976}
+@media(max-width:700px){#app{padding:5px;gap:5px}.top{padding:6px;gap:5px}.top h1{font-size:17px}.layout{grid-template-columns:1fr;grid-template-rows:minmax(230px,1fr) minmax(95px,24vh)}.history h2{font-size:13px}.history{padding:6px}.entry{padding:5px;font-size:11px}.board{font-size:12px;padding:4px}.toolbar{padding:6px}.food{min-width:56px;padding:3px}.food .emoji{font-size:22px}}
+</style></head><body>
+<div id="app">
+<header class="top"><h1>🏫 FunDesk 獨立動態教室</h1><strong id="classTitle">讀取班級中…</strong><span class="sub" id="classCount"></span><span class="grow"></span><span id="sync" class="sub">準備連線</span><button class="btn" id="reload" type="button">↻ 同步</button><button class="btn primary" id="fullscreen" type="button">⛶ 全螢幕</button></header>
+<section class="panel toolbar"><div class="petChoice"><label for="petSelect">🐾 班寵</label><select id="petSelect"></select></div><label>背景<select id="sceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></label><label>速度<select id="speed"><option value="slow">慢</option><option value="medium" selected>中</option><option value="fast">快</option></select></label><button class="btn" type="button" id="pause">⏸ 暫停</button><span class="status" id="status">請點學生名片使用餵食券，或點老師頭像輸入動態教室密碼。</span></section>
+<div class="panel foodShelf" id="foodShelf"></div>
+<main class="layout"><div class="stage" id="stage"><div class="window"></div><div class="board" id="board">動態教室</div><div id="walkers"></div></div><aside class="panel history"><h2>📋 餵食紀錄 <span class="hint">捲動查看更多</span></h2><div class="scroll" id="history"></div></aside></main><div class="foot">獨立頁面 · 不需開啟 FunDesk 主程式 · 教師登入保護班級資料</div>
+</div>
+<div class="loginCurtain" id="login"><form class="loginBox" id="loginForm"><h2>🏫 動態教室登入</h2><p class="hint">請使用 FunDesk 教師帳號。此頁面只顯示指定班級的動態教室，不開啟主程式。</p><label>教師電子郵件<input type="email" id="email" autocomplete="username" required></label><label>教師密碼<input type="password" id="password" autocomplete="current-password" required></label><button class="btn primary" type="submit">登入並開啟動態教室</button><p id="loginError" class="hint" role="alert"></p></form></div>
+<div class="modalBack" id="modal" hidden><div class="modal"><div class="modalHead"><h2 id="modalTitle">學生名片</h2><button class="btn" type="button" id="modalClose">✕ 關閉</button></div><div id="modalContent"></div></div></div>
+<script>
+(function(){"use strict";
+const API="https://ayvwsexnxvjjcrbtyoof.supabase.co",KEY="sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L";
+const $=id=>document.getElementById(id),params=new URL(location.href).searchParams,code=params.get("class")||"";
+if(!/^[A-Za-z0-9_-]{1,40}$/.test(code)){$("loginError").textContent="缺少有效班級連結。請從班級聯絡簿開啟。";$("loginForm").querySelector("button").disabled=true;return}
+const STUDENT_AVATARS=[['girl-1','女生・馬尾'],['girl-2','女生・短髮'],['girl-3','女生・雙辮'],['girl-4','女生・眼鏡'],['girl-5','女生・丸子頭'],['boy-1','男生・短髮'],['boy-2','男生・眼鏡'],['boy-3','男生・捲髮'],['boy-4','男生・棒球帽'],['boy-5','男生・妹妹頭'],['animal-cat','動物・貓咪'],['animal-dog','動物・小狗'],['animal-rabbit','動物・兔子'],['animal-bear','動物・小熊'],['animal-panda','動物・熊貓'],['animal-fox','動物・狐狸'],['animal-lion','動物・獅子'],['animal-koala','動物・無尾熊'],['animal-tiger','動物・老虎'],['animal-frog','動物・青蛙'],['zodiac-aries','星座・牡羊座'],['zodiac-taurus','星座・金牛座'],['zodiac-gemini','星座・雙子座'],['zodiac-cancer','星座・巨蟹座'],['zodiac-leo','星座・獅子座'],['zodiac-virgo','星座・處女座'],['zodiac-libra','星座・天秤座'],['zodiac-scorpio','星座・天蠍座'],['zodiac-sagittarius','星座・射手座'],['zodiac-capricorn','星座・摩羯座'],['zodiac-aquarius','星座・水瓶座'],['zodiac-pisces','星座・雙魚座'],['boy_basketball','運動男生・籃球'],['boy_soccer','運動男生・足球'],['boy_baseball','運動男生・棒球'],['boy_swimming','運動男生・游泳'],['boy_martial_arts','運動男生・跆拳道'],['girl_volleyball','運動女生・排球'],['girl_badminton','運動女生・羽球'],['girl_running','運動女生・田徑'],['girl_archery','運動女生・射箭'],['girl_table_tennis','運動女生・桌球'],['myth-aries','希臘神話・牡羊座'],['myth-taurus','希臘神話・金牛座'],['myth-gemini','希臘神話・雙子座'],['myth-cancer','希臘神話・巨蟹座'],['myth-leo','希臘神話・獅子座'],['myth-virgo','希臘神話・處女座'],['myth-libra','希臘神話・天秤座'],['myth-scorpio','希臘神話・天蠍座'],['myth-sagittarius','希臘神話・射手座'],['myth-capricorn','希臘神話・摩羯座'],['myth-aquarius','希臘神話・水瓶座'],['myth-pisces','希臘神話・雙魚座']];
+const ROOM_PETS=[{id:'dino',name:'小恐龍',emoji:'🦖'},{id:'bear',name:'小熊',emoji:'🐻'},{id:'panda',name:'小貓',emoji:'🐱'},{id:'cat',name:'小兔',emoji:'🐰'},{id:'rabbit',name:'熊貓',emoji:'🐼'},{id:'501',name:'企鵝',emoji:'🐧'},{id:'502',name:'兔兔',emoji:'🐰'},{id:'503',name:'松鼠',emoji:'🐿️'},{id:'504',name:'小鳥',emoji:'🐦'},{id:'505',name:'貓貓',emoji:'🐱'},{id:'506',name:'小狗',emoji:'🐶'},{id:'507',name:'大象',emoji:'🐘'}];
+const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香蕉',emoji:'🍌'},{id:'strawberry',name:'草莓',emoji:'🍓'},{id:'grapes',name:'葡萄',emoji:'🍇'},{id:'cookie',name:'餅乾',emoji:'🍪'},{id:'donut',name:'甜甜圈',emoji:'🍩'},{id:'juice',name:'果汁',emoji:'🧃'},{id:'milk',name:'牛奶',emoji:'🥛'},{id:'bamboo',name:'竹葉',emoji:'🎋'},{id:'fish',name:'小魚',emoji:'🐟'},{id:'bone',name:'骨頭',emoji:'🦴'},{id:'pinecone',name:'松果',emoji:'🌰'},{id:'carrot',name:'紅蘿蔔',emoji:'🥕'}];
+const zodiacAvatarFiles={'zodiac-aries':'01_牡羊座.svg','zodiac-taurus':'02_金牛座.svg','zodiac-gemini':'03_雙子座.svg','zodiac-cancer':'04_巨蟹座.svg','zodiac-leo':'05_獅子座.svg','zodiac-virgo':'06_處女座.svg','zodiac-libra':'07_天秤座.svg','zodiac-scorpio':'08_天蠍座.svg','zodiac-sagittarius':'09_射手座.svg','zodiac-capricorn':'10_摩羯座.svg','zodiac-aquarius':'11_水瓶座.svg','zodiac-pisces':'12_雙魚座.svg'};
+const esc=x=>String(x==null?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const avatarPath=id=> "./avatars/"+(zodiacAvatarFiles[id]||id+".svg");
+const petPath=id=>"./class-pets/"+id+".svg";
+const st=()=>data||{}, today=()=>new Date().toLocaleDateString("sv-SE",{timeZone:"Asia/Taipei"});
+let session=null,data=null,revision=0,shared=null,movers=[],frame=0,last=0,paused=false,speed=42,actor=null,foodId=null,choice=null,busy=false;
+const setStatus=message=>{$("status").textContent=message},setSync=(message,error)=>{$("sync").textContent=message;$("sync").classList.toggle("error",!!error)};
+async function request(path,options={},auth=true,retry=true){
+ const headers=Object.assign({"apikey":KEY},options.body?{"Content-Type":"application/json"}:{});
+ if(auth&&session&&session.access_token)headers.Authorization="Bearer "+session.access_token;
+ const res=await fetch(API+path,Object.assign({},options,{headers,cache:"no-store"}));
+ if(res.status===401&&auth&&retry&&session&&session.refresh_token){await refreshSession();return request(path,options,auth,false)}
+ const raw=await res.text();let json;try{json=JSON.parse(raw)}catch{json=raw}
+ if(!res.ok)throw Error(typeof json==="object"?(json.message||"請檢查登入權限"):String(json));
+ return json;
+}
+async function refreshSession(){
+ const result=await request("/auth/v1/token?grant_type=refresh_token",{method:"POST",body:JSON.stringify({refresh_token:session.refresh_token})},false,false);
+ if(!result.access_token)throw Error("登入已過期");session=result;sessionStorage.setItem("fundesk_cloud_session",JSON.stringify(result));
+}
+async function load(){
+ const [row,settings]=await Promise.all([
+ request("/rest/v1/fundesk_teacher_data?select=class_code,payload,revision&class_code=eq."+encodeURIComponent(code)),
+ request("/rest/v1/fundesk_teacher_data?select=class_code,payload&class_code=eq.shared")
+ ]);
+ if(!Array.isArray(row)||!row.length||!row[0].payload||!Array.isArray(row[0].payload.students))throw Error("教師帳號無法讀取此班級；請確認聯絡簿對應的班級。");
+ data=row[0].payload;revision=Number(row[0].revision)||0;shared=Array.isArray(settings)&&settings.length?settings[0].payload:{};
+ $("classTitle").textContent=shared&&shared.classMeta&&shared.classMeta[code]&&shared.classMeta[code].name||(/^50[1-7]$/.test(code)?"五年"+(["","一","二","三","四","五","六","七"][Number(code)-500])+"班":code);
+ const abs=new Set((data.attendance||[]).filter(x=>x.date===today()&&x.status==="缺席").map(x=>String(x.sid)));
+ $("classCount").textContent="出席 "+(data.students||[]).filter(x=>!abs.has(String(x.id))).length+" 人";
+ $("board").textContent=$("classTitle").textContent+" · 動態教室";
+ $("petSelect").innerHTML='<option value="">不顯示班寵</option>'+ROOM_PETS.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.emoji+" "+p.name)+'</option>').join("");
+ $("petSelect").value=ROOM_PETS.some(x=>x.id===data.classPetType)?data.classPetType:"";
+ $("sceneSelect").value=["classroom","playground","activity"].includes(data.roomScene)?data.roomScene:"classroom";
+ $("stage").className="stage scene-"+$("sceneSelect").value;
+ renderWalkers();renderHistory();setSync("✅ 雲端已同步");
+}
+async function change(mutator){
+ if(busy)return false;busy=true;setSync("⏳ 儲存中");
+ try{
+  const latest=await request("/rest/v1/fundesk_teacher_data?select=payload,revision&class_code=eq."+encodeURIComponent(code));
+  if(!Array.isArray(latest)||!latest.length)throw Error("無法取得最新班級資料");
+  const next=latest[0].payload,v=Number(latest[0].revision)||0;
+  const result=mutator(next);
+  if(result===false){data=next;revision=v;setSync("✅ 無資料變更");renderHistory();return false}
+  const saved=await request("/rest/v1/rpc/fundesk_save_teacher_data",{method:"POST",body:JSON.stringify({p_class_code:code,p_payload:next,p_expected_revision:v})});
+  if(typeof saved!=="number")throw Error("儲存版本驗證失敗");
+  data=next;revision=saved;setSync("✅ 已儲存");renderHistory();renderWalkers();return true;
+ }catch(e){setSync("⚠️ 儲存失敗",true);alert("操作未完成，未扣除餵食券。\n"+e.message);return false}
+ finally{busy=false}
+}
+function tickets(sid){const pts=data&&data.points||[],logs=data&&data.roomFeedingLog||[];
+ const bought=pts.filter(p=>!p.cancelled&&p.kind==="redemption"&&p.rewardId==="feeding-ticket"&&String(p.sid)===String(sid)).length;
+ const used=pts.filter(p=>!p.cancelled&&p.kind==="feeding-ticket-used"&&String(p.sid)===String(sid)).length;
+ const legacy=logs.filter(p=>p.ticketUsed&&String(p.feederSid)===String(sid)&&!p.ledgerId).length;
+ return Math.max(0,bought-used-legacy);
+}
+function getPet(){return ROOM_PETS.find(p=>p.id===data&&data.classPetType)}
+function moveBounds(el){return {x:Math.max(0,$("stage").clientWidth-el.offsetWidth-5),y:Math.max(0,$("stage").clientHeight-el.offsetHeight-5)}}
+function makeMover(id,name,img,type,icon){
+ const el=document.createElement("button");el.type="button";el.className="walker "+type;
+ let picture=document.createElement("img");picture.src=img;picture.alt=name;
+ picture.onerror=()=>{const fallback=document.createElement("span");fallback.className="fallback";fallback.textContent=icon;picture.replaceWith(fallback)};
+ el.appendChild(picture);
+ const label=document.createElement("span");label.className="name";label.textContent=name;el.appendChild(label);
+ el.dataset.id=String(id);el.dataset.type=type;
+ el.onclick=()=>onPerson(type,id);
+ const theta=Math.random()*Math.PI*2;
+ const item={id,type,el,x:0,y:0,vx:Math.cos(theta),vy:Math.sin(theta)};
+ return item;
+}
+function renderWalkers(){
+ cancelAnimationFrame(frame);movers=[];
+ const root=$("walkers");root.replaceChildren();
+ const abs=new Set((st().attendance||[]).filter(x=>x.date===today()&&x.status==="缺席").map(x=>String(x.sid)));
+ const ppl=(st().students||[]).filter(x=>!abs.has(String(x.id)));
+ const pet=getPet();
+ const count=ppl.length+1+(pet?1:0);
+ const stage=$("stage");const cols=Math.max(1,Math.ceil(Math.sqrt(count*stage.clientWidth/Math.max(1,stage.clientHeight))));
+ const rows=Math.ceil(count/cols);const scale=Math.min(1,Math.max(.4,Math.min(stage.clientWidth/cols/103,stage.clientHeight/rows/112)));
+ stage.style.setProperty("--walker-w",Math.round(86*scale)+"px");stage.style.setProperty("--walker-img",Math.round(70*scale)+"px");
+ ppl.forEach(p=>movers.push(makeMover(p.id,p.no+" "+p.name,p.avatar?avatarPath(p.avatar):"./avatars/girl-1.svg","student","🙂")));
+ movers.push(makeMover("__teacher__","👩‍🏫 老師","./fundesk-rps-teacher.webp","teacher","👩‍🏫"));
+ if(pet){
+  const w=makeMover(pet.id,pet.emoji+" "+pet.name,petPath(pet.id),"pet",pet.emoji);
+  const prog=Math.max(0,Math.min(99,Number(st().classPetProgress&&st().classPetProgress[pet.id]&&st().classPetProgress[pet.id].points)||0));
+  const bar=document.createElement("div");bar.className="meter";bar.innerHTML='<span><i style="width:'+prog+'%"></i></span>'+prog+'/100';w.el.insertBefore(bar,w.el.firstChild);movers.push(w);
+ }
+ movers.forEach((m,i)=>{root.appendChild(m.el);const bounds=moveBounds(m.el);m.x=(i%cols)/Math.max(1,cols-1)*bounds.x;m.y=Math.floor(i/cols)/Math.max(1,rows-1)*bounds.y;m.el.style.transform="translate("+m.x+"px,"+m.y+"px)"});
+ frame=requestAnimationFrame(tick);
+}
+function tick(t){
+ const dt=Math.min(.06,Math.max(0,(t-(last||t))/1000));last=t;
+ if(!paused){
+  const pace=({slow:18,medium:42,fast:72}[$("speed").value]||42);
+  for(const m of movers){const box=moveBounds(m.el);m.x+=m.vx*pace*dt;m.y+=m.vy*pace*dt;
+   if(m.x<0){m.x=0;m.vx=Math.abs(m.vx)}if(m.x>box.x){m.x=box.x;m.vx=-Math.abs(m.vx)}
+   if(m.y<0){m.y=0;m.vy=Math.abs(m.vy)}if(m.y>box.y){m.y=box.y;m.vy=-Math.abs(m.vy)}
+   m.el.style.transform="translate3d("+m.x+"px,"+m.y+"px,0)";
+  }
+ }
+ frame=requestAnimationFrame(tick);
+}
+function renderHistory(){
+ const rows=(st().roomFeedingLog||[]).slice(-90).reverse(),out=$("history");
+ if(!rows.length){out.innerHTML='<div class="empty">尚無餵食紀錄</div>';return}
+ out.innerHTML=rows.map(x=>{
+ const who=x.feederName||"先前未記錄",target=x.kind==="pet"?"🐾 "+(ROOM_PETS.find(p=>p.id===x.pet)||{}).name:x.kind==="teacher"?"👩‍🏫 老師":x.name||"學生",food=ROOM_FOODS.find(f=>f.id===x.food);
+ const time=new Date(Number(x.at)||Date.now()).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+ return '<div class="entry"><b>'+esc(who)+'</b> 餵 '+esc(target)+' · '+esc(food?food.emoji+" "+food.name:x.food)+'<br><small>'+esc(time)+(x.ticketUsed?" · 餵食券":" · 老師餵食")+'</small></div>';
+ }).join("");
+}
+function openModal(title,body){$("modalTitle").textContent=title;$("modalContent").innerHTML=body;$("modal").hidden=false}
+function closeModal(){$("modal").hidden=true}
+function onPerson(type,id){
+ if(type==="teacher"&&!foodId){activateTeacher();return}
+ if(foodId){choice={type,id};document.querySelectorAll(".walker").forEach(m=>m.classList.toggle("chosen",m.dataset.type===type&&m.dataset.id===String(id)));feed();return}
+ if(type==="teacher"){activateTeacher();return}
+ if(type==="pet"){setStatus("請先選擇食物，才能餵班寵。");return}
+ openStudent(id);
+}
+function openStudent(id){
+ const p=st().students.find(x=>String(x.id)===String(id));if(!p)return;
+ openModal(p.no+" 號 · "+p.name,'<section><h3>🎟️ 我的餵食券</h3><p>剩餘 <strong>'+tickets(id)+'</strong> 張</p><button class="btn primary" id="useTicket" '+(tickets(id)<1?"disabled":"")+'>🎟️ 使用一張餵食券</button><p class="hint">餵食成功才扣券，每張可餵一次。</p></section><section><button class="btn" id="unlockAvatar">🔒 更換頭像（動態教室密碼）</button><div id="avatarChoices" hidden class="options"></div></section>');
+ $("useTicket").onclick=()=>{if(tickets(id)<1)return;actor={type:"student",sid:String(id),name:p.name};foodId=null;renderFoods();closeModal();setStatus("🎟️ 已選 "+p.name+" 的餵食券，請選食物及餵食對象。")};
+ $("unlockAvatar").onclick=()=>{const area=$("avatarChoices");if(!area.hidden){area.hidden=true;return}const key=prompt("請輸入動態教室密碼");if(key===null)return;if(key!==String(shared&&shared.teacherFeedingPassword||"13579")){alert("密碼不正確");return}
+ area.hidden=false;area.innerHTML=STUDENT_AVATARS.map(x=>'<button type="button" data-avatar="'+esc(x[0])+'"><img src="'+esc(avatarPath(x[0]))+'" alt=""><small>'+esc(x[1])+'</small></button>').join("")+'<button id="clearAvatar" class="btn">不使用頭像</button>';
+ area.querySelectorAll("[data-avatar]").forEach(b=>b.onclick=async()=>{const avatar=b.dataset.avatar;if(await change(row=>{const q=row.students.find(x=>String(x.id)===String(id));if(!q)return false;q.avatar=avatar})){closeModal();setStatus("已更新學生頭像")}});$("clearAvatar").onclick=async()=>{if(await change(row=>{const q=row.students.find(x=>String(x.id)===String(id));if(!q)return false;delete q.avatar})){closeModal();setStatus("已清除學生頭像")}};
+ };
+}
+function activateTeacher(){
+ const key=prompt("請輸入動態教室密碼（老師餵食）");if(key===null)return;
+ if(key!==String(shared&&shared.teacherFeedingPassword||"13579")){setStatus("動態教室密碼錯誤");return}
+ actor={type:"teacher",sid:"__teacher__",name:"老師"};foodId=null;renderFoods();setStatus("👩‍🏫 老師已授權一次餵食，請選食物及學生或班寵。");
+}
+function renderFoods(){
+ $("foodShelf").innerHTML=ROOM_FOODS.map(x=>'<button type="button" class="food '+(foodId===x.id?"sel":"")+'" data-food="'+x.id+'"><span class="emoji">'+x.emoji+'</span>'+esc(x.name)+'</button>').join("");
+ $("foodShelf").querySelectorAll("[data-food]").forEach(b=>b.onclick=()=>{if(!actor){setStatus("請先點學生使用餵食券，或點老師輸入密碼。");return}foodId=b.dataset.food;renderFoods();setStatus("已選 "+ROOM_FOODS.find(f=>f.id===foodId).name+"，請點選想餵的對象。")});
+}
+async function feed(){
+ if(!actor||!foodId||!choice){setStatus("請先選餵食者與食物。");return}
+ if(actor.type==="teacher"&&choice.type==="teacher"){setStatus("老師不能餵自己。");return}
+ const a=actor,t=choice,food=ROOM_FOODS.find(x=>x.id===foodId);if(!food)return;
+ if(!confirm(a.name+" 使用 "+food.name+" 餵 "+(t.type==="teacher"?"老師":t.type==="pet"?(getPet()||{}).name:(st().students.find(x=>String(x.id)===String(t.id))||{}).name)+"，確定嗎？"))return;
+ const done=await change(row=>{
+   const now=Date.now(),pupil=row.students.find(x=>String(x.id)===String(t.id));
+   if(a.type==="student"){
+    const pts=row.points||[],logs=row.roomFeedingLog||[];
+    const purchased=pts.filter(p=>!p.cancelled&&p.kind==="redemption"&&p.rewardId==="feeding-ticket"&&String(p.sid)===a.sid).length;
+    const spent=pts.filter(p=>!p.cancelled&&p.kind==="feeding-ticket-used"&&String(p.sid)===a.sid).length+logs.filter(p=>p.ticketUsed&&String(p.feederSid)===a.sid&&!p.ledgerId).length;
+    if(purchased<=spent){alert("這位學生的餵食券已用完");return false}
+   }
+   let count=0,pet=null,target="";
+   if(t.type==="student"){if(!pupil){alert("找不到學生");return false}const rec=row.roomFeeding||{},old=rec[String(t.id)]||{};if(Number(old.until)>now||(!old.until&&Number(old.count)>=3)){alert("這位學生吃飽了，暫時不能餵食");return false}count=(old.until?0:Math.max(0,Number(old.count)||0))+1;row.roomFeeding=rec;rec[String(t.id)]={count,until:count>=3?now+3600000:0};target=pupil.name}
+   else if(t.type==="pet"){pet=ROOM_PETS.find(x=>x.id===row.classPetType);if(!pet){alert("班寵尚未選擇");return false}const rec=row.classPetFeedings||{},old=rec[pet.id]||{};if(Number(old.until)>now||(!old.until&&Number(old.count)>=10)){alert("班寵吃飽了，暫時不能餵食");return false}count=(old.until?0:Math.max(0,Number(old.count)||0))+1;row.classPetFeedings=rec;rec[pet.id]={count,until:count>=10?now+3600000:0};
+    const progress=row.classPetProgress||{};const older=progress[pet.id]||{},points=(Number(older.points)||0)+1;row.classPetProgress=progress;progress[pet.id]={points:points>=100?0:points,cycles:(Number(older.cycles)||0)+(points>=100?1:0)};target=pet.name}
+   else {const old=row.roomTeacherFeed||{};if(Number(old.until)>now||(!old.until&&Number(old.count)>=3)){alert("老師已吃飽，稍後再餵");return false}count=(old.until?0:Number(old.count)||0)+1;row.roomTeacherFeed={count,until:count>=3?now+3600000:0};target="老師"}
+   const ledgerId="feed_"+now+"_"+Math.random().toString(36).slice(2);
+   if(!Array.isArray(row.points))row.points=[];if(!Array.isArray(row.roomFeedingLog))row.roomFeedingLog=[];
+   if(a.type==="student")row.points.push({id:ledgerId,sid:a.sid,date:today(),delta:0,kind:"feeding-ticket-used",reason:"餵食券使用："+a.name+" 餵 "+target+" "+food.name});
+   row.roomFeedingLog.push({kind:t.type,name:target,sid:t.type==="student"?String(t.id):undefined,pet:t.type==="pet"?pet.id:undefined,food:food.id,count,at:now,feederSid:a.sid,feederName:a.name,ticketUsed:a.type==="student",ledgerId});
+   if(row.roomFeedingLog.length>150)row.roomFeedingLog=row.roomFeedingLog.slice(-150);
+   return true;
+ });
+ if(done){actor=null;foodId=null;choice=null;renderFoods();setStatus("🍽️ "+a.name+" 已餵 "+(t.type==="teacher"?"老師":t.type==="pet"?(getPet()||{}).name:(st().students.find(x=>String(x.id)===String(t.id))||{}).name)+" "+food.name+"。")}
+}
+$("loginForm").onsubmit=async e=>{e.preventDefault();$("loginError").textContent="登入中…";try{
+ const sess=await request("/auth/v1/token?grant_type=password",{method:"POST",body:JSON.stringify({email:$("email").value.trim(),password:$("password").value})},false);
+ if(!sess.access_token)throw Error("登入失敗");session=sess;sessionStorage.setItem("fundesk_cloud_session",JSON.stringify(sess));await load();$("login").hidden=true;
+ }catch(err){$("loginError").textContent="無法登入："+err.message}
+};
+$("modalClose").onclick=closeModal;$("modal").onclick=e=>{if(e.target===$("modal"))closeModal()};
+$("reload").onclick=async()=>{if(busy)return;try{await load();setStatus("已同步最新資料")}catch(e){setSync("⚠️ 同步失敗",true);alert(e.message)}};
+$("petSelect").onchange=async()=>{const id=$("petSelect").value;await change(row=>{row.classPetType=id});};
+$("sceneSelect").onchange=async()=>{const v=$("sceneSelect").value;await change(row=>{row.roomScene=v});$("stage").className="stage scene-"+v};
+$("pause").onclick=()=>{paused=!paused;$("pause").textContent=paused?"▶ 繼續":"⏸ 暫停"};
+$("fullscreen").onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $("app").requestFullscreen()}catch(e){setStatus("瀏覽器不支援自動進入全螢幕，可使用 F11。")}};
+document.addEventListener("fullscreenchange",()=>{$("fullscreen").textContent=document.fullscreenElement?"⛶ 退出全螢幕":"⛶ 全螢幕"});
+window.addEventListener("resize",()=>{if(data)renderWalkers()});
+renderFoods();
+try{const sess=sessionStorage.getItem("fundesk_cloud_session");if(sess){session=JSON.parse(sess);if(session&&session.access_token)load().then(()=>{$("login").hidden=true}).catch(err=>{$("loginError").textContent="請重新登入："+err.message})}}catch(e){}
+})();
+</script></body></html>
