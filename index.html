@@ -356,6 +356,8 @@ body.roomFullscreen .movingRoomPanel{gap:0}
 .roomPetProgressText{font-size:11px;font-weight:900;white-space:nowrap;color:#225c37}
 .roomPetFull{top:-66px}
 @media(max-width:700px){.roomPetProgress{width:115px;top:-27px}.roomPetProgressText{font-size:10px}}
+
+.roomTicketCard{margin:12px 0;padding:12px;border:1px solid #aed4bf;border-radius:12px;background:#f4fff3}.roomTicketCard h3{margin:0 0 5px}.roomTicketCard strong{font-size:20px;color:#297047}.roomPetHistoryPanel{margin-top:12px;border-top:1px solid #cadccf;padding-top:8px}.roomPetHistoryPanel h4{margin:4px 0 8px;font-size:13px}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -2009,7 +2011,7 @@ function printLabDuty(sheet){
 
 .avatarPickerToggle{margin:10px 0;border:1px solid #d4e5f2;border-radius:12px;background:#f5faff;padding:8px 12px}.avatarPickerToggle>summary{cursor:pointer;font-weight:800;color:#345e76;padding:7px;list-style-position:inside}.avatarPickerToggle:not([open]) .avatarPicker{display:none}.avatarPickerToggle .avatarPicker{margin:10px 0 0}.pointLedgerPanel{margin:16px 0;padding:14px;border:1px solid #b8d8c9;border-radius:12px;background:#f5fcf9}.pointLedgerPanel>label{display:block;margin:8px 0}.pointLedgerPanel select{max-width:100%;padding:7px}.pointLedgerPanel .tablewrap{margin-top:12px;max-height:290px;overflow:auto}.pointLedgerPanel td{vertical-align:middle}
 
-.roomTicketCard{margin:12px 0;padding:12px;border:1px solid #aed4bf;border-radius:12px;background:#f4fff3}.roomTicketCard h3{margin:0 0 5px}.roomTicketCard strong{font-size:20px;color:#297047}.roomPetHistoryPanel{margin-top:12px;border-top:1px solid #cadccf;padding-top:8px}.roomPetHistoryPanel h4{margin:4px 0 8px;font-size:13px}
+
 </style></head>
  <body><h1>${esc(sheet.topic)}｜實驗工作分配</h1><p>${esc(classDisplay(cl))}　實驗日期 ${esc(sheet.date)}</p>
  ${labDutyTable(sheet)}<button type="button" onclick="window.print()">列印／另存 PDF</button><\/body><\/html>`);
@@ -2702,7 +2704,9 @@ function bindNewFeatures(){
     <div class="actions"><label>抵扣點數 <input type="number" id="pointOffsetAmount" min="1" max="${max}" value="${max||1}" style="width:90px"></label><button class="btn small" id="pointOffsetApply" ${max<1?'disabled':''}>使用積點抵扣</button></div>
     <div class="tablewrap"><table><thead><tr><th>日期</th><th>原因</th><th>點數</th><th>修正</th></tr></thead><tbody>${records.map(x=>`<tr><td>${esc(x.date||'')}</td><td>${esc(x.reason||'課堂表現')}${x.cancelled?'（已取消）':''}</td><td>${Number(x.delta)>0?'+':''}${Number(x.delta)||0}</td><td>${x.cancelled?'—':`<button type="button" class="btn small outline" data-void-point="${x._index}">取消誤記</button>`}</td></tr>`).join('')}</tbody></table></div>`;
    $('pointOffsetApply').onclick=()=>{const amount=Number($('pointOffsetAmount').value);if(!Number.isInteger(amount)||amount<1||amount>Math.min(ptotal(sid),ppenalty(sid)))return alert('抵扣點數超出可用積點或待抵扣點數');if(!confirm(`確認使用 ${amount} 積點抵扣 ${amount} 扣點？`))return;const date=$('sessionDate').value;cls().points.push({sid,date,delta:-amount,offsetAmount:amount,kind:'penalty-offset',reason:'積點抵扣扣點',id:uid()});save();contactQueuePointsSync(cl,date);render()};
-   ledgerDetails.querySelectorAll('[data-void-point]').forEach(button=>button.onclick=()=>{const index=Number(button.dataset.voidPoint),entry=cls().points[index];if(!entry||entry.cancelled||String(entry.sid)!==String(sid))return;const isOffset=entry.kind==='penalty-offset';if(isOffset){const following=cls().points.slice(index+1).some(x=>!x.cancelled&&x.kind==='penalty-offset'&&String(x.sid)===String(sid));if(following)return alert('請先取消這位學生較新的抵扣紀錄，避免帳目錯亂。')}
+   ledgerDetails.querySelectorAll('[data-void-point]').forEach(button=>button.onclick=()=>{const index=Number(button.dataset.voidPoint),entry=cls().points[index];if(!entry||entry.cancelled||String(entry.sid)!==String(sid))return;
+   if(entry.kind==='feeding-ticket-used')return alert('餵食券已實際使用，不能以誤記取消方式恢復。');
+   if(entry.kind==='redemption'&&entry.rewardId==='feeding-ticket'&&roomTicketBalance(cl,sid)<1)return alert('此學生目前沒有尚未使用的餵食券，不能取消這筆兌換。');const isOffset=entry.kind==='penalty-offset';if(isOffset){const following=cls().points.slice(index+1).some(x=>!x.cancelled&&x.kind==='penalty-offset'&&String(x.sid)===String(sid));if(following)return alert('請先取消這位學生較新的抵扣紀錄，避免帳目錯亂。')}
    if(entry.kind!=='redemption'&&entry.kind!=='penalty-offset'&&Number(entry.delta)<0){
     const remainingPenalty=cls().points.filter(x=>String(x.sid)===String(sid)&&!x.cancelled&&x!==entry&&x.kind!=='redemption'&&x.kind!=='penalty-offset'&&x.kind!=='correction-log').reduce((sum,x)=>sum+Math.max(0,-(Number(x.delta)||0)),0);
     const offsets=cls().points.filter(x=>String(x.sid)===String(sid)&&!x.cancelled&&x.kind==='penalty-offset').reduce((sum,x)=>sum+(Number(x.offsetAmount)||0),0);
@@ -2892,8 +2896,9 @@ function advanceMovingRoom(dt){
 function roomTicketBalance(code,sid){
  const rec=db.classes[code];if(!rec)return 0;
  const bought=(rec.points||[]).filter(p=>!p.cancelled&&p.kind==='redemption'&&p.rewardId==='feeding-ticket'&&String(p.sid)===String(sid)).length;
- const used=(rec.roomFeedingLog||[]).filter(p=>p.ticketUsed&&String(p.feederSid)===String(sid)).length;
- return Math.max(0,bought-used);
+ const used=(rec.points||[]).filter(p=>!p.cancelled&&p.kind==='feeding-ticket-used'&&String(p.sid)===String(sid)).length;
+ const legacyUsed=(rec.roomFeedingLog||[]).filter(p=>p.ticketUsed&&String(p.feederSid)===String(sid)&&!p.ledgerId).length;
+ return Math.max(0,bought-used-legacyUsed);
 }
 function roomTicketActor(){
  const a=roomTicketFeeder;if(!a)return null;
@@ -3006,7 +3011,9 @@ function roomFeedPet(foodId){
  const points=Math.max(0,Math.min(99,Number(oldProgress.points)||0))+1;
  record.classPetProgress[pet.id]={points:points>=100?0:points,cycles:Math.max(0,Number(oldProgress.cycles)||0)+(points>=100?1:0)};
  if(!Array.isArray(record.roomFeedingLog))record.roomFeedingLog=[];
- record.roomFeedingLog.push({kind:'pet',name:pet.name,pet:pet.id,food:food.id,count,at:now,feederSid:String(actor.sid),feederName:actor.pupil.name,ticketUsed:true});
+ const ledgerId=uid();if(!Array.isArray(record.points))record.points=[];
+ record.points.push({id:ledgerId,sid:String(actor.sid),date:today(),delta:0,kind:'feeding-ticket-used',reason:'餵食券使用：'+actor.pupil.name+' 餵 '+pet.name+' '+food.name,petId:pet.id});
+ record.roomFeedingLog.push({kind:'pet',name:pet.name,pet:pet.id,food:food.id,count,at:now,feederSid:String(actor.sid),feederName:actor.pupil.name,ticketUsed:true,ledgerId});
  roomTicketFeeder=null;roomFoodChoice=null;
  if(record.roomFeedingLog.length>150)record.roomFeedingLog=record.roomFeedingLog.slice(-150);
  save();roomUpdatePetAppearance(now);roomRenderFeedHistory();roomRefreshCandidate();
@@ -3113,7 +3120,9 @@ function roomFeedStudent(code,sid,foodId){
  if(!record.roomFeeding||typeof record.roomFeeding!=='object')record.roomFeeding={};
  record.roomFeeding[String(sid)]={count,until:count===3?now+3600000:0};
  if(!Array.isArray(record.roomFeedingLog))record.roomFeedingLog=[];
- record.roomFeedingLog.push({kind:'student',sid:String(sid),name:String(pupil.name||''),food:food.id,count,at:now,feederSid:String(actor.sid),feederName:actor.pupil.name,ticketUsed:true});
+ const ledgerId=uid();if(!Array.isArray(record.points))record.points=[];
+ record.points.push({id:ledgerId,sid:String(actor.sid),date:today(),delta:0,kind:'feeding-ticket-used',reason:'餵食券使用：'+actor.pupil.name+' 餵 '+pupil.name+' '+food.name});
+ record.roomFeedingLog.push({kind:'student',sid:String(sid),name:String(pupil.name||''),food:food.id,count,at:now,feederSid:String(actor.sid),feederName:actor.pupil.name,ticketUsed:true,ledgerId});
  roomTicketFeeder=null;roomFoodChoice=null;
  if(record.roomFeedingLog.length>150)record.roomFeedingLog=record.roomFeedingLog.slice(-150);
  save();
