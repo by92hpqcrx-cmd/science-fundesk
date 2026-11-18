@@ -1998,7 +1998,12 @@ function printLabDuty(sheet){
  <base href="${esc(location.href)}"><style>.avatarMini{width:28px;height:28px;object-fit:contain;vertical-align:middle}.avatarNamed{display:inline-flex;flex-direction:column;align-items:center;gap:2px}.avatarNamed .studentName{font-weight:700}@page{size:A4 landscape;margin:13mm}body{font:15px system-ui,"Microsoft JhengHei",sans-serif;color:#111;margin:0}
  h1{font-size:25px;margin:0 0 8px}p{margin:0 0 15px}table{width:100%;table-layout:fixed;border-collapse:collapse}
  th,td{border:1px solid #444;text-align:center;padding:9px 5px;overflow-wrap:anywhere}tr{break-inside:avoid}
- th:first-child{width:9%}td{height:46px}button{margin:16px 0}@media print{button{display:none}}</style></head>
+ th:first-child{width:9%}td{height:46px}button{margin:16px 0}@media print{button{display:none}}
+/* 班寵名稱固定在頭像最上層，放大時也不被圖像遮住。 */
+.movingRoomStage .roomPet .roomPetImage{position:relative;z-index:1}
+.movingRoomStage .roomPet .roomPetName{position:relative;z-index:50;isolation:isolate;flex-shrink:0;overflow:visible;max-width:none;white-space:nowrap;background:#fffffff5;box-shadow:0 2px 6px #253c3a55;pointer-events:none}
+.movingRoomStage .roomPet .roomPetCount{position:relative;z-index:49;pointer-events:none}
+</style></head>
  <body><h1>${esc(sheet.topic)}｜實驗工作分配</h1><p>${esc(classDisplay(cl))}　實驗日期 ${esc(sheet.date)}</p>
  ${labDutyTable(sheet)}<button type="button" onclick="window.print()">列印／另存 PDF</button><\/body><\/html>`);
  page.document.close();
