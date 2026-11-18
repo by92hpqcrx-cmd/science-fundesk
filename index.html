@@ -364,6 +364,9 @@ body.roomFullscreen .movingRoomPanel{gap:0}
 .movingRoomStage .roomTeacher .roomName{position:relative;z-index:30;background:#fff9d7;border:1px solid #eccd72;border-radius:8px;font-weight:900}
 .movingRoomStage .roomPet .roomPetName{position:absolute!important;left:50%;bottom:calc(8px * var(--room-avatar-scale,1));transform:translateX(-50%);z-index:999!important;display:block!important;isolation:isolate;overflow:visible!important;white-space:nowrap;background:#fff!important;border:2px solid #7db898;box-shadow:0 2px 9px #194a3980;pointer-events:none}
 .movingRoomStage .roomPet .roomPetImage{z-index:1!important}
+
+/* 動態教室名片僅開放餵食券與密碼保護的頭像編輯 */
+.roomAvatarProtected{margin:12px 0;padding:12px;border:1px solid #cee2ec;border-radius:12px;background:#f7fbff}.roomAvatarProtected>#roomUnlockAvatar{width:100%;text-align:center}.roomAvatarProtected #roomAvatarHidden[hidden]{display:none!important}.roomAvatarProtected .avatarPicker{margin:12px 0 0}.roomAvatarProtected .avatarOptions{max-height:min(55vh,400px);overflow:auto}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -2770,7 +2773,7 @@ const ROOM_PETS=[{id:'dino',name:'小恐龍',emoji:'🦖'},{id:'bear',name:'小�
 let roomPetCandidate=false,roomPetVisualTick=0,roomPetWalker=null;
 let roomTicketFeeder=null;
 const roomFeedingPassword=()=>String(db.teacherFeedingPassword||'13579');
-function roomActivateTeacherFeed(){const input=prompt('輸入老師餵食密碼');if(input===null)return false;if(input!==roomFeedingPassword()){roomTicketStatus('餵食密碼不正確');return false}roomTicketFeeder={kind:'teacher',code:cl};roomFoodChoice=null;roomFeedCandidate=null;roomPetCandidate=false;roomRefreshCandidate();roomTicketStatus('👩‍🏫 老師已驗證，請選食物與餵食對象。');return true}
+function roomActivateTeacherFeed(){const input=prompt('輸入動態教室密碼');if(input===null)return false;if(input!==roomFeedingPassword()){roomTicketStatus('動態教室密碼不正確');return false}roomTicketFeeder={kind:'teacher',code:cl};roomFoodChoice=null;roomFeedCandidate=null;roomPetCandidate=false;roomRefreshCandidate();roomTicketStatus('👩‍🏫 老師已驗證，請選食物與餵食對象。');return true}
 
 const roomPetAsset=id=>'/science-fundesk/class-pets/'+id+'.svg';
 const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香蕉',emoji:'🍌'},{id:'strawberry',name:'草莓',emoji:'🍓'},{id:'grapes',name:'葡萄',emoji:'🍇'},{id:'cookie',name:'餅乾',emoji:'🍪'},{id:'donut',name:'甜甜圈',emoji:'🍩'},{id:'juice',name:'果汁',emoji:'🧃'},{id:'milk',name:'牛奶',emoji:'🥛'},{id:'bamboo',name:'竹葉',emoji:'🎋'},{id:'fish',name:'小魚',emoji:'🐟'},{id:'bone',name:'骨頭',emoji:'🦴'},{id:'pinecone',name:'松果',emoji:'🌰'},{id:'carrot',name:'紅蘿蔔',emoji:'🥕'}];
@@ -3272,13 +3275,37 @@ function restoreClassroomSelection(){
  }
  document.querySelectorAll('.roomPicked').forEach(x=>x.classList.remove('roomPicked'));
 }
+function openClassroomStudentCard(id){
+ const s=student(id);if(!s)return;
+ studentId=id;
+ const feedingHistory=(cls().roomFeedingLog||[]).filter(x=>String(x.sid)===String(id)).slice(-8).reverse();
+ $('modalContent').innerHTML=`<div class="studentHeader"><div class="studentAvatarHeader">${avatarThumb(s)}<div><span class="pill">${esc(classDisplay(cl))} · ${esc(s.no)} 號</span><h2>${esc(s.name)}</h2></div></div></div>
+ <section class="roomTicketCard"><h3>🎟️ 餵食券</h3><p>目前有 <strong>${roomTicketBalance(cl,id)}</strong> 張餵食券</p><button type="button" class="btn" id="roomActivateTicket" ${roomTicketBalance(cl,id)<1?'disabled':''}>🎟️ 使用一張餵食券</button><p class="hint">啟用後關閉名片，再點選食物及餵食對象。餵食成功才扣除一張。</p></section>
+ <section class="roomAvatarProtected"><button type="button" class="btn outline" id="roomUnlockAvatar" aria-expanded="false">🔒 更換頭像（輸入動態教室密碼）</button><div id="roomAvatarHidden" hidden>${avatarChooser(s)}</div></section>`;
+ $('modal').classList.remove('hidden');
+ $('roomActivateTicket').onclick=()=>{if(!roomTicketUse(cl,id))return alert('餵食券不足，請先兌換。');$('modal').classList.add('hidden');restoreClassroomSelection()};
+ const unlock=$('roomUnlockAvatar'),area=$('roomAvatarHidden');
+ unlock.onclick=()=>{if(!area.hidden){area.hidden=true;unlock.textContent='🔒 更換頭像（輸入動態教室密碼）';unlock.setAttribute('aria-expanded','false');return}
+ const password=prompt('請輸入動態教室密碼，才能更換頭像');
+ if(password===null)return;
+ if(password!==roomFeedingPassword()){alert('動態教室密碼不正確');return}
+ area.hidden=false;unlock.textContent='🔓 收合更換頭像';unlock.setAttribute('aria-expanded','true');
+ };
+ area.querySelectorAll('[data-avatar-choice]').forEach(btn=>btn.onclick=()=>{
+  if(area.hidden)return;
+  if(!cloudReady||cloudBlocked)return alert('雲端尚未連線，請確認同步後再設定頭像');
+  s.avatar=btn.dataset.avatarChoice;save();openClassroomStudentCard(id);refreshMovingClassroomCards();
+ });
+ const clear=area.querySelector('#clearStudentAvatar');
+ if(clear)clear.onclick=()=>{if(area.hidden)return;if(!cloudReady||cloudBlocked)return alert('雲端尚未連線');delete s.avatar;save();openClassroomStudentCard(id);refreshMovingClassroomCards()};
+}
 function openMovingRoomStudent(code,id,el){
  if(!$('modal').classList.contains('hidden'))return;
  if(roomOriginalClass===null)roomOriginalClass=cl;
  roomCardClass=code;cl=code;
  syncClassOptions();statCards();
  el.classList.add('roomPicked');
- openStudent(id);
+ openClassroomStudentCard(id);
 }
 function startMovingClassroom(){
  if(!$('movingClassroom'))return;
@@ -3402,7 +3429,7 @@ function hookClassManager(){
  $('manageStudents').onclick=()=>{view='students';render()};
  $('manageSeats').onclick=()=>{view='seats';render()};
 }
-function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>👩‍🏫 教師餵食密碼</h2><p class="hint">教師在動態教室點擊老師頭像時輸入密碼，驗證後可餵食一次。初始密碼 13579，建議立即修改。</p><div class="formgrid"><label>目前密碼<input id="feedOldPassword" type="password" autocomplete="off"></label><label>新密碼<input id="feedNewPassword" type="password" autocomplete="new-password" placeholder="至少 5 位數字"></label><label>確認新密碼<input id="feedNewPasswordConfirm" type="password" autocomplete="new-password"></label></div><div class="actions"><button class="btn" type="button" id="feedPasswordSave">修改餵食密碼</button></div></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
+function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>🔐 動態教室密碼</h2><p class="hint">用於老師餵食，以及學生名片解鎖更換頭像。初始密碼為 13579，建議立即修改。</p><div class="formgrid"><label>目前密碼<input id="feedOldPassword" type="password" autocomplete="off"></label><label>新密碼<input id="feedNewPassword" type="password" autocomplete="new-password" placeholder="至少 5 位數字"></label><label>確認新密碼<input id="feedNewPasswordConfirm" type="password" autocomplete="new-password"></label></div><div class="actions"><button class="btn" type="button" id="feedPasswordSave">修改動態教室密碼</button></div></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
 function hookView(){if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();$('editQuickLinks').onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings);document.querySelectorAll('[data-fundesk-monopoly]').forEach(x=>x.addEventListener('click',openFunDeskMonopoly))}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='seats'){
  const toggleLast=$('toggleSeatLastRow');
  if(toggleLast)toggleLast.onclick=()=>{
@@ -3449,7 +3476,7 @@ if(view==='students'){
   button.onclick=()=>removeStudent(button.dataset.deleteStudent);
  });
 }
-if(view==='settings'){$('feedPasswordSave').onclick=()=>{const old=$('feedOldPassword').value,pass=$('feedNewPassword').value,again=$('feedNewPasswordConfirm').value;if(old!==roomFeedingPassword())return alert('原密碼錯誤');if(!/^\d{5,12}$/.test(pass))return alert('請輸入 5 至 12 位數字密碼');if(pass!==again)return alert('確認密碼不一致');db.teacherFeedingPassword=pass;save();alert('教師餵食密碼已更新');render()};$('exportJson').onclick=backup;$('importJson').onclick=()=>$('jsonImport').click();$('resetClass').onclick=()=>{if(prompt(`要重設 ${classDisplay(cl)}所有學生、出勤、習作、考試、點數，請輸入班級數字 ${cl}`)===cl){db.classes[cl]=freshClass();save();render()}}}
+if(view==='settings'){$('feedPasswordSave').onclick=()=>{const old=$('feedOldPassword').value,pass=$('feedNewPassword').value,again=$('feedNewPasswordConfirm').value;if(old!==roomFeedingPassword())return alert('原密碼錯誤');if(!/^\d{5,12}$/.test(pass))return alert('請輸入 5 至 12 位數字密碼');if(pass!==again)return alert('確認密碼不一致');db.teacherFeedingPassword=pass;save();alert('動態教室密碼已更新');render()};$('exportJson').onclick=backup;$('importJson').onclick=()=>$('jsonImport').click();$('resetClass').onclick=()=>{if(prompt(`要重設 ${classDisplay(cl)}所有學生、出勤、習作、考試、點數，請輸入班級數字 ${cl}`)===cl){db.classes[cl]=freshClass();save();render()}}}
 if(view==='tools'){
 document.querySelectorAll('[data-time]').forEach(b=>b.onclick=()=>setTimer(Number(b.dataset.time)));
 $('timerStart').onclick=toggleTimer;$('timerReset').onclick=()=>setTimer(timerBaseSeconds);
