@@ -2008,6 +2008,8 @@ function printLabDuty(sheet){
 .movingRoomStage .roomPet .roomPetCount{position:relative;z-index:49;pointer-events:none}
 
 .avatarPickerToggle{margin:10px 0;border:1px solid #d4e5f2;border-radius:12px;background:#f5faff;padding:8px 12px}.avatarPickerToggle>summary{cursor:pointer;font-weight:800;color:#345e76;padding:7px;list-style-position:inside}.avatarPickerToggle:not([open]) .avatarPicker{display:none}.avatarPickerToggle .avatarPicker{margin:10px 0 0}.pointLedgerPanel{margin:16px 0;padding:14px;border:1px solid #b8d8c9;border-radius:12px;background:#f5fcf9}.pointLedgerPanel>label{display:block;margin:8px 0}.pointLedgerPanel select{max-width:100%;padding:7px}.pointLedgerPanel .tablewrap{margin-top:12px;max-height:290px;overflow:auto}.pointLedgerPanel td{vertical-align:middle}
+
+.roomTicketCard{margin:12px 0;padding:12px;border:1px solid #aed4bf;border-radius:12px;background:#f4fff3}.roomTicketCard h3{margin:0 0 5px}.roomTicketCard strong{font-size:20px;color:#297047}.roomPetHistoryPanel{margin-top:12px;border-top:1px solid #cadccf;padding-top:8px}.roomPetHistoryPanel h4{margin:4px 0 8px;font-size:13px}
 </style></head>
  <body><h1>${esc(sheet.topic)}｜實驗工作分配</h1><p>${esc(classDisplay(cl))}　實驗日期 ${esc(sheet.date)}</p>
  ${labDutyTable(sheet)}<button type="button" onclick="window.print()">列印／另存 PDF</button><\/body><\/html>`);
@@ -2756,12 +2758,13 @@ function bindNewFeatures(){
 let roomAnimation=0,roomLastTick=0,roomWalkers=[],roomFilter='',roomOriginalClass=null,roomCardClass=null,roomObserver=null,roomSpeed="medium",roomFoodGhost=null,roomFeedingPointer=null,roomFoodChoice=null,roomFeedCandidate=null,roomFeedLastVisual=0;
 const ROOM_PETS=[{id:'dino',name:'小恐龍',emoji:'🦖'},{id:'bear',name:'小熊',emoji:'🐻'},{id:'panda',name:'小貓',emoji:'🐱'},{id:'cat',name:'小兔',emoji:'🐰'},{id:'rabbit',name:'熊貓',emoji:'🐼'},{id:'501',name:'企鵝',emoji:'🐧'},{id:'502',name:'兔兔',emoji:'🐰'},{id:'503',name:'松鼠',emoji:'🐿️'},{id:'504',name:'小鳥',emoji:'🐦'},{id:'505',name:'貓貓',emoji:'🐱'},{id:'506',name:'小狗',emoji:'🐶'},{id:'507',name:'大象',emoji:'🐘'}];
 let roomPetCandidate=false,roomPetVisualTick=0,roomPetWalker=null;
+let roomTicketFeeder=null;
 const roomPetAsset=id=>'/science-fundesk/class-pets/'+id+'.svg';
 const ROOM_FOODS=[{id:'apple',name:'蘋果',emoji:'🍎'},{id:'banana',name:'香蕉',emoji:'🍌'},{id:'strawberry',name:'草莓',emoji:'🍓'},{id:'grapes',name:'葡萄',emoji:'🍇'},{id:'cookie',name:'餅乾',emoji:'🍪'},{id:'donut',name:'甜甜圈',emoji:'🍩'},{id:'juice',name:'果汁',emoji:'🧃'},{id:'milk',name:'牛奶',emoji:'🥛'},{id:'bamboo',name:'竹葉',emoji:'🎋'},{id:'fish',name:'小魚',emoji:'🐟'},{id:'bone',name:'骨頭',emoji:'🦴'},{id:'pinecone',name:'松果',emoji:'🌰'},{id:'carrot',name:'紅蘿蔔',emoji:'🥕'}];
 const roomClassCodes=()=>activeCodes().filter(code=>db.classes[code]&&Array.isArray(db.classes[code].students));
 function renderClassroom(){
  return `<section class="movingRoomPanel"><div class="movingRoomToolbar"><strong>🏫 ${esc(classDisplay(cl))} · 動態教室</strong></div>
- <div class="roomPetPicker"><span class="roomCount" id="roomCount"></span><label class="roomSpeedLabel" for="roomSpeedSelect">移動速度 <select id="roomSpeedSelect" aria-label="學生移動速度"><option value="slow">慢</option><option value="medium">中</option><option value="fast">快</option></select></label><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button><label for="roomPetPickerButton">🐾 班級寵物</label><button type="button" id="roomPetPickerButton" class="roomPetPickerButton" aria-haspopup="listbox" aria-expanded="false"><span id="roomPetPickerPreview" class="roomPetPickerPreview">🐾</span><span id="roomPetPickerName">未選擇寵物</span><span aria-hidden="true">▾</span></button><select id="roomPetSelect" class="roomPetNativeSelect" aria-label="班級寵物"><option value="">未選擇寵物</option>${ROOM_PETS.map(p=>`<option value="${p.id}" ${db.classes[cl]?.classPetType===p.id?'selected':''}>${p.emoji} ${p.name}</option>`).join('')}</select><span class="roomPetPickerTip">各班獨立選擇，最多餵 10 次</span><div class="roomPetFeedTopInfo"><p class="roomFoodRule">每人最多餵 3 次<br>吃飽後休息 1 小時</p><div class="roomFeedStatus" id="roomFeedStatus" role="status" aria-live="polite">先選食物，再點學生頭像。</div></div><label class="roomSceneLabel" for="roomSceneSelect">🖼️ 活動背景</label><select class="roomSceneSelect" id="roomSceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></div><div class="roomPlayArea"><section class="roomFeedHistory"><div class="roomHistoryTitle">📋 餵食紀錄 <span>依時間顯示最新紀錄</span></div><div class="roomHistoryList" id="roomFeedHistory"></div></section><div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">${esc(classDisplay(cl))} · 動態教室 ♡ 🐾</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div><button type="button" class="roomPet" id="roomPet" hidden aria-label="選擇班級寵物餵食"><span class="roomPetFull" id="roomPetFull" hidden>吃飽囉!!</span><span class="roomPetProgress" id="roomPetProgress" role="progressbar" aria-label="班寵成長點數" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="roomPetProgressBar"><span id="roomPetProgressFill"></span></span><span class="roomPetProgressText" id="roomPetProgressText">0/100</span></span><span class="roomPetImage" id="roomPetImage"></span><span class="roomPetName" id="roomPetName"></span><span class="roomPetCount" id="roomPetCount"></span></button></div><aside class="roomFoodShelf" aria-label="餵食工具欄"><strong>🍽️ 餵食小站</strong><span class="roomFoodHint">點食物 → 點學生 → 確認餵食；也可拖曳</span><div class="roomFoodGrid">${ROOM_FOODS.map(f=>`<button type="button" draggable="true" class="roomFood" data-food="${f.id}" title="${f.name}：拖到學生頭像">${f.emoji}<small>${f.name}</small></button>`).join('')}</div><div class="roomFeedConfirm" id="roomFeedConfirm" hidden><div id="roomFeedCandidateName"></div><button type="button" class="btn small" id="roomFeedConfirmButton">✅ 確認餵食</button><button type="button" class="btn small outline" id="roomFeedCancelButton">取消</button></div></aside></div></section>`;
+ <div class="roomPetPicker"><span class="roomCount" id="roomCount"></span><label class="roomSpeedLabel" for="roomSpeedSelect">移動速度 <select id="roomSpeedSelect" aria-label="學生移動速度"><option value="slow">慢</option><option value="medium">中</option><option value="fast">快</option></select></label><button class="btn small outline" id="roomShuffle">🎲 重新分散</button><button class="btn small outline" id="roomMotionToggle">⏸ 暫停移動</button><button class="btn small outline" id="roomFullscreenToggle">⛶ 全螢幕</button><label for="roomPetPickerButton">🐾 班級寵物</label><button type="button" id="roomPetPickerButton" class="roomPetPickerButton" aria-haspopup="listbox" aria-expanded="false"><span id="roomPetPickerPreview" class="roomPetPickerPreview">🐾</span><span id="roomPetPickerName">未選擇寵物</span><span aria-hidden="true">▾</span></button><select id="roomPetSelect" class="roomPetNativeSelect" aria-label="班級寵物"><option value="">未選擇寵物</option>${ROOM_PETS.map(p=>`<option value="${p.id}" ${db.classes[cl]?.classPetType===p.id?'selected':''}>${p.emoji} ${p.name}</option>`).join('')}</select><span class="roomPetPickerTip">各班獨立選擇，最多餵 10 次</span><div class="roomPetFeedTopInfo"><p class="roomFoodRule">每人最多餵 3 次<br>吃飽後休息 1 小時</p><div class="roomFeedStatus" id="roomFeedStatus" role="status" aria-live="polite">先開啟學生名片並啟用餵食券，再選食物。</div></div><label class="roomSceneLabel" for="roomSceneSelect">🖼️ 活動背景</label><select class="roomSceneSelect" id="roomSceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option></select></div><div class="roomPlayArea"><section class="roomFeedHistory"><div class="roomHistoryTitle">📋 餵食紀錄 <span>依時間顯示最新紀錄</span></div><div class="roomHistoryList" id="roomFeedHistory"></div><div class="roomPetHistoryPanel" id="roomPetHistoryPanel"></div></section><div class="movingRoomStage" id="movingClassroom" aria-label="點選移動中的學生頭像查看學生名片"><div class="movingRoomWall"></div><div class="movingRoomWindow"></div><div class="movingRoomBoard">${esc(classDisplay(cl))} · 動態教室 ♡ 🐾</div><div class="movingRoomClock"></div><div class="movingRoomFloor"></div><div class="movingRoomDesk d1"></div><div class="movingRoomDesk d2"></div><div class="movingRoomDesk d3"></div><div id="roomWalkers"></div><button type="button" class="roomPet" id="roomPet" hidden aria-label="選擇班級寵物餵食"><span class="roomPetFull" id="roomPetFull" hidden>吃飽囉!!</span><span class="roomPetProgress" id="roomPetProgress" role="progressbar" aria-label="班寵成長點數" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="roomPetProgressBar"><span id="roomPetProgressFill"></span></span><span class="roomPetProgressText" id="roomPetProgressText">0/100</span></span><span class="roomPetImage" id="roomPetImage"></span><span class="roomPetName" id="roomPetName"></span><span class="roomPetCount" id="roomPetCount"></span></button></div><aside class="roomFoodShelf" aria-label="餵食工具欄"><strong>🍽️ 餵食小站</strong><span class="roomFoodHint">點食物 → 點學生 → 確認餵食；也可拖曳</span><div class="roomFoodGrid">${ROOM_FOODS.map(f=>`<button type="button" draggable="true" class="roomFood" data-food="${f.id}" title="${f.name}：拖到學生頭像">${f.emoji}<small>${f.name}</small></button>`).join('')}</div><div class="roomFeedConfirm" id="roomFeedConfirm" hidden><div id="roomFeedCandidateName"></div><button type="button" class="btn small" id="roomFeedConfirmButton">✅ 確認餵食</button><button type="button" class="btn small outline" id="roomFeedCancelButton">取消</button></div></aside></div></section>`;
 }
 function roomPeople(){
  const date=$('sessionDate')?.value||today();
@@ -2770,7 +2773,7 @@ function roomPeople(){
  return (db.classes[cl]?.students||[]).filter(s=>!absent.has(String(s.id))).map(s=>({code:cl,s}));
 }
 function stopMovingClassroom(){
- roomClearFeedingPointer();roomFoodChoice=null;roomFeedCandidate=null;roomPetCandidate=false;
+ roomClearFeedingPointer();roomFoodChoice=null;roomFeedCandidate=null;roomPetCandidate=false;roomTicketFeeder=null;
  if(roomAnimation)cancelAnimationFrame(roomAnimation);
  roomAnimation=0;roomWalkers=[];roomLastTick=0;
  if(roomObserver){roomObserver.disconnect();roomObserver=null}
@@ -2886,6 +2889,25 @@ function advanceMovingRoom(dt){
  for(const w of walkers)w.el.style.transform=`translate3d(${w.x.toFixed(1)}px,${w.y.toFixed(1)}px,0)`;
 }
 /* 教室餵食紀錄隨教師班級雲端資料同步；按學生 ID 分別計算三次與一小時冷卻。 */
+function roomTicketBalance(code,sid){
+ const rec=db.classes[code];if(!rec)return 0;
+ const bought=(rec.points||[]).filter(p=>!p.cancelled&&p.kind==='redemption'&&p.rewardId==='feeding-ticket'&&String(p.sid)===String(sid)).length;
+ const used=(rec.roomFeedingLog||[]).filter(p=>p.ticketUsed&&String(p.feederSid)===String(sid)).length;
+ return Math.max(0,bought-used);
+}
+function roomTicketActor(){
+ const a=roomTicketFeeder;if(!a)return null;
+ const pupil=db.classes[a.code]?.students?.find(s=>String(s.id)===String(a.sid));
+ return pupil&&roomTicketBalance(a.code,a.sid)>0?{...a,pupil}:null;
+}
+function roomTicketStatus(message){const el=$('roomFeedStatus');if(el)el.textContent=message}
+function roomTicketUse(code,sid){
+ const pupil=db.classes[code]?.students?.find(s=>String(s.id)===String(sid));
+ if(!pupil||roomTicketBalance(code,sid)<1)return false;
+ roomTicketFeeder={code,sid:String(sid)};roomFoodChoice=null;roomFeedCandidate=null;roomPetCandidate=false;
+ document.querySelectorAll('.roomFood').forEach(b=>{b.classList.remove('roomFoodSelected');b.setAttribute('aria-pressed','false')});
+ roomRefreshCandidate();roomTicketStatus('🎟️ '+pupil.name+' 已啟用餵食券。請選食物和餵食對象，成功餵食才扣券。');return true;
+}
 function roomPetSelected(code=cl){return ROOM_PETS.find(p=>p.id===db.classes[code]?.classPetType)||null}
 function roomPetState(code=cl,now=Date.now()){
  const type=db.classes[code]?.classPetType;
@@ -2973,6 +2995,7 @@ function roomRenderPet(){
 function roomFeedPet(foodId){
  const food=ROOM_FOODS.find(f=>f.id===foodId),pet=roomPetSelected(),record=db.classes[cl];
  if(!food||!pet||!record)return false;
+ const actor=roomTicketActor();if(!actor||actor.code!==cl){roomTicketStatus('請先在學生名片啟用餵食券。');return false}
  const now=Date.now(),state=roomPetState(cl,now),status=$('roomFeedStatus');
  if(state.until>now){if(status)status.textContent='🐾 '+pet.name+' 吃飽囉!! 再等 '+Math.ceil((state.until-now)/60000)+' 分鐘。';return false}
  const count=state.count+1;
@@ -2983,9 +3006,10 @@ function roomFeedPet(foodId){
  const points=Math.max(0,Math.min(99,Number(oldProgress.points)||0))+1;
  record.classPetProgress[pet.id]={points:points>=100?0:points,cycles:Math.max(0,Number(oldProgress.cycles)||0)+(points>=100?1:0)};
  if(!Array.isArray(record.roomFeedingLog))record.roomFeedingLog=[];
- record.roomFeedingLog.push({kind:'pet',name:pet.name,pet:pet.id,food:food.id,count,at:now});
+ record.roomFeedingLog.push({kind:'pet',name:pet.name,pet:pet.id,food:food.id,count,at:now,feederSid:String(actor.sid),feederName:actor.pupil.name,ticketUsed:true});
+ roomTicketFeeder=null;roomFoodChoice=null;
  if(record.roomFeedingLog.length>150)record.roomFeedingLog=record.roomFeedingLog.slice(-150);
- save();roomUpdatePetAppearance(now);roomRenderFeedHistory();
+ save();roomUpdatePetAppearance(now);roomRenderFeedHistory();roomRefreshCandidate();
  const el=$('roomPet');
  if(el){el.classList.remove('roomJustFed');void el.offsetWidth;el.classList.add('roomJustFed');setTimeout(()=>el.classList.remove('roomJustFed'),850)}
  if(status)status.textContent=food.emoji+' '+pet.name+' 吃了'+food.name+'！已餵 '+count+'/10 次'+(points>=100?'，成長集滿 100 點，已重新累計！':'')+(count===10?'，吃飽囉!! 1 小時後才能再餵。':'。');
@@ -3018,15 +3042,18 @@ function roomRenderFeedHistory(){
  const el=$('roomFeedHistory');if(!el)return;
  const record=db.classes[cl]?.roomFeedingLog;
  const entries=Array.isArray(record)?record.slice(-40).reverse():[];
+ const pet=roomPetSelected(),perPet=pet?(record||[]).filter(entry=>entry.kind==='pet'&&entry.pet===pet.id).slice(-12).reverse():[];
+ const petPanel=$('roomPetHistoryPanel');if(petPanel)petPanel.innerHTML=pet?'<h4>🐾 '+esc(pet.name)+' 專屬餵食紀錄</h4>'+(perPet.map(x=>'<div class="roomHistoryItem">'+esc(x.feederName||'未記錄餵食者')+' 餵了 '+esc(ROOM_FOODS.find(f=>f.id===x.food)?.name||x.food||'食物')+'</div>').join('')||'<p class="hint">這隻班寵尚無紀錄</p>'):'';
  el.innerHTML=entries.length?entries.map(entry=>{
   const food=ROOM_FOODS.find(x=>x.id===entry.food);
   const person=db.classes[cl]?.students?.find(st=>String(st.id)===String(entry.sid));
   const stamp=new Date(Number(entry.at)||Date.now());
   const when=Number.isFinite(stamp.getTime())?stamp.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-  return `<div class="roomHistoryItem"><span>${food?.emoji||'🍽️'}</span><strong>${esc(entry.kind==='pet'?'🐾 '+(entry.name||'班級寵物'):person?person.no+' 號 '+person.name:entry.name||'學生')}</strong><span>吃了${esc(food?.name||entry.food||'食物')}</span><span>第 ${Math.max(1,Math.min(entry.kind==='pet'?10:3,Number(entry.count)||1))} 次</span><time>${esc(when)}</time></div>`;
+  return `<div class="roomHistoryItem"><span>${food?.emoji||'🍽️'}</span><strong>${esc(entry.kind==='pet'?'🐾 '+(entry.name||'班級寵物'):person?person.no+' 號 '+person.name:entry.name||'學生')}</strong><span>${entry.feederSid?'由 '+esc(entry.feederName||'學生')+' 餵食 · ':''}吃了${esc(food?.name||entry.food||'食物')}</span><span>第 ${Math.max(1,Math.min(entry.kind==='pet'?10:3,Number(entry.count)||1))} 次</span><time>${esc(when)}</time></div>`;
  }).join(''):'<div class="roomHistoryEmpty">尚無餵食紀錄，選擇食物開始吧！</div>';
 }
 function roomSetFoodChoice(foodId){
+ if(foodId&&!roomTicketActor()){roomTicketStatus('請先點學生頭像，在名片中啟用餵食券。');return}
  roomFoodChoice=ROOM_FOODS.some(f=>f.id===foodId)?foodId:null;
  roomFeedCandidate=null;roomPetCandidate=false;
  document.querySelectorAll('.roomFood').forEach(b=>{
@@ -3070,6 +3097,7 @@ function roomRefreshCandidate(){
 function roomFeedStudent(code,sid,foodId){
  const food=ROOM_FOODS.find(f=>f.id===foodId),record=db.classes[code];
  if(!food||!record||!record.students?.some(st=>String(st.id)===String(sid)))return false;
+ const actor=roomTicketActor();if(!actor||actor.code!==code){roomTicketStatus('請先在學生名片啟用餵食券。');return false}
  const now=Date.now(),state=roomFeedState(code,sid,now);
  const status=$('roomFeedStatus');
  const pupil=record.students.find(st=>String(st.id)===String(sid));
@@ -3085,7 +3113,8 @@ function roomFeedStudent(code,sid,foodId){
  if(!record.roomFeeding||typeof record.roomFeeding!=='object')record.roomFeeding={};
  record.roomFeeding[String(sid)]={count,until:count===3?now+3600000:0};
  if(!Array.isArray(record.roomFeedingLog))record.roomFeedingLog=[];
- record.roomFeedingLog.push({sid:String(sid),name:String(pupil.name||''),food:food.id,count,at:now});
+ record.roomFeedingLog.push({kind:'student',sid:String(sid),name:String(pupil.name||''),food:food.id,count,at:now,feederSid:String(actor.sid),feederName:actor.pupil.name,ticketUsed:true});
+ roomTicketFeeder=null;roomFoodChoice=null;
  if(record.roomFeedingLog.length>150)record.roomFeedingLog=record.roomFeedingLog.slice(-150);
  save();
  const walker=roomWalkers.find(w=>w.code===code&&String(w.sid)===String(sid));
@@ -3094,13 +3123,14 @@ function roomFeedStudent(code,sid,foodId){
   walker.el.classList.remove('roomJustFed');void walker.el.offsetWidth;walker.el.classList.add('roomJustFed');
   setTimeout(()=>walker.el?.classList.remove('roomJustFed'),850);
  }
- roomRenderFeedHistory();
+ roomRenderFeedHistory();roomRefreshCandidate();
  if(status)status.textContent=food.emoji+' '+pupil.name+' 吃了'+food.name+'！已餵 '+count+'/3 次'+(count===3?'，長到兩倍後會在 1 小時內慢慢變小。':'。');
  return true;
 }
 function roomFoodDropAt(x,y,foodId){
  const target=document.elementFromPoint(x,y)?.closest?.('.roomWalker,.roomPet');
  if(!target||!$('movingClassroom')?.contains(target)){$('roomFeedStatus').textContent='請把食物放到學生或寵物頭像上。';return}
+ if(!roomTicketActor()){roomTicketStatus('必須先啟用餵食券。');return}
  if(target.classList.contains('roomPet'))roomFeedPet(foodId);
  else roomFeedStudent(target.dataset.roomClass,target.dataset.roomStudent,foodId);
 }
@@ -3116,6 +3146,7 @@ function roomBindFoods(){
  foods.forEach(button=>{
   button.onclick=()=>roomSetFoodChoice(button.dataset.food);
   button.ondragstart=e=>{
+   if(!roomTicketActor()){e.preventDefault();roomTicketStatus('請先啟用餵食券。');return}
    e.dataTransfer.setData('application/x-fundesk-food',button.dataset.food);
    e.dataTransfer.setData('text/plain',button.dataset.food);
    e.dataTransfer.effectAllowed='copy';
@@ -3124,6 +3155,7 @@ function roomBindFoods(){
   button.onpointerdown=e=>{
    if(e.pointerType==='mouse'||e.button!==0)return;
    const food=ROOM_FOODS.find(f=>f.id===button.dataset.food);if(!food)return;
+   if(!roomTicketActor()){roomTicketStatus('請先啟用餵食券。');return}
    roomClearFeedingPointer();
    roomFeedingPointer={id:e.pointerId,food:food.id,source:button};
    roomFoodGhost=document.createElement('div');roomFoodGhost.className='roomFoodGhost';
@@ -3158,7 +3190,7 @@ function roomBindFoods(){
  };
  $('roomFeedConfirmButton').onclick=()=>{
   const target=roomFeedCandidate,food=roomFoodChoice;
-  if(!food)return;
+  if(!food||!roomTicketActor()){roomTicketStatus('請先啟用餵食券，再選食物。');return}
   if(roomPetCandidate){if(roomFeedPet(food)){roomPetCandidate=false;roomRefreshCandidate()}return}
   if(!target)return;
   if(roomFeedStudent(target.code,target.sid,food)){roomFeedCandidate=null;roomRefreshCandidate()}
@@ -3228,7 +3260,7 @@ function startMovingClassroom(){
  $('roomShuffle').onclick=populateMovingRoom;
  $('roomPetSelect').onchange=e=>{const id=e.target.value;if(id&&!ROOM_PETS.some(p=>p.id===id))return;db.classes[cl].classPetType=id;save();roomPetCandidate=false;populateMovingRoom();roomRefreshCandidate()};
  roomInitPetPicker();
- roomBindFoods();roomFoodChoice=null;roomFeedCandidate=null;roomPetCandidate=false;roomRenderFeedHistory();
+ roomBindFoods();roomFoodChoice=null;roomFeedCandidate=null;roomPetCandidate=false;roomTicketFeeder=null;roomRenderFeedHistory();
  const speedSelect=$('roomSpeedSelect');speedSelect.value=roomSpeed;speedSelect.onchange=()=>{roomSpeed=speedSelect.value};
  const fullscreenButton=$('roomFullscreenToggle');
  const updateFullscreenButton=()=>{const enabled=document.fullscreenElement===document.documentElement&&view==='classroom';document.body.classList.toggle('roomFullscreen',enabled);if(fullscreenButton.isConnected)fullscreenButton.textContent=enabled?'⛶ 退出全螢幕':'⛶ 全螢幕'};
@@ -3401,9 +3433,10 @@ refreshToolAnimals();updateCountdown()}
 bindNewFeatures();
 }
 const toMMSS=n=>{n=Math.max(0,Math.floor(Number(n)||0));let h=Math.floor(n/3600),m=Math.floor(n%3600/60),sec=n%60;return h?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`};
-function openStudent(id){studentId=id;let s=student(id);if(!s)return;let abs=cls().attendance.filter(a=>a.sid===id&&a.status==='缺席').sort((a,b)=>b.date.localeCompare(a.date));let prs=cls().points.filter(a=>String(a.sid)===String(id)&&a.kind!=='correction-log').sort((a,b)=>b.date.localeCompare(a.date));let unmet=pending(id);let active=[...cls().tasks].sort((a,b)=>b.date.localeCompare(a.date));const labIndex=layoutMap('lab').indexOf(id);const groupLabel=labIndex>=0?['第四組','第五組','第一組','第二組','第三組'][Math.floor(labIndex/6)]:'';$('modalContent').innerHTML=`<div class="studentHeader"><div class="studentAvatarHeader">${avatarThumb(s)}<div><span class="pill">${classDisplay(cl)} · ${s.no} 號${groupLabel?' · 實驗'+groupLabel:''}</span><h2>${esc(s.name)}</h2><div class="hint">可用積點 ${ptotal(id)} · 待抵扣 ${ppenalty(id)} · 缺席 ${abs.length} 次 · 待追蹤 ${unmet.length} 項</div></div></div><button class="btn small outline" id="editStudent">編輯學生</button></div><details class="avatarPickerToggle"><summary>🎨 選擇學生更換頭像（點擊展開／收合）</summary>${avatarChooser(s)}</details><div class="twoCols"><div><h3 class="sectionLabel">快速登記出勤</h3><input type="date" id="studentAttDate" value="${esc($('sessionDate').value)}">${attendanceStatuses.map(status=>attendanceControl(id,$('sessionDate').value,status)).join('')}</div><div><h3 class="sectionLabel">課堂獎懲</h3><div class="row"><button class="btn small" data-delta="1">＋1</button><button class="btn small" data-delta="2">＋2</button><button class="btn small danger" data-delta="-1">－1</button><button class="btn small danger" data-delta="-2">－2</button></div><input id="pointReason" placeholder="加／扣點原因（建議填寫）" style="margin-top:9px;width:100%"></div></div><h3 class="sectionLabel">習作／實驗／考試進度</h3>${active.length?`<div class="tablewrap"><table><thead><tr><th>日期</th><th>類型／名稱</th><th>狀態</th></tr></thead><tbody>${active.map(t=>`<tr><td>${t.date.slice(5)}</td><td><span class="pill">${t.type}</span> ${esc(t.title)}</td><td><select data-student-task="${t.id}">${taskStatusOptions(t.type).map(opt=>`<option ${taskStatus(t.id,id)===opt?'selected':''}>${opt}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`:'<div class="emptymsg">尚無追蹤項目，請到「習作／實驗／考試」建立。</div>'}<div class="twoCols"><div><h3 class="sectionLabel">出勤紀錄</h3><div id="studentAttendanceHistory">${studentAttendanceHistory(id)}</div></div><div><h3 class="sectionLabel">待完成／待補考</h3>${unmet.length?unmet.map(x=>{let t=cls().tasks.find(t=>t.id===x.taskId);return `<div class="record"><span>${t?.date||''}</span> ${esc(t?.title||'')} <b>${esc(x.status)}</b></div>`}).join(''):'<p class="hint">目前沒有待處理的項目</p>'}</div></div><h3 class="sectionLabel">獎懲歷程</h3>${prs.length?prs.slice(0,12).map(p=>`<div class="record"><span>${p.date}</span> <strong class="${p.delta>0?'pointsPositive':'pointsNegative'}">${p.delta>0?'+':''}${p.delta}</strong> ${esc(p.reason||'課堂表現')}${p.cancelled?'（已取消）':''}</div>`).join(''):'<p class="hint">尚無獎懲紀錄</p>'}<h3 class="sectionLabel">老師備註</h3><textarea id="studentNote">${esc(s.notes||'')}</textarea><div class="actions"><button id="saveStudentNote" class="btn small outline">儲存備註</button></div>`;
+function openStudent(id){studentId=id;let s=student(id);if(!s)return;let abs=cls().attendance.filter(a=>a.sid===id&&a.status==='缺席').sort((a,b)=>b.date.localeCompare(a.date));let prs=cls().points.filter(a=>String(a.sid)===String(id)&&a.kind!=='correction-log').sort((a,b)=>b.date.localeCompare(a.date));let unmet=pending(id);let active=[...cls().tasks].sort((a,b)=>b.date.localeCompare(a.date));const labIndex=layoutMap('lab').indexOf(id);const groupLabel=labIndex>=0?['第四組','第五組','第一組','第二組','第三組'][Math.floor(labIndex/6)]:'';$('modalContent').innerHTML=`<div class="studentHeader"><div class="studentAvatarHeader">${avatarThumb(s)}<div><span class="pill">${classDisplay(cl)} · ${s.no} 號${groupLabel?' · 實驗'+groupLabel:''}</span><h2>${esc(s.name)}</h2><div class="hint">可用積點 ${ptotal(id)} · 待抵扣 ${ppenalty(id)} · 缺席 ${abs.length} 次 · 待追蹤 ${unmet.length} 項</div></div></div><button class="btn small outline" id="editStudent">編輯學生</button></div><details class="avatarPickerToggle"><summary>🎨 選擇學生更換頭像（點擊展開／收合）</summary>${avatarChooser(s)}</details>${view==='classroom'?`<section class="roomTicketCard"><h3>🎟️ 我的餵食券</h3><p>剩餘 <strong>${roomTicketBalance(cl,id)}</strong> 張，每張可以餵食一次。</p><button type="button" class="btn" id="roomActivateTicket" ${roomTicketBalance(cl,id)<1?'disabled':''}>使用一張餵食券</button><p class="hint">點券後關閉名片，選食物與餵食對象；成功餵食才扣券。</p><h4>近期被餵食紀錄</h4>${(cls().roomFeedingLog||[]).filter(x=>String(x.sid)===String(id)).slice(-8).reverse().map(x=>`<div class="record">${esc(x.feederName||'未記錄餵食者')} 餵了 ${esc(ROOM_FOODS.find(f=>f.id===x.food)?.name||x.food||'食物')}</div>`).join('')||'<p class="hint">尚無紀錄</p>'}</section>`:''}<div class="twoCols"><div><h3 class="sectionLabel">快速登記出勤</h3><input type="date" id="studentAttDate" value="${esc($('sessionDate').value)}">${attendanceStatuses.map(status=>attendanceControl(id,$('sessionDate').value,status)).join('')}</div><div><h3 class="sectionLabel">課堂獎懲</h3><div class="row"><button class="btn small" data-delta="1">＋1</button><button class="btn small" data-delta="2">＋2</button><button class="btn small danger" data-delta="-1">－1</button><button class="btn small danger" data-delta="-2">－2</button></div><input id="pointReason" placeholder="加／扣點原因（建議填寫）" style="margin-top:9px;width:100%"></div></div><h3 class="sectionLabel">習作／實驗／考試進度</h3>${active.length?`<div class="tablewrap"><table><thead><tr><th>日期</th><th>類型／名稱</th><th>狀態</th></tr></thead><tbody>${active.map(t=>`<tr><td>${t.date.slice(5)}</td><td><span class="pill">${t.type}</span> ${esc(t.title)}</td><td><select data-student-task="${t.id}">${taskStatusOptions(t.type).map(opt=>`<option ${taskStatus(t.id,id)===opt?'selected':''}>${opt}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`:'<div class="emptymsg">尚無追蹤項目，請到「習作／實驗／考試」建立。</div>'}<div class="twoCols"><div><h3 class="sectionLabel">出勤紀錄</h3><div id="studentAttendanceHistory">${studentAttendanceHistory(id)}</div></div><div><h3 class="sectionLabel">待完成／待補考</h3>${unmet.length?unmet.map(x=>{let t=cls().tasks.find(t=>t.id===x.taskId);return `<div class="record"><span>${t?.date||''}</span> ${esc(t?.title||'')} <b>${esc(x.status)}</b></div>`}).join(''):'<p class="hint">目前沒有待處理的項目</p>'}</div></div><h3 class="sectionLabel">獎懲歷程</h3>${prs.length?prs.slice(0,12).map(p=>`<div class="record"><span>${p.date}</span> <strong class="${p.delta>0?'pointsPositive':'pointsNegative'}">${p.delta>0?'+':''}${p.delta}</strong> ${esc(p.reason||'課堂表現')}${p.cancelled?'（已取消）':''}</div>`).join(''):'<p class="hint">尚無獎懲紀錄</p>'}<h3 class="sectionLabel">老師備註</h3><textarea id="studentNote">${esc(s.notes||'')}</textarea><div class="actions"><button id="saveStudentNote" class="btn small outline">儲存備註</button></div>`;
  $('modal').classList.remove('hidden');
  document.querySelectorAll('[data-avatar-choice]').forEach(btn=>btn.onclick=()=>{if(!cloudReady||cloudBlocked)return alert('雲端尚未連線，請確認同步後再設定頭像');s.avatar=btn.dataset.avatarChoice;save();openStudent(id);render()});
+ if($('roomActivateTicket'))$('roomActivateTicket').onclick=()=>{if(!roomTicketUse(cl,id))return alert('餵食券不足，請先兌換。');$('modal').classList.add('hidden');restoreClassroomSelection()};
  $('clearStudentAvatar').onclick=()=>{if(!cloudReady||cloudBlocked)return alert('雲端尚未連線');delete s.avatar;save();openStudent(id);render()};
  $('editStudent').onclick=()=>{let name=prompt('修改學生姓名',s.name);if(name===null)return;name=name.trim();if(!name)return alert('姓名不可空白');s.name=name;save();openStudent(id);render()};
  const refreshStudentAtt=bindAttendanceControl($('modalContent'),id,()=>$('studentAttDate').value,()=>{
