@@ -4258,20 +4258,34 @@ async function cloudLoad(){
 }
 function cloudInitWizard(){
  cloudReady=false;document.body.classList.add('cloud-locked');
- const hasLocal=legacyDb&&legacyDb.classes&&CLASSES.every(c=>Array.isArray(legacyDb.classes[c]?.students));
- cloudGateMessage(`<h2>首次登入：雲端尚無班級資料</h2><p>選擇建立七班示範資料，或將這台電腦的舊版資料上傳到雲端。<b>只有第一次建立雲端資料時才能使用這個匯入選項。</b></p><div class="cloudActions"><button id="cloudNew">建立七班示範資料</button>${hasLocal?'<button class="secondary" id="cloudImport">匯入此電腦七班舊資料</button>':''}</div><p class="cloudNote">如已在別台電腦初始化，請不要建立新的資料；先確認是否登入同一個教師帳號。</p>`);
+ // 只辨識此瀏覽器中完整的舊版七班資料；新帳號預設僅建立一個示範班。
+ const hasLocal=legacyDb&&legacyDb.classes&&DEFAULT_CLASSES.every(c=>Array.isArray(legacyDb.classes[c]?.students));
+ cloudGateMessage(`<h2>首次登入：雲端尚無班級資料</h2><p>新教師只會建立 <b>1 個示範班級</b>（含 30 位示範學生），之後可以自行重新命名、刪除示範學生或增加班級。<b>只有第一次建立雲端資料時才能匯入舊資料。</b></p><div class="cloudActions"><button id="cloudNew">建立一班示範資料</button>${hasLocal?'<button class="secondary" id="cloudImport">匯入此電腦七班舊資料</button>':''}</div><p class="cloudNote">如已在別台電腦初始化，請不要建立新的資料；先確認是否登入同一個教師帳號。既有教師資料不會變更。</p>`);
  $('cloudNew').onclick=()=>cloudInitialize(false);
  if(hasLocal)$('cloudImport').onclick=()=>cloudInitialize(true);
 }
 async function cloudInitialize(useLocal){
- if(!confirm(useLocal?'確定要把目前瀏覽器儲存的七班資料上傳到你的教師雲端嗎？請先自行下載 JSON 備份。':'確定初始化七班雲端示範資料嗎？之後可逐班匯入正式名單。'))return;
+ if(!confirm(useLocal?'確定要把目前瀏覽器儲存的七班資料上傳到你的教師雲端嗎？請先自行下載 JSON 備份。':'確定建立一班示範資料嗎？之後可修改班名、名單並新增其他班級。'))return;
  if(useLocal&&!legacyDb)return;
- db=useLocal?JSON.parse(JSON.stringify(legacyDb)):makeState();
+ if(useLocal){
+   db=JSON.parse(JSON.stringify(legacyDb));
+   // 保留匯入舊資料的原始班級清單。
+   CLASSES=DEFAULT_CLASSES.filter(c=>Array.isArray(db.classes?.[c]?.students));
+   if(!CLASSES.length){alert('沒有可匯入的舊版班級資料');return}
+ }else{
+   CLASSES=['demo-1'];
+   db=makeState();
+   db.classMeta['demo-1']={name:'示範班級',active:true};
+ }
+ cl=CLASSES[0];
  if(!Array.isArray(db.labTemplate)||db.labTemplate.length!==5)db.labTemplate=DEFAULT_LAB_TEMPLATE.map(g=>[...g]);
  cloudSnapshots={};cloudRevisions={};cloudBlocked=false;cloudReady=true;
- cloudStatus('正在建立七班雲端紀錄…');
+ cloudStatus(useLocal?'正在匯入舊版班級資料…':'正在建立一班示範資料…');
  await cloudQueueSave();
  if(cloudBlocked){cloudReady=false;cloudInitWizard();alert('雲端初始化失敗；請檢查錯誤訊息及 SQL 設定，勿在其他電腦匯入。');return}
+ cloudRenderQuickClasses();
+ const currentSelect=$('classSelect');
+ if(currentSelect)syncClassOptions();
  cloudUnlock();
 }
 function cloudUnlock(){
