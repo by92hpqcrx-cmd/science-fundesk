@@ -1,0 +1,48 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FunDesk iPhone 掃碼授權</title><style>body{background:#e7f4ed;font-family:system-ui,'Microsoft JhengHei';color:#193d35;margin:0;padding:18px}.panel{max-width:440px;margin:8vh auto;background:white;border-radius:22px;padding:25px;box-shadow:0 10px 30px #153c3022}h1{font-size:25px}input,button{font:inherit;width:100%;padding:13px;margin:8px 0;border-radius:12px;box-sizing:border-box}input{border:1px solid #adc7bd}button{background:#217760;color:white;border:0;font-weight:700}button:disabled{opacity:.45}.hint{color:#526e65;font-size:14px;line-height:1.7}#status{font-weight:700}</style></head><body><main class="panel"><h1>📱 FunDesk 掃碼登入</h1><p class="hint">請確認你正在操作的是自己面前的教室電腦。授權後，該電腦將能使用你的教師帳號存取班級資料。</p><div id="body"><p>正在確認授權連結…</p></div><p id="status" role="status"></p></main><script>
+(()=>{
+const cfg={url:'https://ayvwsexnxvjjcrbtyoof.supabase.co',key:'sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L'};
+const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),id=params.get('id'),phoneSecret=params.get('key');
+if(!/^[a-f0-9-]{36}$/i.test(id||'')||!/^[a-f0-9]{64}$/.test(phoneSecret||'')){$('body').textContent='授權連結不正確，請重新掃描。';return}
+const storageKey='fundesk_qr_phone_session';
+const form='<form id="signin"><label>教師電子郵件<input id="email" type="email" autocomplete="username" required></label><label>教師密碼<input id="password" type="password" autocomplete="current-password" required></label><button>在 iPhone 驗證教師身分</button></form>';
+let session=null;
+try{session=JSON.parse(localStorage.getItem(storageKey)||'null')}catch{}
+async function post(path,body,token){
+ const res=await fetch(cfg.url+path,{method:'POST',headers:{apikey:cfg.key,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body),cache:'no-store'});
+ const data=await res.json().catch(()=>({}));
+ if(!res.ok)throw Error(data.message||data.error_description||'HTTP '+res.status);
+ return data;
+}
+function signin(){
+ $('body').innerHTML=form;
+ $('signin').onsubmit=async e=>{
+  e.preventDefault();$('status').textContent='正在驗證…';
+  try{session=await post('/auth/v1/token?grant_type=password',{email:$('email').value.trim(),password:$('password').value});localStorage.setItem(storageKey,JSON.stringify(session));confirmPage()}
+  catch(err){$('status').textContent='登入失敗：'+err.message}
+ };
+}
+async function confirmPage(){
+ try{
+  if(!session?.access_token)throw Error('請先登入');
+  const res=await fetch(cfg.url+'/auth/v1/user',{headers:{apikey:cfg.key,Authorization:'Bearer '+session.access_token},cache:'no-store'});
+  if(!res.ok)throw Error('手機登入已到期');
+  const user=await res.json();
+  $('body').innerHTML='<p>目前教師帳號：<strong id="teacherEmail"></strong></p><button id="approve">✅ 允許教室電腦登入</button><button id="change" style="background:#edf3f0;color:#17483a">切換教師帳號</button>';
+  $('teacherEmail').textContent=user.email||'';
+  $('change').onclick=()=>{localStorage.removeItem(storageKey);session=null;signin()};
+  $('approve').onclick=async()=>{
+   $('approve').disabled=true;$('status').textContent='正在核准一次性登入…';
+   try{
+    const r=await fetch(cfg.url+'/functions/v1/fundesk-qr-approve',{method:'POST',headers:{apikey:cfg.key,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({id,phoneSecret})});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok)throw Error(data.message||'核准失敗');
+    $('body').innerHTML='<h2>✅ 已授權</h2><p>請回到教室電腦查看 FunDesk。</p>';
+    $('status').textContent='授權只適用於本次掃碼。';
+   }catch(e){$('status').textContent=e.message;$('approve').disabled=false}
+  };
+  $('status').textContent='請確認後才按下允許登入。';
+ }catch{localStorage.removeItem(storageKey);session=null;signin();$('status').textContent='請先驗證教師身分。'}
+}
+if(session)confirmPage();else signin();
+})();
+</script></body></html>
