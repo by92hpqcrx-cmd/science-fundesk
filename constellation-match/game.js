@@ -140,7 +140,7 @@ function memoryMode(){
  main.style.setProperty('--cols',cols);main.style.setProperty('--rows',Math.ceil(count/cols));
  const version=gameId;openMemory=[];block=false;
  cards.forEach(({item,kind},i)=>{
-  const b=document.createElement('button');b.type='button';b.className='memoryCard';
+  const b=document.createElement('button');b.type='button';b.className='memoryCard '+kind;
   b.setAttribute('aria-label','第'+(i+1)+'張未翻開的卡片');
   const content=document.createElement('span');content.className='cardInner';
   if(kind==='image')content.append(getSprite(item));else content.textContent=item.name;
