@@ -36,6 +36,7 @@ button:focus-visible{outline:3px solid #ffc867;outline-offset:2px}
 .hidden{display:none!important}#login{max-width:530px;margin:42px auto}#selectedCount{font-weight:800}
 @media(max-width:700px){.actionSections{grid-template-columns:1fr}.pointQuickEight{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:550px){.actions{grid-template-columns:repeat(2,minmax(0,1fr))}#students{grid-template-columns:repeat(3,minmax(0,1fr))}.student{padding:9px 4px}header{flex-wrap:wrap}}
+.seatToolbar{display:flex;gap:8px;margin-bottom:12px}.seatToolbar .active{background:#246f5d;color:#fff}#students.normalSeats,#students.labSeats{display:block}.seatGrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}.blackboard{margin:12px auto;background:#e8eef7;color:#28415c;border:2px solid #9bacc2;border-radius:9px;text-align:center;padding:10px;width:78%;font-weight:900;letter-spacing:4px}.labGroups{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}.labGroup{grid-column:span 2;background:#f5f9ff;border:2px solid #b9cce2;border-top:5px solid #7597c8;border-radius:12px;padding:7px;text-align:center}.labGroup:nth-child(2){border-top-color:#6b9f95}.labGroup:nth-child(3){border-top-color:#a08cc4}.labGroup:nth-child(4){grid-column:2/span 2;border-top-color:#cd9d65}.labGroup:nth-child(5){border-top-color:#8e9cba}.labCells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-top:8px}.seatGrid .student,.labCells .student{min-width:0;padding:8px 3px;min-height:82px}.emptySeat{opacity:.45;justify-content:center}.labCells .student strong{font-size:14px}.labCells .student span{font-size:12px}@media(max-width:650px){.seatGrid{gap:3px}.seatGrid .student{min-height:68px;padding:5px 1px}.seatGrid .student strong{font-size:12px}.seatGrid .student span{font-size:11px}.labGroups{gap:5px}.labGroup{padding:3px}.labCells{gap:2px}.labCells .student{padding:4px 1px}.labCells .student strong{font-size:11px}.labCells .student span{font-size:10px}.labCells .student .score{font-size:11px}} 
 </style></head>
 <body><header><h1>📱 FunDesk 課堂表現遙控器</h1><button id="logout" class="secondary hidden">🚪 登出</button></header>
 <main>
@@ -46,7 +47,7 @@ button:focus-visible{outline:3px solid #ffc867;outline-offset:2px}
 <div class="controls"><button class="secondary" id="reload">↻ 更新學生與點數</button><button class="secondary" id="selectAll">選全班</button><button class="secondary" id="clear">清除選取</button></div>
 <div class="inlineControls"><label>選擇實驗小組<select id="pointGroup"><option value="0">第一組</option><option value="1">第二組</option><option value="2">第三組</option><option value="3">第四組</option><option value="4">第五組</option></select></label><button class="secondary" type="button" id="selectGroup">選實驗小組</button></div>
 <p class="note">已選取 <span id="selectedCount">0</span> 人。可選個人、全班或實驗小組；全班允許加分，禁止連坐扣分。</p></section>
-<section class="panel"><h2>選擇學生</h2><p class="note">可多選學生，並查看目前積點。</p><div id="students"></div></section>
+<section class="panel"><h2>選擇學生</h2><p class="note">可多選學生，並查看目前積點。</p><div class="seatToolbar"><button type="button" class="secondary active" id="normalLayout">一般座位</button><button type="button" class="secondary" id="labLayout">實驗分組</button></div><div id="students"></div></section>
 <section class="panel"><h2>★ 課堂表現｜加扣點</h2>
 <div class="actionSections">
 <div class="actionSection"><h3>🌟 加點行為</h3><label>選擇加點項目<select id="pointAddBehavior"></select></label><button class="primary" type="button" id="applyAddBehavior">＋ 登記加點</button></div>
@@ -67,8 +68,8 @@ const KEY="sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L";
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const today=()=>{const a=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Taipei",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()).map(x=>[x.type,x.value]));return a.year+"-"+a.month+"-"+a.day};
-const behaviors=[['主動發言',1,'🙋'],['專心上課',1,'👂'],['完成任務',2,'✏️'],['合作良好',2,'🤝'],['實驗表現',2,'🔬'],['主動服務',2,'⭐'],['筆記認真',2,'📝'],['平板使用優良',2,'💻'],['平時考100分',5,'💯'],['期中期末考100分',10,'🏅'],['習作字體工整（每次）',2,'✍️'],['習作書寫無錯誤（每次）',2,'✅'],['干擾上課',-1,'🗣️'],['任意走動',-1,'🚶'],['未帶課習',-1,'📚'],['上課分心',-1,'💭'],['上課遲到',-1,'⏰'],['不尊重同學',-2,'😠'],['實驗違規',-2,'⚠️'],['平板違規',-2,'🎮'],['在自然教室喧鬧',-1,'🔊'],['攜帶非學用品至教室',-1,'🎲'],['亂動課室物品',-1,'🧪'],['發言不舉手',-1,'✋'],['說髒話',-2,'🚫']];
-let session=null,rows=[],meta={},selection=new Set(),saving=false,classCode="";
+const behaviors=[['主動發言',1,'🙋'],['專心上課',1,'👂'],['完成任務',2,'✏️'],['合作良好',2,'🤝'],['實驗表現',2,'🔬'],['主動服務',2,'⭐'],['筆記認真',2,'📝'],['平板使用優良',2,'💻'],['平時考100分',5,'💯'],['期中期末考100分',10,'🏅'],['習作字體工整（每次）',2,'✍️'],['習作書寫無錯誤（每次）',2,'✅'],['干擾上課',-1,'🗣️'],['任意走動',-1,'🚶'],['未帶課習',-1,'📚'],['上課分心',-1,'💭'],['上課遲到',-1,'⏰'],['不尊重同學',-2,'😠'],['實驗違規',-2,'⚠️'],['平板違規',-2,'🎮'],['在自然教室喧鬧',-1,'🔊'],['攜帶非學用品至教室',-1,'🎲'],['亂動課室物品',-1,'🧪'],['發言不舉手',-1,'✋'],['說髒話',-2,'🚫'],['上課吃東西',-2,'🍪'],['上課玩東西',-2,'🧸']];
+let session=null,rows=[],meta={},selection=new Set(),saving=false,classCode="",seatLayout="normal";
 function status(s,type=""){const e=$("status");e.textContent=s;e.className="status "+type}
 async function api(path,options={},auth=false,retry=true){
  const headers={apikey:KEY,...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})};
@@ -106,9 +107,31 @@ function selectGroup(){
 }
 function draw(){
  const students=people(),ids=new Set(students.map(x=>x.id));selection=new Set([...selection].filter(x=>ids.has(x)));
- $("students").innerHTML=students.map(s=>'<button class="student '+(selection.has(s.id)?"active":"")+'" data-sid="'+esc(s.id)+'" aria-pressed="'+selection.has(s.id)+'"><strong>'+esc(s.no)+' 號</strong><span>'+esc(s.name)+'</span><span class="score">'+(studentTotal(s.id)>0?'+':'')+studentTotal(s.id)+' 點</span></button>').join("")||'<p>本班尚未有學生名單。</p>';
+ const payload=current()?.payload||{},seatMap=payload.seats||{},shared=rows.find(x=>x.class_code==='shared')?.payload||{};
+ let seats=seatMap[seatLayout];
+ if(!Array.isArray(seats)||!seats.length){
+  if(seatLayout==='lab'&&Array.isArray(shared.labTemplate))seats=shared.labTemplate.flat().map(no=>students.find(p=>Number(p.no)===Number(no))?.id||null);
+  else seats=students.map(p=>p.id);
+ }
+ const byId=new Map(students.map(p=>[p.id,p]));
+ const cell=(sid)=>{const st=byId.get(sid);if(!st)return '<div class="student emptySeat">空位</div>';
+  const total=studentTotal(sid);
+  return '<button type="button" class="student '+(selection.has(sid)?'active':'')+'" data-sid="'+esc(sid)+'" aria-pressed="'+selection.has(sid)+'"><strong>'+esc(st.no)+' 號</strong><span>'+esc(st.name)+'</span><span class="score">'+(total>0?'+':'')+total+' 點</span></button>';
+ };
+ if(seatLayout==='normal'){
+  $("students").className='normalSeats';
+  $("students").innerHTML='<div class="seatGrid">'+seats.slice().reverse().map(cell).join('')+'</div><div class="blackboard">講 台 ／ 黑 板</div>';
+ }else{
+  $("students").className='labSeats';
+  const names=['第一組','第二組','第三組','第四組','第五組'];
+  $("students").innerHTML='<div class="blackboard">黑 板</div><div class="labGroups">'+names.map((name,i)=>'<div class="labGroup group'+(i+1)+'"><b>'+name+'</b><div class="labCells">'+seats.slice(i*6,i*6+6).map(cell).join('')+'</div></div>').join('')+'</div>';
+ }
+ $("normalLayout").classList.toggle('active',seatLayout==='normal');
+ $("labLayout").classList.toggle('active',seatLayout==='lab');
  $("selectedCount").textContent=String(selection.size);
 }
+$("normalLayout").onclick=()=>{seatLayout='normal';draw()};
+$("labLayout").onclick=()=>{seatLayout='lab';draw()};
 function chooseClass(){classCode=$("classes").value;selection.clear();draw()}
 async function reload(silent=false){
  if(saving)return;
@@ -149,7 +172,7 @@ $("students").onclick=e=>{const b=e.target.closest("[data-sid]");if(!b)return;co
 $("selectGroup").onclick=selectGroup;
 $("pointAddBehavior").innerHTML=behaviors.map(([name,d],i)=>d>0?'<option value="'+i+'">'+esc(name)+'（+'+d+' 點）</option>':'').join('');
 $("pointDeductBehavior").innerHTML=behaviors.map(([name,d],i)=>d<0?'<option value="'+i+'">'+esc(name)+'（'+d+' 點）</option>':'').join('');
-$("reasons").innerHTML=behaviors.slice(0,8).map(([name,d,emoji],i)=>'<button type="button" class="behaviorButton" data-reason="'+i+'" aria-label="'+esc(name)+' 加 '+d+' 點"><b>'+emoji+' ＋'+d+' 點</b><span>'+esc(name)+'</span></button>').join('');
+$("reasons").innerHTML=[...behaviors.map((r,i)=>[...r,i]).filter(r=>r[1]<0).slice(0,4),...behaviors.map((r,i)=>[...r,i]).filter(r=>r[1]>0).slice(0,4)].map(([name,d,emoji,i])=>'<button type="button" class="behaviorButton" data-reason="'+i+'" aria-label="'+esc(name)+' 加 '+d+' 點"><b>'+emoji+' ＋'+d+' 點</b><span>'+esc(name)+'</span></button>').join('');
 $("reasons").onclick=e=>{const b=e.target.closest('[data-reason]');if(!b)return;const [name,delta]=behaviors[Number(b.dataset.reason)];addPoints(delta,name)};
 function applyBehavior(selectId,sign){const row=behaviors[Number($(selectId).value)];if(!row||Math.sign(row[1])!==sign)return status('請選擇有效行為','error');addPoints(row[1],row[0])}
 $("applyAddBehavior").onclick=()=>applyBehavior('pointAddBehavior',1);
