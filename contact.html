@@ -113,10 +113,11 @@ function pointPanel(points,published,entryDate){
  if(!published)return '';
  const detail=points.length?points.map(p=>{
   const delta=Number(p.delta)||0;
+  if(p.classWide===true){return `<div class="pointRecord"><b>🌟 全班加點　+${esc(delta)} 點／人</b>${p.date&&p.date!==entryDate?`<div class="pointReason">記錄日期：${esc(p.date)}</div>`:''}<div class="pointReason">原因：${esc(p.reason||'課堂表現')}</div></div>`;}
   const seatNo=String(p.no??p.seatNo??p.seat_no??'').trim()||'未提供';
    return `<div class="pointRecord"><b>座號：${esc(seatNo)}　姓名：${esc(p.name||'未提供')}　${delta>0?'+':''}${esc(delta)} 分</b>${p.date&&p.date!==entryDate?`<div class="pointReason">記錄日期：${esc(p.date)}</div>`:''}<div class="pointReason">原因：${esc(p.reason||'（無備註）')}</div></div>`;
  }).join(''):'<p>本日無加扣點紀錄。</p>';
- return `<div class="pointPanel ${showPoints?'':'pointHidden'}"><h3>⭐ FunDesk 學生加扣點紀錄</h3><div class="pointDetails"><p class="pointNotice">含學生姓名與加扣分原因。持有聯絡簿網址的人可取得已發布資料，投影前請隱藏。</p>${detail}</div></div>`;
+ return `<div class="pointPanel ${showPoints?'':'pointHidden'}"><h3>⭐ FunDesk 學生加扣點紀錄</h3><div class="pointDetails"><p class="pointNotice">個別加扣點顯示姓名；全班加點僅顯示一筆摘要。持有聯絡簿網址的人可取得已發布資料，投影前請隱藏。</p>${detail}</div></div>`;
 }
 function article(e,wrapped=true){
  const parsed=splitPoints(e.reminders);
