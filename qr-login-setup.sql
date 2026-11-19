@@ -14,7 +14,7 @@ create table if not exists public.fundesk_qr_login_requests (
 alter table public.fundesk_qr_login_requests enable row level security;
 revoke all on public.fundesk_qr_login_requests from anon, authenticated;
 create or replace function public.fundesk_qr_create(p_id uuid,p_phone_secret text,p_desktop_secret text)
-returns boolean language plpgsql security definer set search_path=public,pg_temp as $$
+returns boolean language plpgsql security definer set search_path=public,extensions,pg_temp as $$
 begin
  if length(p_phone_secret)<32 or length(p_desktop_secret)<32 then raise exception 'Invalid challenge'; end if;
  delete from public.fundesk_qr_login_requests where expires_at<now()-interval '1 hour';
@@ -23,7 +23,7 @@ begin
  return true;
 end $$;
 create or replace function public.fundesk_qr_poll(p_id uuid,p_desktop_secret text)
-returns table(state text,auth_token_hash text) language plpgsql security definer set search_path=public,pg_temp as $$
+returns table(state text,auth_token_hash text) language plpgsql security definer set search_path=public,extensions,pg_temp as $$
 declare r public.fundesk_qr_login_requests%rowtype;
 begin
  select * into r from public.fundesk_qr_login_requests where id=p_id
