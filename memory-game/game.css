@@ -52,3 +52,42 @@ button{font:inherit;cursor:pointer}button:focus-visible,input:focus-visible+span
 .shell:fullscreen .footnote{display:none}
 @media(max-height:680px){.shell:fullscreen .heading span,.shell:fullscreen .chosenPet{display:none}.shell:fullscreen .topbar{height:45px}.shell:fullscreen .toolbar{padding:2px 7px}.shell:fullscreen .levels label span{padding:5px 8px}.shell:fullscreen .playarea{padding:4px}.shell:fullscreen .card-back small{display:none}}
 @media(prefers-reduced-motion:reduce){.card-inner{transition:none}.spark,.memory-card.nope .card-inner{animation:none}}
+
+/* 四人賽：選擇學生、積分看板、當前玩家 */
+.multiplayer{padding:8px 12px;display:grid;gap:7px;border:2px solid #bfdfd0;border-radius:17px;background:#ffffffec}
+.modeRow{display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap;font-size:15px;font-weight:800}
+.modeRow>strong{font-size:17px}.modeRow label{display:flex;gap:5px;align-items:center;white-space:nowrap;cursor:pointer}
+.modeRow input{accent-color:#319f79;width:17px;height:17px}
+#rosterState{margin-left:auto;font-size:12px;color:#577f70}
+.playerSetup[hidden],.scoreboard[hidden],.turnNotice[hidden]{display:none!important}
+.playerSetup{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:8px;border:1px solid #b5dcd1;border-radius:14px;background:#f4fff8}
+.playerIntro{flex:1 1 100%;display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap}.playerIntro strong{font-size:17px}.playerIntro span{color:#5b8174;font-size:13px}
+.playerSelectors{flex:1 1 600px;display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px}
+.playerSelectors label{font-size:14px;font-weight:900;display:grid;gap:4px}
+.playerSelectors select{width:100%;min-width:0;padding:8px;border:2px solid #a8d5bf;border-radius:10px;background:#fff;color:#255b48;font-size:15px}
+.scoreboard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.scoreCard{min-width:0;padding:7px 8px;border:3px solid #c9dfd5;border-radius:13px;background:#f8fff9;display:grid;grid-template-columns:36px 1fr auto;grid-template-rows:auto auto;gap:2px 6px;align-items:center;color:#315c4f}
+.scoreCard.active{border-color:#efaf48;background:#fff3d1;box-shadow:0 0 0 2px #fbe9b6}
+.scoreAvatar{grid-row:1/3;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#e4f7ee;font-size:23px;overflow:hidden}
+.scoreAvatar img{width:100%;height:100%;object-fit:contain}
+.scoreCard b{font-size:clamp(12px,1.15vw,17px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scoreCard strong{font-size:clamp(16px,1.5vw,22px);color:#257951;font-weight:950;white-space:nowrap}
+.scoreCard small{grid-column:2/4;color:#658477;font-size:12px}
+.turnNotice{text-align:center;padding:4px 8px;border-radius:9px;background:#e9f9ef;color:#176a4e;font-weight:950;font-size:clamp(14px,1.2vw,18px)}
+.winDialog #winResult{white-space:pre-line;text-align:center;font-size:clamp(15px,1.5vw,21px)}
+@media(max-width:800px){.playerSelectors{grid-template-columns:repeat(2,minmax(0,1fr))}.scoreboard{gap:4px}.scoreCard{padding:3px;grid-template-columns:1fr;grid-template-rows:repeat(3,auto);justify-items:center;text-align:center}.scoreAvatar{grid-row:auto}.scoreCard small{grid-column:auto}}
+@media(max-width:470px){.playerSelectors{grid-template-columns:repeat(2,minmax(0,1fr))}.modeRow{font-size:12px}.modeRow>strong{font-size:14px}#rosterState{flex:1 1 100%}.scoreAvatar{display:none}.scoreCard b{font-size:11px}.scoreCard strong{font-size:14px}.scoreCard small{font-size:10px}.multiplayer{padding:5px}.turnNotice{font-size:12px}}
+.shell:fullscreen .multiplayer{flex:0 0 auto;padding:3px 8px;gap:3px}
+.shell:fullscreen .modeRow{font-size:13px;gap:5px 9px}
+.shell:fullscreen .modeRow>strong{font-size:14px}
+.shell:fullscreen .scoreCard{padding:3px 6px;min-height:38px}
+.shell:fullscreen .scoreAvatar{width:27px;height:27px}
+.shell:fullscreen .scoreCard b{font-size:clamp(11px,1vw,15px)}
+.shell:fullscreen .scoreCard strong{font-size:clamp(14px,1.2vw,19px)}
+.shell:fullscreen .scoreCard small{font-size:10px}
+.shell:fullscreen .turnNotice{padding:2px;font-size:13px}
+.shell:fullscreen .playerSetup{padding:3px 6px}
+.shell:fullscreen .playerIntro{display:none}
+.shell:fullscreen .playerSelectors select{padding:3px}
+.shell:fullscreen .playerSetup .restart{padding:5px}
+@media(max-height:730px){.shell:fullscreen .multiplayer .modeRow{display:none}.shell:fullscreen .scoreAvatar{display:none}.shell:fullscreen .scoreCard{grid-template-columns:1fr 1fr;grid-template-rows:auto}.shell:fullscreen .scoreCard small{display:none}.shell:fullscreen .scoreCard b{font-size:12px}.shell:fullscreen .turnNotice{font-size:12px}}
