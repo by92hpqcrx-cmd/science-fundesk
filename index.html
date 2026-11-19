@@ -3803,8 +3803,27 @@ function contactDailyPoints(date,code=cl){
   const first=group[0],unique=new Set(group.map(p=>String(p.sid)));
   if(Number(first.delta)>0&&unique.size===people.size&&group.length===people.size&&group.every(p=>Number(p.delta)===Number(first.delta)&&String(p.reason||'')===String(first.reason||'')))valid.add(key);
  }
+ // 舊版全班加點沒有批次 ID；只有同日、同原因、同點數，且每位在籍生
+ // 都恰有一筆時，才安全地合併。避免把部分小組或個別加分誤判為全班。
+ const legacy=new Map();
+ entries.forEach((p,i)=>{
+  if(p.classAwardBatchId||!(Number(p.delta)>0)||p.kind) return;
+  const key=JSON.stringify([Number(p.delta),String(p.reason||'')]);
+  if(!legacy.has(key))legacy.set(key,[]);
+  legacy.get(key).push({p,i});
+ });
+ const legacyFirst=new Map(),legacySkip=new Set();
+ for(const group of legacy.values()){
+  if(!people.size||group.length!==people.size)continue;
+  if(new Set(group.map(x=>String(x.p.sid))).size!==people.size)continue;
+  const first=group[0];
+  legacyFirst.set(first.i,{classWide:true,delta:Number(first.p.delta)||0,reason:String(first.p.reason||'').slice(0,90),count:people.size});
+  group.slice(1).forEach(x=>legacySkip.add(x.i));
+ }
  const shown=new Set();
- return entries.flatMap(p=>{
+ return entries.flatMap((p,i)=>{
+  if(legacySkip.has(i))return [];
+  if(legacyFirst.has(i))return [legacyFirst.get(i)];
   const key=String(p.classAwardBatchId||'');
   if(valid.has(key)){
    if(shown.has(key))return [];
@@ -3835,16 +3854,10 @@ function contactQueuePointsSync(code,date,fillMissingSeats=false){
    const oldPoints=Array.isArray(parsed.points)?parsed.points:[];
    const sameDay=oldPoints.filter(p=>String(p.date||entry.entry_date)===date);
    const keepOtherDates=oldPoints.filter(p=>String(p.date||entry.entry_date)!==date);
-   let same=current;
-   if(fillMissingSeats){
-    same=sameDay.map(point=>{
-     if(!point||point.no||point.seatNo||point.seat_no)return point;
-     const matches=current.filter(item=>item.name===point.name&&item.delta===Number(point.delta)&&item.reason===(point.reason||''));
-     const seats=new Set(matches.map(item=>item.no).filter(Boolean));
-     return seats.size===1?{...point,no:seats.values().next().value}:point;
-    });
-    if(JSON.stringify(same)===JSON.stringify(sameDay))return;
-   }
+   // 更新已發布的當日快照，包含舊版全班加點摘要轉換。
+   // 不修改其他日期，不重複建立公開日期，也不改動學生原始積點。
+   const same=current;
+   if(fillMissingSeats&&JSON.stringify(same)===JSON.stringify(sameDay))return;
    const points=[...keepOtherDates,...same];
    // 日期附於每筆紀錄；同一天的重試會覆蓋該日快照，不會重複累加。
    const reminders=parsed.reminders+(parsed.reminders?'\n':'')+CONTACT_POINT_START+'\n'+JSON.stringify(points)+'\n'+CONTACT_POINT_END;
@@ -3922,7 +3935,10 @@ function contactFill(data,code){
  const entries=contactCache[code].entries;
  for(const entry of entries){
   const {points}=contactSplitPoints(entry.reminders);
-  if(points.some(p=>p&&!p.no&&!p.seatNo&&!p.seat_no)&&contactDailyPoints(entry.entry_date,code).length){
+  const parsed=contactSplitPoints(entry.reminders);
+  const current=contactDailyPoints(entry.entry_date,code).map(p=>({...p,date:entry.entry_date}));
+  const publishedDay=points.filter(p=>String(p.date||entry.entry_date)===entry.entry_date);
+  if(parsed.published&&JSON.stringify(publishedDay)!==JSON.stringify(current)){
    contactQueuePointsSync(code,entry.entry_date,true);
   }
  }
