@@ -2417,7 +2417,7 @@ function bindRedemption(){
  };
 }
 
-function pointAdd(ids,delta,reason){const code=cl,date=$('sessionDate').value;ids.forEach(id=>{if(student(id))cls().points.push({sid:id,date,delta,reason:reason||'課堂表現'})});save();render();contactQueuePointsSync(code,date)}
+function pointAdd(ids,delta,reason){const code=cl,date=$('sessionDate').value;const uniqueIds=[...new Set(ids.map(String))];const enrolled=students();const allClass=Number(delta)>0&&enrolled.length>0&&uniqueIds.length===enrolled.length&&enrolled.every(s=>uniqueIds.includes(String(s.id)));const batchId=allClass?uid():null;ids.forEach(id=>{if(student(id))cls().points.push({sid:id,date,delta,reason:reason||'課堂表現',...(batchId?{classAwardBatchId:batchId}:{})})});save();render();contactQueuePointsSync(code,date)}
 function pointCards(){return [...students()].sort((a,b)=>a.no-b.no).map(s=>`<button class="personCard ${pointSelection.has(s.id)?'selected':''}" data-lab-group="${studentGroupIndex(s.id)+1}" data-point-person="${s.id}" aria-pressed="${pointSelection.has(s.id)}"><b>${s.no} 號</b>${avatarNamed(s)}<strong>可用 ${ptotal(s.id)} 點</strong><small>待抵扣 ${ppenalty(s.id)} 點</small></button>`).join('')}
 function renderPoints(){return `<section class="panel"><div class="panelHead"><h2>★ ${esc(classDisplay(cl))}課堂表現</h2><span class="pill">點學生卡片可多選</span></div><div class="actions"><button class="btn small outline" data-select-points="all">選全班</button><button class="btn small outline" data-select-points="clear">清除選取</button><button class="btn small outline" data-select-points="group">選實驗小組</button><select id="pointGroup">${['第一組','第二組','第三組','第四組','第五組'].map((x,i)=>`<option value="${i}">${x}</option>`).join('')}</select></div><p class="hint"><a href="./remote.html" target="_blank" rel="noopener noreferrer">📱 開啟平板加扣分遙控器 ↗</a>（使用同一個教師帳號，平板操作會同步回這個頁面）</p><p class="hint">已選 <strong id="selectedPointCount">${pointSelection.size}</strong> 位；只影響目前 ${classDisplay(cl)}。點數與原因保留在學生紀錄。</p><div id="pointPeople" class="personGrid">${pointCards()}</div><div class="pointActionSections"><div class="pointActionSection"><h3>🌟 加點行為</h3><label for="pointAddBehavior">選擇加點項目</label><select id="pointAddBehavior">${BEHAVIORS.map(([name,d],i)=>d>0?`<option value="${i}">${esc(name)}（+${d} 點）</option>`:'').join('')}</select><button class="btn" id="applyAddBehavior">＋ 登記加點</button></div><div class="pointActionSection"><h3>📌 扣點行為</h3><label for="pointDeductBehavior">選擇扣點項目</label><select id="pointDeductBehavior">${BEHAVIORS.map(([name,d],i)=>d<0?`<option value="${i}">${esc(name)}（${d} 點）</option>`:'').join('')}</select><button class="btn danger" id="applyDeductBehavior">－ 登記扣點</button></div></div><section class="pointLedgerPanel"><h3>🧾 積點抵扣／誤記取消</h3><p class="hint">請先選擇一位學生。積點抵扣會同時扣除等值可用積點與待抵扣點數；取消誤記保留稽核紀錄。</p><label>選擇學生 <select id="pointLedgerStudent"><option value="">請選擇學生</option>${[...students()].sort((a,b)=>a.no-b.no).map(s=>`<option value="${esc(s.id)}">${s.no} 號 ${esc(s.name)}｜可用 ${ptotal(s.id)}｜待抵扣 ${ppenalty(s.id)}</option>`).join('')}</select></label><div id="pointLedgerDetails"></div></section><div class="actions"><label>自訂點數 <input type="number" id="customPoint" value="1" min="-100" max="100" style="width:90px"></label><button class="btn outline" id="giveCustomPoint">套用</button></div><label class="inlineLabel">補充備註 <input id="pointsReason" placeholder="選填，另可補充行為說明" style="min-width:220px;flex:1"></label><h3>常用行為一鍵記錄（8 格）</h3><div class="behaviorGrid pointQuickEight">${[...BEHAVIORS.filter(row=>row[1]<0).slice(0,4),...BEHAVIORS.filter(row=>row[1]>0).slice(0,4)].map(([name,d,emoji])=>`<button type="button" class="behaviorButton" data-behavior="${esc(name)}" data-value="${d}" aria-label="${esc(name)} ${d>0?'加':'扣'} ${Math.abs(d)} 點"><b>${emoji} ${d>0?'＋':'－'}${Math.abs(d)} 點</b><span>${esc(name)}</span></button>`).join('')}</div><p class="hint">可選個人、全班或某個實驗小組，再按加減分或常用行為。全班可加分；全班扣分會被阻擋，以免誤操作或形成連坐處罰。違規請先提醒並記錄具體行為。</p></section>`}
 function correctionTasks(){return cls().tasks.filter(t=>t.type!=='考試')}
@@ -3792,12 +3792,27 @@ function contactSplitPoints(text){
  return {reminders:contactStripClassName((v.slice(0,a)+v.slice(b+CONTACT_POINT_END.length)).trim()),points,published:true};
 }
 function contactDailyPoints(date,code=cl){
- const people=new Map((db.classes[code]?.students||[]).map(x=>[x.id,x]));
- return (db.classes[code]?.points||[]).filter(p=>p.date===date&&p.kind!=='redemption'&&people.has(p.sid)).map(p=>{
- const st=people.get(p.sid);return {no:st.no,name:String(st.name||'').slice(0,25),delta:Number(p.delta)||0,reason:String(p.reason||'').slice(0,90)};
+ const people=new Map((db.classes[code]?.students||[]).map(x=>[String(x.id),x]));
+ const entries=(db.classes[code]?.points||[]).filter(p=>p.date===date&&p.kind!=='redemption'&&!p.cancelled&&people.has(String(p.sid)));
+ const batches=new Map();
+ for(const p of entries){if(!p.classAwardBatchId)continue;const key=String(p.classAwardBatchId);if(!batches.has(key))batches.set(key,[]);batches.get(key).push(p)}
+ const valid=new Set();
+ for(const [key,group] of batches){
+  const first=group[0],unique=new Set(group.map(p=>String(p.sid)));
+  if(Number(first.delta)>0&&unique.size===people.size&&group.length===people.size&&group.every(p=>Number(p.delta)===Number(first.delta)&&String(p.reason||'')===String(first.reason||'')))valid.add(key);
+ }
+ const shown=new Set();
+ return entries.flatMap(p=>{
+  const key=String(p.classAwardBatchId||'');
+  if(valid.has(key)){
+   if(shown.has(key))return [];
+   shown.add(key);
+   return [{classWide:true,delta:Number(p.delta)||0,reason:String(p.reason||'').slice(0,90),count:people.size}];
+  }
+  const st=people.get(String(p.sid));
+  return [{no:st.no,name:String(st.name||'').slice(0,25),delta:Number(p.delta)||0,reason:String(p.reason||'').slice(0,90)}];
  });
 }
-
 // After explicit publication by a teacher, keep the shared view up to date.
 // Never create a new public entry or expose a date that the teacher has not opted in to share.
 let contactPointsSyncQueue=Promise.resolve();
