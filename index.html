@@ -4147,6 +4147,8 @@ async function fundeskEnforceIdleLogout(){
  if(gate)gate.hidden=false;
  cloudGateMessage('<h2>🔒 已閒置 40 分鐘</h2><p>為保護班級與學生資料，正在結束教師登入並確認雲端儲存。</p>');
  try{await cloudQueue;}catch(e){console.warn('閒置登出時雲端儲存狀態：',e);}
+ // 僅撤銷這台電腦的 Refresh Token，不登出教師其他裝置。
+ try{await cloudFetch('/auth/v1/logout?scope=local',{method:'POST'},false,false)}catch(e){console.warn('遠端撤銷登入未完成；仍會清除本機憑證',e)}
  cloudReady=false;
  cloudSession=null;
  sessionStorage.removeItem('fundesk_cloud_session');
