@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>🏝️ 家園探險王｜國小社會闖關</title>
+<style>
+:root{--ink:#204c56;--deep:#156b76;--cream:#fff9e9;--aqua:#d9f5f2;--gold:#fcd987;--shadow:0 16px 36px #27515b22}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 12% 16%,#fff8ce 0,transparent 32%),linear-gradient(150deg,#a9e9df,#d8f3fd 54%,#f5ead2);color:var(--ink);font:500 18px/1.55 system-ui,'Microsoft JhengHei',sans-serif;min-height:100vh}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.4;cursor:not-allowed}header{max-width:1120px;margin:auto;padding:20px 22px 0;display:flex;align-items:center;justify-content:space-between;gap:12px}.logo{font-size:clamp(21px,3vw,31px);font-weight:900;color:#105b68}.tiny{font-size:14px;color:#58767a}.linkBtn{border:2px solid #a6d5d3;background:#fffefb;border-radius:999px;padding:8px 16px;color:var(--deep);font-weight:800}main{max-width:1120px;margin:10px auto 36px;padding:0 18px}section.screen{background:#ffffffdd;border:3px solid #fff;border-radius:32px;box-shadow:var(--shadow);padding:clamp(20px,4.5vw,50px);min-height:540px;position:relative;overflow:hidden}h1,h2,h3,p{margin:0}h1{font-size:clamp(32px,5vw,58px);line-height:1.23}h2{font-size:clamp(25px,3vw,39px);line-height:1.3}h3{font-size:22px}p{margin-top:12px}.center{text-align:center}.hero{padding:24px 0 16px}.hero .mascot{font-size:83px;line-height:1.2;filter:drop-shadow(0 8px 3px #8a9f8140);margin:12px}.sub{color:#5d7b7b;font-size:17px}.pill{display:inline-block;border-radius:999px;padding:5px 13px;background:#e3f7f4;color:#166c77;font-weight:800;font-size:14px;margin:8px 3px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin:26px 0}.cardBtn{border:3px solid #e0f0eb;border-radius:24px;padding:25px 20px;background:#fff;text-align:left;box-shadow:0 8px 16px #27686c14;min-height:140px;color:#174e58;transition:transform .13s,border-color .13s;display:flex;flex-direction:column;justify-content:center;gap:5px}.cardBtn:hover,.cardBtn:focus-visible{transform:translateY(-4px);border-color:#50bdb4;outline:none}.cardBtn .emoji{font-size:44px}.cardBtn strong{font-size:24px}.cardBtn small{font-size:15px;color:#638087}.primary{background:linear-gradient(110deg,#128b88,#08717c);color:white;border:0;border-radius:18px;padding:14px 26px;font-weight:900;box-shadow:0 7px 0 #115c63}.primary:active{transform:translateY(4px);box-shadow:0 3px 0 #115c63}.secondary{border:2px solid #acd9d4;background:white;color:#146472;border-radius:17px;padding:12px 20px;font-weight:800}.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}.stat{background:#e9f7f6;border:2px solid #d5eeee;border-radius:15px;padding:8px 15px;font-weight:900}.progress{background:#e9f4e9;height:17px;border-radius:40px;overflow:hidden;margin:17px 0 23px}.progress>b{display:block;background:linear-gradient(90deg,#52bba7,#f2bb56);height:100%;width:0%;transition:width .2s}.question{background:#fff9e9;border:3px solid #f6e4b8;padding:clamp(20px,4vw,37px);border-radius:25px;font-size:clamp(22px,2.8vw,32px);font-weight:850;line-height:1.65;min-height:150px;display:flex;align-items:center}.answers{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:20px 0}.answer{border:3px solid #e7e6dc;padding:22px 16px;background:#fff;border-radius:21px;font-size:clamp(24px,3vw,30px);font-weight:900;color:#235a61}.answer:hover:not(:disabled){border-color:#65c7ba;background:#ecfaf7}.answer.good{background:#d9f6dc;border-color:#46b97a}.answer.bad{background:#ffebdf;border-color:#e48a80}.feedback{border-radius:20px;padding:17px 22px;background:#eff7ff;border:2px solid #d1e3e9;margin:17px 0;font-size:17px}.feedback strong{display:block;font-size:23px}.controls{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}.scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:15px 0}.player{background:#fff;border:3px solid #e5eef0;border-radius:20px;padding:12px 17px;display:flex;justify-content:space-between;align-items:center;font-size:22px;font-weight:850}.player.active{border-color:#f2b84f;background:#fff4cf}.player:nth-child(2){background:#f3e9ff}.buzzerZone{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:18px 0}.buzzer{border:0;border-radius:25px;padding:31px 10px;font-size:clamp(23px,3.1vw,36px);font-weight:950;color:#fff;box-shadow:inset 0 -8px #0002}.buzzer.one{background:#2a95aa}.buzzer.two{background:#9261bf}.buzzer:active:not(:disabled){transform:translateY(3px)}.hint{margin:7px 0 10px;color:#557677}.bigResult{font-size:clamp(34px,5vw,55px);font-weight:950;text-align:center;margin:10px}.stars{font-size:70px;text-align:center}.footer{text-align:center;font-size:13px;color:#547b83;padding:0 12px 25px}#fireworks{position:fixed;inset:0;z-index:20;pointer-events:none;width:100%;height:100%}.hidden{display:none!important}.confetti{font-size:32px}.choiceCnt{font-size:15px;font-weight:700;color:#668489}input[type=number]{width:84px;border-radius:14px;border:2px solid #badbd2;padding:9px}.settings{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;background:#ebf7f4;border-radius:20px;padding:17px;margin:16px 0}.help{background:#fff;border-left:5px solid #eac27d;border-radius:8px;padding:8px 13px;color:#507276;margin-top:18px;font-size:15px}@media(max-width:620px){header{padding:12px 16px 0}.logo{font-size:21px}section.screen{min-height:460px;border-radius:22px;padding:18px}.cards{grid-template-columns:1fr}.cardBtn{min-height:95px;padding:16px 18px}.answers{gap:9px}.answer{padding:14px}.player{font-size:16px;padding:12px}.question{min-height:140px}.buzzer{padding:25px 5px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+/* 臺灣元素：島嶼剪影、山脈、海浪、稻田、船與港口的輕柔彩繪背景。 */
+body{background:linear-gradient(150deg,#b4e9e0 0%,#d8eff6 47%,#faecd2 100%);background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.29;background-image:url("assets/taiwan-landscape.svg");background-repeat:no-repeat;background-size:cover;background-position:center bottom;z-index:-1}
+header{max-width:1280px;padding:12px 18px 0}
+main{max-width:1280px;margin-top:10px}
+.headerActions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.heroSetup{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:23px;padding:10px 14px 19px;background:linear-gradient(110deg,#e5faf6ed,#fff3d8d4);border:2px solid #d3e9df}
+.heroText{max-width:78%}.heroSetup h1{font-size:clamp(33px,4vw,49px)}.heroSetup p{margin:5px 0}.scenery{display:flex;align-items:center;gap:2px;font-size:clamp(25px,3.2vw,52px)}.scenery span:nth-child(2){transform:translateY(15px)}.scenery span:nth-child(3){transform:translateY(-10px)}
+.setupGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0 10px}.setupStep{background:#f5fdfb;border:2px solid #dcefe8;border-radius:20px;padding:15px 17px}.setupStep.full{grid-column:1/-1}.setupStep h3{font-size:20px;margin-bottom:10px}.modePick,.unitPick,.activityPick{display:grid;gap:9px}.modePick{grid-template-columns:repeat(2,minmax(0,1fr))}.unitPick{grid-template-columns:repeat(3,minmax(0,1fr))}.activityPick{grid-template-columns:repeat(3,minmax(0,1fr))}.selectTile{color:#22545c;background:#fff;border:2px solid #c9e0db;border-radius:15px;padding:12px 11px;font-weight:850;font-size:17px;text-align:left;min-height:80px;line-height:1.35;box-shadow:0 3px 8px #174f5c10}.selectTile small{display:block;margin-top:6px;font-weight:600;font-size:13px;color:#607c7d}.selectTile em{display:inline-block;font-size:12px;font-style:normal;border-radius:99px;background:#ebf6f2;padding:2px 9px;margin-top:5px}.selectTile:hover,.selectTile:focus-visible{border-color:#28a4a2;outline:2px solid #9cd9c9}.selectTile.chosen{background:#d9f7eb;border:3px solid #119e8d;box-shadow:0 0 0 2px #a1ebd1}.countOptions{display:flex;flex-wrap:wrap;align-items:center;gap:18px}.countOptions label{font-weight:800}.countOptions select{border:2px solid #8fcfcb;background:white;color:var(--ink);border-radius:12px;padding:10px 18px}.setupBottom{display:flex;gap:15px;align-items:center;justify-content:space-between}.setupBottom .help{flex:1;margin:3px 0}.launch{font-size:23px;white-space:nowrap}
+section.screen{min-height:unset;padding:clamp(20px,3vw,36px)}
+:fullscreen body{height:100vh;overflow:auto} :fullscreen header{max-width:100%;padding:12px 24px 0}:fullscreen main{max-width:100%;margin:10px auto 0;padding:0 24px}:fullscreen section.screen{min-height:calc(100vh - 110px)}
+@media(max-width:900px){.setupGrid{grid-template-columns:1fr}.setupStep.full{grid-column:auto}.unitPick{grid-template-columns:repeat(3,minmax(0,1fr))}.activityPick{grid-template-columns:repeat(2,minmax(0,1fr))}.heroText{max-width:100%}.scenery{display:none}}
+@media(max-width:640px){.headerActions .linkBtn{font-size:13px;padding:7px 10px}.heroSetup{padding:13px}.setupStep{padding:13px}.setupGrid{gap:9px}.modePick,.unitPick,.activityPick{grid-template-columns:1fr}.selectTile{min-height:58px;font-size:17px}.selectTile small{display:block}.setupBottom{display:block}.setupBottom .help{margin-bottom:14px}.launch{width:100%}header{padding:12px 10px 0}main{padding:0 10px}}
+
+/* 家園探險王：全螢幕單頁免捲軸，保持所有控制項可見 */
+html:fullscreen,html:fullscreen body{width:100%;height:100dvh;max-height:100dvh;overflow:hidden!important;overscroll-behavior:none}
+html:fullscreen body{display:flex;flex-direction:column;min-height:0}
+html:fullscreen header{width:100%;max-width:none;flex:0 0 auto;padding:5px 14px 2px}
+html:fullscreen .logo{font-size:clamp(17px,2vw,25px)}
+html:fullscreen .linkBtn{padding:4px 11px;font-size:clamp(12px,1.3vw,16px)}
+html:fullscreen main{width:100%;max-width:none;flex:1 1 auto;min-height:0;margin:0;padding:5px 10px;overflow:hidden}
+html:fullscreen section.screen{height:100%;max-height:100%;min-height:0;padding:clamp(8px,1.1vh,15px);border-radius:18px;overflow:hidden}
+html:fullscreen .screenInner{width:100%;transform-origin:top center;will-change:transform}
+html:fullscreen .footer{display:none}
+html:fullscreen .heroSetup{padding:4px 12px 7px;min-height:0}
+html:fullscreen .heroSetup h1{font-size:clamp(25px,3vw,41px)}
+html:fullscreen .heroSetup p{margin:2px 0;font-size:14px}
+html:fullscreen .setupGrid{gap:8px;margin:7px 0}
+html:fullscreen .setupStep{padding:9px 12px;border-radius:14px}
+html:fullscreen .setupStep h3{font-size:17px}
+html:fullscreen .selectTile{min-height:44px;padding:6px 9px;font-size:clamp(12px,1.2vw,16px)}
+html:fullscreen .setupBottom{margin-top:5px}
+html:fullscreen .question{padding:13px 20px;font-size:clamp(19px,2.5vw,31px)}
+html:fullscreen .answer{padding:10px 14px}
+html:fullscreen .topline{margin-bottom:8px}
+html:fullscreen .progress{margin:8px 0 12px}
+html:fullscreen .hero .mascot{font-size:48px;margin:4px}
+
+</style></head>
+<body><canvas id="fireworks"></canvas><header><div class="logo">🏝️ 家園探險王 <span class="tiny">｜社會科</span></div><div class="headerActions"><button class="linkBtn" id="fullscreenButton" type="button" aria-pressed="false">⛶ 全螢幕</button><button class="linkBtn" id="homeButton" type="button">🏠 設定首頁</button></div></header><main id="app"><section class="screen center"><h1>載入題庫中…</h1></section></main><div class="footer">五年級社會 · 單人練習／雙人搶答 · 題庫依教材檔案整理</div><script src="social-questions.js"></script><script>
+'use strict';
+const allQuestions=Array.isArray(window.SOCIAL_QUESTIONS)?window.SOCIAL_QUESTIONS:[];
+const units=[{id:'3',title:'成為清帝國的領土',emoji:'⛵',activities:[['1','早期移民如何在臺灣建立家園？','🏠'],['2','開港通商為什麼改變了臺灣的發展？','🚢']]},{id:'4',title:'土地的利用與變遷',emoji:'🏞️',activities:[['1','人們如何適應不同地形創造所需？','⛰️'],['2','沿海的利用為什麼呈現多元發展？','🏖️'],['3','土地開發與環境保護該如何抉擇？','🌱']]},{id:'5',title:'製作小書看見臺灣',emoji:'📚',activities:[['1','製作小書看見臺灣','📖']]}];
+const app=document.getElementById('app');const homeBtn=document.getElementById('homeButton');
+const state={mode:null,unit:null,activity:null,limit:10,deck:[],pos:0,score:[0,0],picked:null,turn:null,wrongPlayer:null,feedback:false,answered:false,answerWasCorrect:false};
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&quot;'}[c]));}
+const randomize=a=>{let r=[...a];for(let i=r.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r};
+const label=()=>`第 ${state.unit} 單元 · 第 ${state.activity} 課`;
+function show(content){app.innerHTML='<section class="screen"><div class="screenInner">'+content+'</div></section>';if(!document.fullscreenElement)window.scrollTo({top:0,behavior:'instant'});requestFullscreenFit();}
+function home(){
+ stopFireworks();Object.assign(state,{mode:state.mode||'solo',unit:state.unit||'3',activity:state.activity||'1'});
+ show(`<div class="heroSetup">
+  <div class="heroText"><span class="pill">🌏 國小五年級社會 · 臺灣探索旅程</span><h1>🏝️ 家園探險王</h1><p class="sub">踏上臺灣的山林、港口與古老聚落，和好友一起成為家園探索高手！</p></div>
+  <div class="scenery" aria-hidden="true"><span>🏔️</span><span>🚂</span><span>⛵</span><span>🌿</span></div>
+ </div>
+ <div class="setupGrid"><div class="setupStep"><h3>① 遊戲模式</h3><div class="modePick"><button type="button" class="selectTile ${state.mode==='solo'?'chosen':''}" data-mode="solo">🧭 單人冒險<small>自己答題、學習解析</small></button><button type="button" class="selectTile ${state.mode==='duel'?'chosen':''}" data-mode="duel">⚔️ 雙人搶答<small>A／L 搶答，同台競賽</small></button></div></div>
+ <div class="setupStep"><h3>② 選擇單元</h3><div class="unitPick">${units.map(u=>`<button type="button" class="selectTile ${state.unit===u.id?'chosen':''}" data-unit="${u.id}">${u.emoji} 第${{3:'三',4:'四',5:'五'}[u.id]}單元<small>${escapeHtml(u.title)}</small></button>`).join('')}</div></div>
+ <div class="setupStep full"><h3>③ 選擇活動</h3><div id="activityChoices" class="activityPick"></div></div>
+ <div class="setupStep full"><h3>④ 題目設定</h3><div class="countOptions"><label for="count">本回合題數</label><select id="count"></select><span class="choiceCnt" id="availableCount"></span></div></div></div>
+ <div class="setupBottom"><p class="help" id="modeHelp"></p><button class="primary launch" type="button" id="start">🚀 開始探索臺灣</button></div>`);
+ function refreshSetup(){
+   app.querySelectorAll('[data-mode]').forEach(b=>{b.classList.toggle('chosen',b.dataset.mode===state.mode);b.setAttribute('aria-pressed',String(b.dataset.mode===state.mode))});
+   app.querySelectorAll('[data-unit]').forEach(b=>{b.classList.toggle('chosen',b.dataset.unit===state.unit);b.setAttribute('aria-pressed',String(b.dataset.unit===state.unit))});
+   const unit=units.find(u=>u.id===state.unit)||units[0];
+   if(!unit.activities.some(a=>a[0]===state.activity))state.activity=unit.activities[0][0];
+   document.getElementById('activityChoices').innerHTML=unit.activities.map(([id,title,emoji])=>{const n=allQuestions.filter(q=>q.unit===state.unit&&q.activity===id).length;return `<button type="button" class="selectTile ${state.activity===id?'chosen':''}" data-act="${id}" ${n?'':'disabled'}>${emoji} 第 ${id} 課<small>${escapeHtml(title)}</small><em>${n} 題</em></button>`}).join('');
+   app.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>{state.activity=b.dataset.act;refreshSetup()});
+   const n=allQuestions.filter(q=>q.unit===state.unit&&q.activity===state.activity).length;
+   const oldCount=Number(document.getElementById('count').value)||state.limit||10;
+   const vals=[...new Set([5,10,20,30,n].filter(v=>v>0&&v<=n))].sort((a,b)=>a-b);
+   document.getElementById('count').innerHTML=vals.map(v=>`<option value="${v}" ${v===Math.min(oldCount,n)?'selected':''}>${v===n?'全部 '+n+' 題':v+' 題'}</option>`).join('');
+   document.getElementById('availableCount').textContent=`本活動共 ${n} 題可用`;
+   document.getElementById('start').disabled=!n;
+   document.getElementById('modeHelp').textContent=state.mode==='duel'?'⚔️ 雙人：按 A／L 或畫面按鈕搶答；答對 +1 分，答錯換對手補答。':'🧭 單人：每題答對 +10 分，答錯顯示教材解析。';
+ }
+ app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;refreshSetup()});
+ app.querySelectorAll('[data-unit]').forEach(b=>b.onclick=()=>{state.unit=b.dataset.unit;refreshSetup()});
+ document.getElementById('count').onchange=e=>{state.limit=Number(e.target.value)||10};
+ document.getElementById('start').onclick=()=>{state.limit=Number(document.getElementById('count').value)||10;startGame()};
+ refreshSetup();
+}
+function startGame(){state.deck=randomize(allQuestions.filter(q=>q.unit===state.unit&&q.activity===state.activity)).slice(0,state.limit);Object.assign(state,{pos:0,score:[0,0],picked:null,turn:null,wrongPlayer:null,feedback:false,answered:false,answerWasCorrect:false});renderQuestion();}
+function q(){return state.deck[state.pos]}
+function progressHtml(){return `<div class="topline"><span class="pill">${label()}</span><span class="stat">第 ${state.pos+1} / ${state.deck.length} 題</span></div><div class="progress" aria-label="遊戲進度"><b style="width:${state.pos/state.deck.length*100}%"></b></div>`;}
+function questionHtml(){return `<div class="question">${escapeHtml(q().question)}</div>`;}
+function renderQuestion(){const curr=q();if(!curr){result();return;}let top=progressHtml(),body='';if(state.mode==='solo'){
+  body=`<div class="topline"><h3>🧑‍🚀 單人冒險</h3><span class="stat">⭐ ${state.score[0]} 分</span></div>${questionHtml()}<div class="answers"><button class="answer" data-answer="true">⭕ 正確</button><button class="answer" data-answer="false">❌ 錯誤</button></div>`;
+}else{body=`<div class="scoreboard"><div class="player ${state.turn===0?'active':''}">🔵 玩家 1 <span>${state.score[0]} 分</span></div><div class="player ${state.turn===1?'active':''}">🟣 玩家 2 <span>${state.score[1]} 分</span></div></div>${questionHtml()}<p class="hint" id="phase">${state.turn===null?'⏱️ 看到題目後搶答！鍵盤 A／L 或觸控按鈕':(state.turn===0?'🔵 玩家 1':'🟣 玩家 2')+' 請回答 ○ 或 ×'}</p><div class="buzzerZone" id="buzzers"><button class="buzzer one" data-buzz="0" ${state.turn!==null||state.wrongPlayer===0?'disabled':''}>🔵 玩家 1 搶答<br><small>按 A 鍵</small></button><button class="buzzer two" data-buzz="1" ${state.turn!==null||state.wrongPlayer===1?'disabled':''}>🟣 玩家 2 搶答<br><small>按 L 鍵</small></button></div><div class="answers ${state.turn===null?'hidden':''}" id="duelAnswers"><button class="answer" data-answer="true">⭕ 正確</button><button class="answer" data-answer="false">❌ 錯誤</button></div>`;}
+ show(top+body+`<div id="feedbackZone"></div><div class="controls"><button class="secondary" id="quit">🚪 離開本回合</button></div>`);app.querySelector('#quit').onclick=()=>{if(confirm('要離開本回合嗎？分數不會保留。'))home()};wireChoices();}
+function wireChoices(){app.querySelectorAll('[data-answer]').forEach(b=>b.onclick=()=>answer(b.dataset.answer==='true'));app.querySelectorAll('[data-buzz]').forEach(b=>b.onclick=()=>buzz(Number(b.dataset.buzz)));}
+function buzz(player){if(state.mode!=='duel'||state.answered||state.turn!==null||state.wrongPlayer===player)return;state.turn=player;app.querySelectorAll('[data-buzz]').forEach(b=>b.disabled=true);document.getElementById('duelAnswers').classList.remove('hidden');app.querySelectorAll('[data-answer]').forEach(b=>b.disabled=false);document.getElementById('phase').textContent=(player===0?'🔵 玩家 1':'🟣 玩家 2')+' 已搶答！請選擇 ○ 或 ×';}
+function answer(choice){if(state.answered||state.mode==='duel'&&state.turn===null)return;const yes=choice===q().correct;const buttons=[...app.querySelectorAll('[data-answer]')];buttons.forEach(b=>{b.disabled=true;if((b.dataset.answer==='true')===q().correct)b.classList.add('good');else if(b.dataset.answer===String(choice))b.classList.add('bad');});if(state.mode==='solo'){
+ state.answered=true;if(yes)state.score[0]+=10;showFeedback(yes?'🌟 答對了！':'💪 再加油！',yes?'恭喜你獲得 10 分！':'沒關係，看完解析再挑戰下一題。',false);return;
+}const player=state.turn;if(yes){state.score[player]+=1;state.answered=true;showFeedback('🎯 '+(player===0?'玩家 1':'玩家 2')+' 答對！','獲得 1 分！',false);}else if(state.wrongPlayer===null){state.wrongPlayer=player;state.turn=null;buttons.forEach(b=>{b.disabled=true;b.classList.remove('good','bad')});document.getElementById('duelAnswers').classList.add('hidden');app.querySelectorAll('[data-buzz]').forEach(b=>b.disabled=Number(b.dataset.buzz)===player);document.getElementById('phase').textContent='答錯囉！另一位玩家可以搶答。';document.getElementById('feedbackZone').innerHTML='<div class="feedback"><strong>💪 再加油！</strong>換另一位玩家搶答試試看。</div>';}
+else{state.answered=true;showFeedback('👏 兩位都加油！','這題兩位都沒答對，來看看解析。',false);}}
+function showFeedback(title,subtitle){const expl=q().explanation?escapeHtml(q().explanation):'本題原始檔案未提供解析，請依答案複習。';const correct=q().correct?'○ 正確':'× 錯誤';document.getElementById('feedbackZone').innerHTML=`<div class="feedback" role="status"><strong>${title}</strong><div>${subtitle}</div><div style="margin-top:8px">✅ 正解：<b>${correct}</b></div><div>📖 解析：${expl}</div></div><div class="controls"><button class="primary" id="next">${state.pos+1===state.deck.length?'🏆 查看結果':'下一題 →'}</button></div>`;document.getElementById('next').onclick=()=>{state.pos++;state.turn=null;state.wrongPlayer=null;state.answered=false;renderQuestion()};}
+function result(){stopFireworks();const solo=state.mode==='solo';let good=solo?state.score[0]>=state.deck.length*7:state.score[0]!==state.score[1];let winner=state.score[0]>state.score[1]?0:state.score[1]>state.score[0]?1:null;let title=solo?(good?'🏆 探險大成功！':'💪 再加油，勇敢挑戰！'):(winner===null?'🤝 平手！兩位都很棒':`🏆 ${winner===0?'玩家 1':'玩家 2'} 獲勝！`);let info=solo?`你答對了 ${state.score[0]/10} / ${state.deck.length} 題，獲得 ${state.score[0]} 分。`:`🔵 玩家 1：${state.score[0]} 分　　🟣 玩家 2：${state.score[1]} 分`;let subtitle=solo?(good?'你是家園探險高手！繼續保持！':'再練習一次，你會越來越熟練！'):(winner===null?'下一回合再來一場精彩對決！':`恭喜勝利！另一位也辛苦了，再加油、下次再挑戰！`);show(`<div class="center" style="padding:26px 0"><div class="stars">${good?'🎆🎉🌟':'💖🌱✨'}</div><h1 class="bigResult">${title}</h1><p style="font-size:26px;font-weight:900">${info}</p><p class="sub">${subtitle}</p><div class="controls" style="margin-top:35px"><button class="primary" id="again">🔁 再玩一次</button><button class="secondary" id="other">📚 返回單頁設定</button><button class="secondary" id="backHome">🏠 回首頁</button></div></div>`);document.getElementById('again').onclick=startGame;document.getElementById('other').onclick=home;document.getElementById('backHome').onclick=home;if(good)runFireworks();}
+function keyAction(e){if(e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;if(state.mode!=='duel'||state.deck.length===0||state.pos>=state.deck.length||!app.querySelector('#buzzers'))return;const key=e.key.toLowerCase();if(key==='a'){e.preventDefault();buzz(0)}if(key==='l'){e.preventDefault();buzz(1)}}
+// 在全螢幕內以整頁縮放取代捲軸，使用者切換關卡時也會重新計算。
+let fitFrame=0;
+function requestFullscreenFit(){
+ if(fitFrame)cancelAnimationFrame(fitFrame);
+ fitFrame=requestAnimationFrame(()=>{
+  fitFrame=0;
+  const panel=app.querySelector('section.screen'),inner=panel?.querySelector('.screenInner');
+  if(!panel||!inner)return;
+  inner.style.transform='';inner.style.width='100%';
+  if(!document.fullscreenElement)return;
+  const style=getComputedStyle(panel);
+  const usableW=Math.max(1,panel.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight)-4);
+  const usableH=Math.max(1,panel.clientHeight-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom)-4);
+  const naturalH=Math.max(inner.scrollHeight,inner.getBoundingClientRect().height);
+  const naturalW=Math.max(inner.scrollWidth,inner.getBoundingClientRect().width);
+  const scale=Math.min(1,usableH/Math.max(1,naturalH),usableW/Math.max(1,naturalW));
+  inner.style.transform='scale('+Math.max(.2,scale).toFixed(4)+')';
+ });
+}
+window.addEventListener('resize',requestFullscreenFit);
+new MutationObserver(()=>{if(document.fullscreenElement)requestFullscreenFit()}).observe(app,{childList:true,subtree:true});
+const fullscreenBtn=document.getElementById('fullscreenButton');
+function fullscreenRefresh(){const on=Boolean(document.fullscreenElement);fullscreenBtn.textContent=on?'⤢ 離開全螢幕':'⛶ 全螢幕';fullscreenBtn.setAttribute('aria-pressed',String(on))}
+fullscreenBtn.onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();else alert('此瀏覽器不支援網頁全螢幕，可使用電腦 F11 或 iPad 加入主畫面。')}catch(err){alert('無法切換全螢幕，請檢查瀏覽器權限或使用 F11。')}};
+document.addEventListener('fullscreenchange',()=>{fullscreenRefresh();requestFullscreenFit()});fullscreenRefresh();
+document.addEventListener('keydown',keyAction);homeBtn.onclick=()=>{if(state.deck?.length&&state.pos<state.deck.length&&app.querySelector('#buzzers,#quit')){if(!confirm('確定返回首頁？這回合的分數不會保留。'))return;}home()};
+// canvas fireworks - no external libraries/audio or student tracking.
+const cv=document.getElementById('fireworks'),ctx=cv.getContext('2d');let fireworksTimer=null,particles=[];function sizeCanvas(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}window.addEventListener('resize',sizeCanvas);sizeCanvas();function burst(){let x=Math.random()*innerWidth,y=60+Math.random()*innerHeight*.56;for(let i=0;i<80;i++){let a=Math.random()*Math.PI*2,s=1+Math.random()*6;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:55+Math.random()*35,color:`hsl(${Math.floor(Math.random()*360)},95%,${45+Math.random()*25}%)`})}}function frame(){ctx.clearRect(0,0,innerWidth,innerHeight);for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.045;p.life--;ctx.fillStyle=p.color;ctx.globalAlpha=Math.min(1,p.life/28);ctx.beginPath();ctx.arc(p.x,p.y,3,0,7);ctx.fill();if(p.life<=0)particles.splice(i,1)}ctx.globalAlpha=1;if(fireworksTimer)requestAnimationFrame(frame)}function runFireworks(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;stopFireworks();fireworksTimer=setInterval(burst,480);burst();frame();setTimeout(()=>stopFireworks(),5200)}function stopFireworks(){if(fireworksTimer)clearInterval(fireworksTimer);fireworksTimer=null;particles=[];ctx.clearRect(0,0,innerWidth,innerHeight)}home();
+</script></body></html>
