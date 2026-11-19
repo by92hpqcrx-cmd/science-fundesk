@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 820" role="img" aria-label="臺灣島嶼山巒、港口和田野">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#c9f5fc"/><stop offset="1" stop-color="#e5fffa"/></linearGradient><linearGradient id="hill" x2="0" y2="1"><stop stop-color="#80c9a7"/><stop offset="1" stop-color="#cbe6b0"/></linearGradient></defs>
+<rect width="1440" height="820" fill="url(#sky)"/><circle cx="1260" cy="130" r="78" fill="#ffde8c" opacity=".75"/>
+<g fill="#fff" opacity=".72"><ellipse cx="200" cy="120" rx="130" ry="38"/><ellipse cx="270" cy="108" rx="85" ry="43"/><ellipse cx="910" cy="170" rx="110" ry="37"/><ellipse cx="960" cy="151" rx="73" ry="42"/></g>
+<path d="M0 540Q210 355 375 525T750 500T1110 482T1440 530V820H0Z" fill="#b6dcd1"/>
+<path d="M0 635Q220 500 420 620T865 590T1440 612V820H0Z" fill="url(#hill)"/>
+<g transform="translate(940 215) rotate(17)"><path d="M0 0Q95 22 105 103Q110 183 58 280Q35 340 -21 402Q-47 432 -63 400Q-83 375 -52 332Q-30 277 -54 214Q-65 172 -29 114Q-22 71 0 0Z" fill="#e9deb7" stroke="#75ac98" stroke-width="8"/><path d="M12 40L-12 112L52 160L-25 231L50 279L-37 360" fill="none" stroke="#7aa993" stroke-width="22" stroke-linecap="round"/></g>
+<g opacity=".75"><path d="M0 730Q110 689 250 730T500 730T750 730T1000 730T1250 730T1440 730" fill="none" stroke="#87cbd9" stroke-width="16"/><path d="M0 773Q125 740 250 773T500 773T750 773T1000 773T1250 773T1440 773" fill="none" stroke="#5eb8cb" stroke-width="12"/></g>
+<g transform="translate(235 480)"><path d="M-120 170H160L120 205H-70Z" fill="#d98c54"/><rect x="-74" y="70" width="157" height="103" rx="7" fill="#f7dbad"/><path d="M-95 75L10 12L110 75Z" fill="#a65f47"/><rect x="-15" y="115" width="43" height="58" fill="#b58f72"/><path d="M-160 170H-100V207H-160Z" fill="#e1b56e"/></g>
+<g transform="translate(1180 545)"><path d="M-130 115H140L110 145H-90Z" fill="#4e9aaf"/><path d="M0 -95V118" stroke="#b17d47" stroke-width="10"/><path d="M10 -80V95H135Z" fill="#fff7d6"/><path d="M-9 -60V87H-105Z" fill="#facf8c"/></g>
+<g transform="translate(590 650)" stroke="#8abb76" stroke-width="6"><path d="M-160 0Q0 -70 165 0M-175 25Q0 -45 175 25M-190 50Q0 -20 190 50" fill="none"/></g>
+</svg>
