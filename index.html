@@ -1582,7 +1582,7 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
 const KEY='science_fundesk_v1';
 // 連結不包含學生資料，預設網址可由老師在主頁修改。
 const LINK_KEY='science_fundesk_links_v1';
-const LINK_DEFAULTS={personal:'https://by92hpqcrx-cmd.github.io/nature-science-game/personal.html',sky:'https://by92hpqcrx-cmd.github.io/sky-adventure/arena.html',quizace:'https://quizace.knsh.com.tw/teacher/quizList',learnmode:'https://www.learnmode.net/home/',kangxuan:'https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=na&grade=all&item=ebook&bookcase=mybookcase',kahoot:'https://kahoot.com/',monopoly:'https://by92hpqcrx-cmd.github.io/dachen-monopoly/campus-challenge.html',zodiac:'https://zodiac-story-atlas.corkylapwing2.chatgpt.site/',starLegends:'https://star-legends-atlas.corkylapwing2.chatgpt.site/'};
+const LINK_DEFAULTS={personal:'https://by92hpqcrx-cmd.github.io/nature-science-game/personal.html',sky:'https://by92hpqcrx-cmd.github.io/sky-adventure/arena.html',socialAdventure:'https://by92hpqcrx-cmd.github.io/science-fundesk/home-adventure/index.html',quizace:'https://quizace.knsh.com.tw/teacher/quizList',learnmode:'https://www.learnmode.net/home/',kangxuan:'https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=na&grade=all&item=ebook&bookcase=mybookcase',kahoot:'https://kahoot.com/',monopoly:'https://by92hpqcrx-cmd.github.io/dachen-monopoly/campus-challenge.html',zodiac:'https://zodiac-story-atlas.corkylapwing2.chatgpt.site/',starLegends:'https://star-legends-atlas.corkylapwing2.chatgpt.site/'};
 let quickLinks={...LINK_DEFAULTS};
 const LINK_REVISION='3';
 try{
@@ -1598,7 +1598,7 @@ try{
 }catch{}
 function safeLink(v){try{const u=new URL(v);return ['https:','http:'].includes(u.protocol)?u.href:''}catch{return ''}}
 function renderQuickLinks(){
- const cfg=[['personal','🎮','自然科學王・個人賽'],['sky','🌌','星空冒險島'],['zodiac','✨','星空故事館・十二星座篇'],['starLegends','🌠','星空故事館・星河傳說'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版']];
+ const cfg=[['personal','🎮','自然科學王・個人賽'],['sky','🌌','星空冒險島'],['socialAdventure','🏝️','家園探險王・社會冒險'],['zodiac','✨','星空故事館・十二星座篇'],['starLegends','🌠','星空故事館・星河傳說'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版']];
  return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid"><button type="button" class="quickLink" data-goto="rps"><span class="quickIcon">✊</span><strong>課間小遊戲・剪刀石頭布</strong><small>選一位學生來挑戰老師</small></button>${cfg.map(([id,icon,title])=>{const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" href="${esc(link)}" ${id==='monopoly'?'data-fundesk-monopoly="1"':''} target="_blank" rel="noopener noreferrer"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
 }
 /* FunDesk 授權教師開啟校園大富翁時，才透過同源訊息傳遞最少量的玩家候選名單。
@@ -1658,7 +1658,7 @@ function openFunDeskMonopoly(event){
  const expire=setTimeout(()=>window.removeEventListener('message',receive),45000);
 }
 function openLinkSettings(){
- const cfg=[['personal','自然科學王・個人賽'],['sky','星空冒險島'],['zodiac','星空故事館・十二星座篇'],['starLegends','星空故事館・星河傳說'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot! 互動測驗'],['monopoly','校園大富翁・單機版']];
+ const cfg=[['personal','自然科學王・個人賽'],['sky','星空冒險島'],['socialAdventure','家園探險王・社會冒險'],['zodiac','星空故事館・十二星座篇'],['starLegends','星空故事館・星河傳說'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot! 互動測驗'],['monopoly','校園大富翁・單機版']];
  $('modalContent').innerHTML=`<h2>教學快捷入口設定</h2><p class="hint">網址只儲存在目前瀏覽器；必須是 http:// 或 https:// 網址。</p><form id="quickLinkForm">${cfg.map(([id,title])=>`<label class="linkField"><strong>${title}</strong><input type="url" name="${id}" value="${esc(quickLinks[id])}" placeholder="https://..."></label>`).join('')}<div class="actions"><button class="btn" type="submit">儲存連結</button><button class="btn outline" type="button" id="cancelQuickLinks">取消</button></div></form>`;
  $('modal').classList.remove('hidden');$('cancelQuickLinks').onclick=()=>$('modal').classList.add('hidden');
  $('quickLinkForm').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);for(const k of Object.keys(LINK_DEFAULTS)){const v=String(fd.get(k)||'').trim();if(v&&!safeLink(v)){alert('網址格式有誤：'+k);return}quickLinks[k]=v}try{localStorage.setItem(LINK_KEY,JSON.stringify({...quickLinks,revision:LINK_REVISION}))}catch{}$('modal').classList.add('hidden');render()};
