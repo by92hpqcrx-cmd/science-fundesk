@@ -88,3 +88,55 @@ button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:de
 .card.image .sprite{height:100%;width:100%}
 .game:has(.stackBoard) .cardGrid{grid-auto-rows:minmax(0,1fr)}
 @media(max-width:610px){.stackBoard .cardGrid{gap:3px}.card.word{font-size:clamp(13px,3.1vw,22px)}}
+
+/* 2026-11-19 圖卡完整顯示修正：保留每張原始圖片的 4:3 比例，避免橫向拉伸或被裁掉 */
+body:has(.game:not([hidden])) .app{
+ height:100dvh;min-height:0;overflow:hidden;
+}
+.game:not([hidden]){flex:1 1 0;min-height:0;overflow:hidden}
+.game:not([hidden]) .playfield{flex:1 1 0;min-height:0;overflow:hidden}
+.stackBoard{
+ display:grid!important;
+ grid-template-rows:minmax(0, .28fr) minmax(0, .72fr)!important;
+ gap:8px!important;
+}
+.stackBoard>section{min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.stackBoard .zoneTitle{flex:0 0 auto;margin:0;font-size:clamp(12px,1.1vw,16px)}
+.stackBoard .cardGrid{flex:1 1 0;min-height:0;grid-auto-rows:minmax(0,1fr)!important;align-items:stretch}
+.card.image,.memoryCard{container-type:size}
+.card.image .sprite,.memoryCard .sprite{
+ display:block!important;
+ flex:none!important;
+ aspect-ratio:4 / 3!important;
+ width:min(100cqw,133.9286cqh)!important;
+ height:min(100cqh,74.6667cqw)!important;
+ max-width:100%!important;
+ max-height:100%!important;
+ border-radius:4px;
+ background-size:500% 400%;
+ background-repeat:no-repeat;
+}
+.stackBoard .card.image{display:flex!important;align-items:center!important;justify-content:center!important;padding:5px!important}
+.stackBoard .card.word{font-size:clamp(17px,1.7vw,30px);line-height:1.15}
+.quizBoard .card.image{display:flex;align-items:center;justify-content:center}
+.memoryCard .cardInner{min-width:0;min-height:0}
+@media (max-height:720px){
+ .game:not([hidden]){gap:4px;padding:5px}
+ .game:not([hidden]) .gameHeader{min-height:0}
+ .game:not([hidden]) .gameStats span{padding:3px 7px}
+ .game:not([hidden]) .scores{gap:4px}
+ .game:not([hidden]) .score{padding:4px 7px}
+ .game:not([hidden]) .score small{display:none}
+ .game:not([hidden]) .instruction{padding:4px;min-height:26px;font-size:clamp(13px,1.3vw,18px)}
+ .game:not([hidden]) .feedback{min-height:18px;font-size:14px}
+ .stackBoard{grid-template-rows:minmax(0,.25fr) minmax(0,.75fr)!important;gap:5px!important}
+ .stackBoard>section{gap:3px}
+}
+@media (max-width:700px){
+ .stackBoard{grid-template-rows:minmax(0,.35fr) minmax(0,.65fr)!important}
+ .stackBoard .card.image{padding:2px!important}
+ .card.image .sprite,.memoryCard .sprite{
+  width:min(100cqw,133.9286cqh)!important;
+  height:min(100cqh,74.6667cqw)!important
+ }
+}
