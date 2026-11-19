@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#e3f8ec">
+<title>🐾 班寵翻牌王｜FunDesk</title>
+<link rel="icon" type="image/svg+xml" href="../fundesk-app-icon.svg">
+<link rel="stylesheet" href="./game.css?v=20261119-a"></head>
+<body>
+<div class="shell" id="shell">
+  <header class="topbar">
+    <a class="home" href="../index.html" title="返回 FunDesk"><img src="../fundesk-app-icon.svg" alt="FD 小黑板"><span>FunDesk</span></a>
+    <div class="heading"><strong>🐾 班寵翻牌王</strong><span>記憶力大挑戰 · 找出相同的班寵！</span></div>
+    <div class="toptools">
+      <span id="chosenPet" class="chosenPet" hidden></span>
+      <button id="fullscreen" class="tool" type="button">⛶ 全螢幕</button>
+      <button id="sound" class="tool" type="button" aria-pressed="false">🔈 音效關</button>
+    </div>
+  </header>
+  <section class="toolbar" aria-label="遊戲設定與成績">
+    <fieldset class="levels"><legend>選擇難度</legend>
+      <label><input type="radio" name="level" value="24" checked><span>🌱 簡單 <b>24 張</b></span></label>
+      <label><input type="radio" name="level" value="36"><span>🌻 中等 <b>36 張</b></span></label>
+      <label><input type="radio" name="level" value="48"><span>🚀 困難 <b>48 張</b></span></label>
+    </fieldset>
+    <div class="stats" aria-live="polite">
+      <div><small>已配對</small><strong id="pairs">0 / 12</strong></div>
+      <div><small>翻牌次數</small><strong id="moves">0</strong></div>
+      <div><small>遊戲時間</small><strong id="time">00:00</strong></div>
+    </div>
+    <button class="restart" id="restart" type="button">🔄 重新開始</button>
+  </section>
+  <main class="playarea">
+    <div class="decor" aria-hidden="true">☀️　✦　🌈　✧　☁️</div>
+    <div id="board" class="board" role="group" aria-label="班寵翻牌區"></div>
+  </main>
+  <div class="footnote">每次翻開兩張牌；找到相同班寵與版本，就能成功配對。完成全部配對即可過關！</div>
+  <div id="confetti" class="confetti" aria-hidden="true"></div>
+  <dialog id="winDialog" class="winDialog">
+    <div class="winMascot">🏆 🐾 🎉</div><h2>恭喜！全部配對成功</h2>
+    <p id="winResult"></p><div class="winButtons">
+      <button id="again" class="restart" type="button">再玩一次</button>
+      <button id="closeWin" class="tool" type="button">查看完成牌面</button>
+    </div>
+  </dialog>
+</div>
+<script src="./game.js?v=20261119-a" defer></script>
+</body></html>
