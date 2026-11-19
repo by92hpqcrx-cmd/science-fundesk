@@ -19,6 +19,16 @@ Deno.serve(async (req) => {
   const client=createClient(url,secret,{auth:{autoRefreshToken:false,persistSession:false}});
   const {data:{user},error:authError}=await client.auth.getUser(jwt);
   if(authError||!user?.email||!user.email_confirmed_at)return reply(401,'教師身分驗證未通過');
+  // 僅允許管理者明確核准的 FunDesk 教師帳號使用手機掃碼授權。
+  // 以 Supabase Auth user.id 核對，不能依電子郵件字串自行宣稱為教師。
+  const {data:teacher,error:teacherError}=await client
+   .from('fundesk_qr_allowed_teachers')
+   .select('user_id,active')
+   .eq('user_id',user.id)
+   .eq('active',true)
+   .maybeSingle();
+  if(teacherError)return reply(503,'教師授權名單尚未設定或暫時無法查詢');
+  if(!teacher)return reply(403,'此帳號尚未取得 FunDesk 教師掃碼授權');
   const body=await req.json();
   const id=String(body.id||''),phone=String(body.phoneSecret||'');
   if(!/^[a-f0-9-]{36}$/i.test(id)||phone.length<32||phone.length>256)return reply(400,'掃碼授權資料有誤');
