@@ -4116,6 +4116,60 @@ function contactBind(){
 const CLOUD_CONFIG_KEY='fundesk_cloud_public_config_v1';
 const cloudConfig={url:'https://ayvwsexnxvjjcrbtyoof.supabase.co',key:'sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L'};
 let cloudSession=null,cloudReady=false,cloudBlocked=false,cloudQueue=Promise.resolve(),cloudOutstanding=0;
+
+// 教師共用電腦安全：連續 40 分鐘沒有實際操作，鎖定並登出（含 QR Code 登入）。
+const FUNDESK_IDLE_MS=40*60*1000;
+const FUNDESK_LAST_ACTIVE_KEY='fundesk_last_teacher_activity_v1';
+let fundeskLastActivity=Number(sessionStorage.getItem(FUNDESK_LAST_ACTIVE_KEY))||0;
+let fundeskIdleClosing=false;
+function fundeskRecordActivity(force=false){
+ if(!cloudReady||fundeskIdleClosing||document.hidden)return;
+ const now=Date.now();
+ if(fundeskLastActivity && now-fundeskLastActivity>=FUNDESK_IDLE_MS){
+  void fundeskEnforceIdleLogout();return;
+ }
+ if(force||now-fundeskLastActivity>10000){
+  fundeskLastActivity=now;
+  sessionStorage.setItem(FUNDESK_LAST_ACTIVE_KEY,String(now));
+ }
+}
+function fundeskStartActivitySession(){
+ fundeskIdleClosing=false;
+ fundeskLastActivity=Date.now();
+ sessionStorage.setItem(FUNDESK_LAST_ACTIVE_KEY,String(fundeskLastActivity));
+}
+async function fundeskEnforceIdleLogout(){
+ if(fundeskIdleClosing||!cloudSession)return;
+ fundeskIdleClosing=true;
+ // 立即鎖住畫面，避免等待雲端儲存時被繼續操作。
+ document.body.classList.add('cloud-locked');
+ const gate=document.getElementById('cloudGate');
+ if(gate)gate.hidden=false;
+ cloudGateMessage('<h2>🔒 已閒置 40 分鐘</h2><p>為保護班級與學生資料，正在結束教師登入並確認雲端儲存。</p>');
+ try{await cloudQueue;}catch(e){console.warn('閒置登出時雲端儲存狀態：',e);}
+ cloudReady=false;
+ cloudSession=null;
+ sessionStorage.removeItem('fundesk_cloud_session');
+ sessionStorage.removeItem(FUNDESK_LAST_ACTIVE_KEY);
+ fundeskLastActivity=0;
+ // 若有儲存錯誤，不重新整理；先顯示明確警告，避免未存資料被清空。
+ if(cloudBlocked||cloudOutstanding>0){
+  cloudGateMessage('<h2>🔒 已自動登出</h2><p>雲端儲存可能未完成，請暫時不要關閉此分頁，聯絡管理者確認資料。</p>');
+  return;
+ }
+ location.reload();
+}
+for(const eventName of ['pointerdown','keydown','touchstart','wheel']){
+ document.addEventListener(eventName,e=>{if(e.isTrusted)fundeskRecordActivity();},{passive:true,capture:true});
+}
+const fundeskCheckIdle=()=>{
+ if(!cloudSession||fundeskIdleClosing)return;
+ if(fundeskLastActivity && Date.now()-fundeskLastActivity>=FUNDESK_IDLE_MS)void fundeskEnforceIdleLogout();
+};
+setInterval(fundeskCheckIdle,15000);
+window.addEventListener('focus',fundeskCheckIdle);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)fundeskCheckIdle()});
+
 let cloudRevisions={},cloudSnapshots={};
 const cloudIds=()=>[...CLASSES,'shared'];
 function cloudGateMessage(html){$('cloudGateBody').innerHTML=html}
@@ -4158,7 +4212,7 @@ function cloudLoginForm(error=''){
  `);
  $('cloudLoginForm').onsubmit=async e=>{e.preventDefault();const email=$('cloudEmail').value.trim(),password=$('cloudPassword').value;const b=e.target.querySelector('button');b.disabled=true;b.textContent='登入中…';try{
   const sess=await cloudFetch('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})},true);
-  cloudSession=sess;sessionStorage.setItem('fundesk_cloud_session',JSON.stringify(sess));await cloudLoad();
+  cloudSession=sess;sessionStorage.setItem('fundesk_cloud_session',JSON.stringify(sess));await cloudLoad();fundeskStartActivitySession();
  }catch(err){cloudSession=null;sessionStorage.removeItem('fundesk_cloud_session');cloudLoginForm(cloudErr(err))}}
 
 }
@@ -4166,7 +4220,7 @@ window.fundeskQrFinish=async function(sess){
  if(!sess?.access_token||!sess?.refresh_token)throw Error('Supabase 未回傳完整登入憑證');
  cloudSession=sess;
  sessionStorage.setItem('fundesk_cloud_session',JSON.stringify(sess));
- try{await cloudLoad()}catch(e){cloudSession=null;sessionStorage.removeItem('fundesk_cloud_session');cloudLoginForm(cloudErr(e));throw e}
+ try{await cloudLoad();fundeskStartActivitySession()}catch(e){cloudSession=null;sessionStorage.removeItem('fundesk_cloud_session');cloudLoginForm(cloudErr(e));throw e}
 };
 function cloudRenderQuickClasses(){
  const root=$('fastClassLinks');if(!root)return;
@@ -4293,7 +4347,15 @@ async function cloudBoot(){
  cloudRenderQuickClasses();
  $('cloudLogout').onclick=cloudLogout;
  const sess=sessionStorage.getItem('fundesk_cloud_session');
- if(sess){try{cloudSession=JSON.parse(sess);await cloudLoad();return}catch(err){cloudSession=null;sessionStorage.removeItem('fundesk_cloud_session');cloudLoginForm(cloudErr(err));return}}
+ if(sess){try{
+  if(fundeskLastActivity&&Date.now()-fundeskLastActivity>=FUNDESK_IDLE_MS){
+    sessionStorage.removeItem('fundesk_cloud_session');
+    sessionStorage.removeItem(FUNDESK_LAST_ACTIVE_KEY);
+    cloudLoginForm('已閒置 40 分鐘，請重新登入');
+    return;
+  }
+  cloudSession=JSON.parse(sess);await cloudLoad();if(!fundeskLastActivity)fundeskStartActivitySession();return
+ }catch(err){cloudSession=null;sessionStorage.removeItem('fundesk_cloud_session');cloudLoginForm(cloudErr(err));return}}
  cloudLoginForm();
 }
 async function cloudLogout(){
@@ -4301,6 +4363,8 @@ async function cloudLogout(){
  await cloudQueue;
  if(cloudBlocked){alert('雲端儲存尚未完成，請先在資料管理下載備份。');return}
  sessionStorage.removeItem('fundesk_cloud_session');
+ sessionStorage.removeItem(FUNDESK_LAST_ACTIVE_KEY);
+ fundeskLastActivity=0;
  location.reload();
 }
 window.addEventListener('beforeunload',e=>{if(cloudOutstanding>0||cloudBlocked){e.preventDefault();e.returnValue='雲端可能尚未儲存，請先備份';}});
