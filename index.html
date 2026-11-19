@@ -4089,6 +4089,7 @@ function cloudLoginForm(error=''){
  const showError=error?`<div class="cloudError">${esc(error)}</div>`:'';
  cloudGateMessage(`${showError}
  <form id="cloudLoginForm"><label>教師電子郵件</label><input id="cloudEmail" type="email" autocomplete="username" required placeholder="teacher@example.edu.tw"><label>教師密碼</label><input id="cloudPassword" type="password" autocomplete="current-password" required placeholder="Supabase Auth 帳號密碼"><button type="submit">登入並同步我的班級</button></form>
+ <div style="margin-top:14px;padding-top:12px;border-top:1px solid #dce7df"><button id="qrLoginStart" type="button" class="secondary">📱 iPhone 掃碼登入</button><p class="cloudNote">使用手機核准此電腦的登入請求；原本密碼登入仍可使用。</p><div id="qrLoginPanel" hidden></div></div>
  `);
  $('cloudLoginForm').onsubmit=async e=>{e.preventDefault();const email=$('cloudEmail').value.trim(),password=$('cloudPassword').value;const b=e.target.querySelector('button');b.disabled=true;b.textContent='登入中…';try{
   const sess=await cloudFetch('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})},true);
@@ -4096,6 +4097,12 @@ function cloudLoginForm(error=''){
  }catch(err){cloudSession=null;sessionStorage.removeItem('fundesk_cloud_session');cloudLoginForm(cloudErr(err))}}
 
 }
+window.fundeskQrFinish=async function(sess){
+ if(!sess?.access_token||!sess?.refresh_token)throw Error('Supabase 未回傳完整登入憑證');
+ cloudSession=sess;
+ sessionStorage.setItem('fundesk_cloud_session',JSON.stringify(sess));
+ try{await cloudLoad()}catch(e){cloudSession=null;sessionStorage.removeItem('fundesk_cloud_session');cloudLoginForm(cloudErr(e));throw e}
+};
 function cloudRenderQuickClasses(){
  const root=$('fastClassLinks');if(!root)return;
  const url=new URL(location.href);root.innerHTML=activeCodes().map(c=>{const u=new URL(url.href);u.searchParams.set('class',c);return `<a href="${esc(u.href)}" class="${cl===c?'selected':''}" title="${c} 班專屬網址">${esc(className(c))}</a>`}).join('');
@@ -4318,4 +4325,4 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollReplyN
 loadQuestionBank();
 cloudBoot();
 })();
-</script><script src="./tablet-ppt-links.js?v=20261118-native4"></script></body></html>
+</script><script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script><script src="./qr-login.js?v=20261119"></script><script src="./tablet-ppt-links.js?v=20261118-native4"></script></body></html>
