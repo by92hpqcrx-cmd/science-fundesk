@@ -6,6 +6,7 @@ const pets=[
 const $=id=>document.getElementById(id),board=$('board'),shell=$('shell'),dialog=$('winDialog');
 const levels={24:'簡單',36:'中等',48:'困難'};
 let deck=[],opened=[],turns=0,matched=0,elapsed=0,ticker=null,pending=null,version=0,locked=false,sound=false,ctx=null;
+let mode='solo',roster=null,players=[],active=0,gameStarted=false;
 const petId=new URLSearchParams(location.search).get('pet'),current=pets.find(p=>p[0]===petId);
 if(current){
  const area=$('chosenPet');area.hidden=false;
@@ -13,6 +14,55 @@ if(current){
  img.onerror=()=>{img.remove()};
  const txt=document.createElement('span');txt.textContent=current[2]+' 本班班寵 '+current[1];area.append(img,txt);
 }
+// FunDesk student roster: only accepts the matching same-origin opener with a one-time token.
+const token=new URLSearchParams(location.search).get('fundeskToken')||'';
+if(token&&window.opener){
+ window.addEventListener('message',e=>{
+  if(e.origin!==location.origin||e.source!==window.opener||e.data?.token!==token||e.data?.kind!=='fundesk-memory-roster')return;
+  const incoming=e.data;
+  if(!Array.isArray(incoming.students))return;
+  roster={name:String(incoming.className||'目前班級').slice(0,80),students:incoming.students.slice(0,100).map(v=>({id:String(v.id||''),name:String(v.name||'').slice(0,50),no:Number(v.no)||0,avatar:String(v.avatar||'')})).filter(v=>v.id&&v.name)};
+  $('rosterState').textContent='✅ 已連接 '+roster.name+'（'+roster.students.length+' 位學生）';
+  $('rosterClass').textContent='📚 '+roster.name+'｜選四位不同的學生';
+  document.querySelectorAll('.playerSelect').forEach(sel=>{
+   const old=sel.value;sel.replaceChildren();const empty=document.createElement('option');empty.value='';empty.textContent='選擇學生';sel.append(empty);
+   for(const st of roster.students){const option=document.createElement('option');option.value=st.id;option.textContent=st.no+'號 '+st.name;sel.append(option)}
+   sel.value=roster.students.some(st=>st.id===old)?old:'';
+  });
+ });
+ window.opener.postMessage({kind:'fundesk-memory-ready',token},location.origin);
+}
+function showScores(){
+ const board=$('scoreboard'),notice=$('turnNotice');board.replaceChildren();
+ if(mode!=='four'||!gameStarted){board.hidden=true;notice.hidden=true;return}
+ board.hidden=false;notice.hidden=false;
+ players.forEach((p,i)=>{
+  const box=document.createElement('div');box.className='scoreCard'+(active===i?' active':'');
+  const avatar=document.createElement('span');avatar.className='scoreAvatar';
+  if(p.avatar&&p.avatar.startsWith(location.origin+'/science-fundesk/')){const img=document.createElement('img');img.src=p.avatar;img.alt='';img.onerror=()=>{img.remove();avatar.textContent='👤'};avatar.append(img)}else avatar.textContent='👤';
+  const name=document.createElement('b');name.textContent=p.no+'號 '+p.name;
+  const score=document.createElement('strong');score.textContent=p.score+' 分';
+  const pairs=document.createElement('small');pairs.textContent=p.pairs+' 組配對';
+  box.append(avatar,name,score,pairs);board.append(box);
+ });
+ notice.textContent='🎯 輪到 '+players[active].name+'（'+players[active].no+'號）'+(locked?' · 請稍候':' · 請翻兩張牌');
+}
+function startFour(){
+ if(!roster)return alert('請從已登入的 FunDesk 首頁開啟遊戲，才能選擇班級學生。');
+ const ids=[...document.querySelectorAll('.playerSelect')].map(x=>x.value);
+ if(ids.length!==4||ids.some(v=>!v))return alert('請選滿四位學生。');
+ if(new Set(ids).size!==4)return alert('四位玩家不可重複。');
+ players=ids.map((id,index)=>({...roster.students.find(st=>st.id===id),index,score:0,pairs:0,turns:0}));
+ gameStarted=true;active=0;$('playerSetup').hidden=true;begin();
+}
+function setMode(value){
+ mode=value;gameStarted=false;players=[];active=0;
+ $('playerSetup').hidden=value!=='four';
+ $('rosterState').textContent=roster?'✅ 已載入 '+roster.name:'請從 FunDesk 首頁開啟以選擇學生';
+ showScores();begin();
+}
+document.querySelectorAll('input[name="mode"]').forEach(r=>r.onchange=()=>setMode(r.value));
+$('startMatch').onclick=startFour;
 function count(){return Number(document.querySelector('input[name=level]:checked').value)}
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function timeLabel(){return String(Math.floor(elapsed/60)).padStart(2,'0')+':'+String(elapsed%60).padStart(2,'0')}
@@ -54,6 +104,7 @@ function makeCard(item,index){
 function begin(){
  version++;stop();if(dialog.open)dialog.close();$('confetti').replaceChildren();
  opened=[];turns=0;matched=0;elapsed=0;locked=false;
+ if(mode==='four'&&gameStarted){players.forEach(p=>{p.score=0;p.pairs=0;p.turns=0});active=0}showScores();
  const pairs=count()/2;
  const types=pets.map(p=>({pet:p,theme:'sun',key:p[0]+'-sun'}))
    .concat(pets.map(p=>({pet:p,theme:'moon',key:p[0]+'-moon'}))).slice(0,pairs);
@@ -62,15 +113,15 @@ function begin(){
  layout();stats();
 }
 function flip(b,item,index){
- if(locked||b.classList.contains('flipped')||b.classList.contains('matched')||opened.length>=2)return;
+ if(locked||(mode==='four'&&!gameStarted)||b.classList.contains('flipped')||b.classList.contains('matched')||opened.length>=2)return;
  timer();b.classList.add('flipped');b.setAttribute('aria-pressed','true');
  b.setAttribute('aria-label','第'+(index+1)+'張，'+item.pet[1]+(item.theme==='sun'?'陽光版':'星光版'));
  opened.push({b,item,index});beep(480,.11);
  if(opened.length!==2)return;
- turns++;stats();const [a,c]=opened;
+ turns++;if(mode==='four'&&gameStarted)players[active].turns++;stats();const [a,c]=opened;
  if(a.item.key===c.item.key){
   a.b.classList.add('matched');c.b.classList.add('matched');
-  a.b.disabled=true;c.b.disabled=true;opened=[];matched++;stats();beep(780,.19);
+  a.b.disabled=true;c.b.disabled=true;opened=[];matched++;if(mode==='four'&&gameStarted){players[active].score+=10;players[active].pairs++;showScores()}stats();beep(780,.19);
   if(matched===deck.length/2)complete();
  }else{
   locked=true;a.b.classList.add('nope');c.b.classList.add('nope');
@@ -78,7 +129,7 @@ function flip(b,item,index){
   pending=setTimeout(()=>{
    pending=null;if(currentVersion!==version)return;
    for(const x of [a,c]){x.b.classList.remove('flipped','nope');x.b.setAttribute('aria-pressed','false');x.b.setAttribute('aria-label','第'+(x.index+1)+'張，未翻開')}
-   opened=[];locked=false;
+   opened=[];locked=false;if(mode==='four'&&gameStarted){active=(active+1)%4;showScores()}
   },900);
  }
 }
@@ -99,11 +150,18 @@ function fireworks(){
 function complete(){
  if(ticker){clearInterval(ticker);ticker=null}
  locked=true;fireworks();beep(990,.26);
- $('winResult').textContent=levels[count()]+'模式｜'+deck.length+'張全部配對成功！翻牌'+turns+'次，完成時間'+timeLabel()+'。';
+ let summary=levels[count()]+'模式｜'+deck.length+'張全部配對成功！翻牌'+turns+'次，完成時間'+timeLabel()+'。';
+ if(mode==='four'&&gameStarted){
+  const ranked=[...players].sort((a,b)=>b.score-a.score||a.index-b.index);
+  const champions=ranked.filter(p=>p.score===ranked[0].score);
+  summary+='\n🏆 '+(champions.length>1?'並列冠軍：':'冠軍：')+champions.map(p=>p.name).join('、');
+  summary+='\n'+ranked.map((p,i)=>(i+1)+'. '+p.no+'號 '+p.name+'：'+p.score+'分（'+p.pairs+'組）').join('\n');
+ }
+ $('winResult').textContent=summary;
  setTimeout(()=>{if(!dialog.open)dialog.showModal()},500);
 }
-$('restart').onclick=begin;$('again').onclick=begin;$('closeWin').onclick=()=>dialog.close();
-document.querySelectorAll('input[name=level]').forEach(x=>x.onchange=begin);
+$('restart').onclick=()=>{if(mode==='four'&&!gameStarted){alert('請先選擇四位學生並開始遊戲。');return}begin()};$('again').onclick=begin;$('closeWin').onclick=()=>dialog.close();
+document.querySelectorAll('input[name=level]').forEach(x=>x.onchange=()=>{if(mode==='four'){gameStarted=false;players=[];$('playerSetup').hidden=false}begin()});
 $('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'🔊 音效開':'🔈 音效關';$('sound').setAttribute('aria-pressed',sound);if(sound)beep()};
 $('fullscreen').onclick=async()=>{
  try{if(document.fullscreenElement)await document.exitFullscreen();else await shell.requestFullscreen()}
