@@ -1,249 +1,250 @@
+/* FunDesk 星空配對王 — 國小五年級清晰 SVG 修正版
+   只保留「星座疊疊樂」與「星座快選王」。
+   圖案由 constellation-sprite.svg 的 20 組向量圖形提供。
+*/
 (()=>{'use strict';
-const items=[
-['牧夫座','牧夫座位於北斗七星附近'],['雙子座','想想兩位並肩的雙胞胎'],['人馬座','像拿著弓箭的人馬'],['大犬座','大犬座裡有明亮的天狼星'],
-['大熊座','北斗七星屬於大熊座的一部分'],['小熊座','北極星位於小熊座尾端'],['天琴座','天琴座有明亮的織女星'],['天鵝座','天鵝座有天津四'],
-['天蠍座','有彎曲的蠍子尾巴'],['仙后座','常見 W 或 M 的連線形狀'],['冬季大三角','三顆亮星形成冬季大三角'],['北斗七星','像水瓢，由七顆主要亮星組成'],
-['室女座','室女座有角宿一'],['春季大三角','找找春天三顆代表亮星'],['秋季四邊形','四顆亮星組成近似四邊形'],['獅子座','想像一頭獅子'],
-['獵戶座','腰帶上有三顆排列整齊的亮星'],['雙魚座','兩條魚以線連在一起'],['飛馬座','飛馬座有明顯的四邊形'],['夏季大三角','織女星、牛郎星、天津四']
+const LIST=[
+ ['牧夫座','靠近北斗七星，可以想像一位牧人'],
+ ['雙子座','兩位並肩的雙胞胎'],
+ ['人馬座','想像拿著弓箭的人馬'],
+ ['大犬座','這個星座有非常明亮的天狼星'],
+ ['大熊座','北斗七星是大熊座的一部分'],
+ ['小熊座','北極星在小熊座的尾端'],
+ ['天琴座','可以在天琴座找到織女星'],
+ ['天鵝座','夏季的天津四就在天鵝座'],
+ ['天蠍座','星點排列像一條彎曲的蠍子尾巴'],
+ ['仙后座','常見的形狀像 W 或 M'],
+ ['冬季大三角','冬天三顆明亮的星形成三角形'],
+ ['北斗七星','七顆亮星連起來像水瓢'],
+ ['室女座','室女座中有明亮的角宿一'],
+ ['春季大三角','春夜天空可以找這三顆代表亮星'],
+ ['秋季四邊形','四顆亮星連起來接近四邊形'],
+ ['獅子座','彎曲的星點像獅子的頭與身體'],
+ ['獵戶座','腰帶上有三顆排在一起的亮星'],
+ ['雙魚座','可以想像兩條魚連在一起'],
+ ['飛馬座','中央有一個明顯的四邊形'],
+ ['夏季大三角','織女星、牛郎星、天津四組成三角形']
 ].map(([name,hint],id)=>({id,name,hint}));
-const $=id=>document.getElementById(id),app=$('app'),field=$('playfield'),win=$('win');
-const params=new URLSearchParams(location.search),token=params.get('fundeskToken');
-let roster=null,mode='stack',targetCount=6,people=[],turn=0,questions=[],solved=new Set(),rounds=0,seconds=0,clock=null,
-    selectedPicture=null,activeWord=0,gameId=0,block=false,openMemory=[];
-function shuffle(array){const a=[...array];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-const getMode=()=>document.querySelector('input[name="mode"]:checked')?.value||'stack';
-const playerCount=()=>Number(document.querySelector('input[name="players"]:checked')?.value||1);
-const time=()=>String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
-const tooltip=item=>$('showHint').checked?item.hint:'';
-function getSprite(item){
- const x=(item.id%5)*25, y=Math.floor(item.id/5)*(100/3);
- const span=document.createElement('span');span.className='sprite';span.style.backgroundPosition=x.toFixed(3)+'% '+y.toFixed(3)+'%';
- span.setAttribute('role','img');span.setAttribute('aria-label',item.name+'星座圖');
- return span;
-}
-function currentPlayer(){return people[turn]}
-function status(message){$('instruction').textContent=message}
-function describe(message){$('feedback').textContent=message}
-function scoreCards(){
- const host=$('scores');host.replaceChildren();
- people.forEach((p,i)=>{
-  const box=document.createElement('div');box.className='score'+(i===turn?' active':'');
-  const av=document.createElement('span');av.className='avatar';
-  if(p.avatar){const img=document.createElement('img');img.src=p.avatar;img.alt='';img.onerror=()=>{img.remove();av.textContent='👤'};av.append(img)}else av.textContent=['🌞','🌙','🌈','⭐'][i];
-  const name=document.createElement('span');name.className='name';name.textContent=p.name;
-  const score=document.createElement('strong');score.textContent=p.score;
-  const small=document.createElement('small');small.textContent=p.matches+' 組配對';
-  box.append(av,name,score,small);host.append(box);
- });
-}
-function info(){
- $('done').textContent=solved.size+'/'+questions.length;
- $('rounds').textContent=rounds;
- $('timer').textContent=time();
- scoreCards();
-}
-function tic(){if(!clock)clock=setInterval(()=>{seconds++;$('timer').textContent=time()},1000)}
-function clearClock(){if(clock){clearInterval(clock);clock=null}}
-function nextTurn(){
- if(people.length>1)turn=(turn+1)%people.length;
- scoreCards();
- status('🎯 '+currentPlayer().name+'，輪到你了！'+(mode==='pick'?'請選擇正確圖卡。':mode==='memory'?'翻開兩張牌找配對。':'請把圖卡放到正確字卡上。'));
-}
-function feedbackGood(item){
- currentPlayer().score++;
- currentPlayer().matches++;
- solved.add(item.id);
- info();describe('🌟 答對了！這是「'+item.name+'」！獲得 1 分！');
- if(solved.size===questions.length){finish();return true}
- return false;
-}
-function feedbackBad(){
- describe('💪 再想想看！圖卡已歸位，換下一位挑戰。');
- nextTurn();
-}
-function photo(item,type='image'){
- const button=document.createElement('button');button.type='button';button.className='card '+type;
- button.dataset.id=item.id;button.setAttribute('aria-label',item.name+'星座圖');button.title=tooltip(item);
- button.append(getSprite(item));
- return button;
+
+const $=id=>document.getElementById(id);
+const app=$('app'),playfield=$('playfield'),dialog=$('winDialog');
+const token=new URLSearchParams(location.search).get('fundeskToken')||'';
+let roster=null,mode='stack',players=[],current=0,cards=[],solved=new Set(),attempts=0,elapsed=0,timer=null,version=0;
+let activeImage=null,waiting=false,remaining=[],finishTimer=null;
+const modeName={stack:'🧩 星座疊疊樂',pick:'🎯 星座快選王'};
+const numPlayers=()=>Number(document.querySelector('input[name="players"]:checked')?.value||1);
+const fmtTime=()=>String(Math.floor(elapsed/60)).padStart(2,'0')+':'+String(elapsed%60).padStart(2,'0');
+function shuffle(list){const out=[...list];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
+function text(id,value){$(id).textContent=String(value)}
+function art(item){
+ const node=document.createElement('span');node.className='art';
+ node.style.setProperty('--x',String((item.id%5)*25)+'%');
+ node.style.setProperty('--y',String(Math.floor(item.id/5)*100/3)+'%');
+ node.setAttribute('role','img');node.setAttribute('aria-label','星座連線圖');
+ return node;
 }
 function word(item){
- const button=document.createElement('button');button.type='button';button.className='card word';button.dataset.id=item.id;
- button.textContent=item.name;button.title=tooltip(item);
- return button;
+ const button=document.createElement('button');button.type='button';button.className='card word';
+ button.textContent=item.name;button.dataset.id=String(item.id);return button;
 }
-function columns(count){return count<=4?count:count<=8?4:count<=12?6:count<=16?8:10}
-function gridOf(count){
- const grid=document.createElement('div');grid.className='cardGrid';grid.style.setProperty('--cols',columns(count));return grid;
+function image(item){
+ const button=document.createElement('button');button.type='button';button.className='card image';
+ button.dataset.id=String(item.id);button.setAttribute('aria-label','星座圖卡');
+ button.append(art(item));return button;
 }
-function stackMode(){
- const main=document.createElement('div');main.className='stackBoard';
- const upper=document.createElement('section'),lower=document.createElement('section');
- const words=gridOf(questions.length),photos=gridOf(questions.length);
- // 字卡較扁平、圖卡需足夠高度，六組以下每組盡可能各佔一欄。
- const pictureCols=questions.length<=8?questions.length:questions.length<=12?6:questions.length<=16?8:10;
- const wordCols=questions.length<=8?questions.length:columns(questions.length);
- words.style.setProperty('--cols',wordCols);
- photos.style.setProperty('--cols',pictureCols);
- upper.append(Object.assign(document.createElement('h3'),{className:'zoneTitle',textContent:'① 字卡區：把對應圖卡疊上來'}),words);
- lower.append(Object.assign(document.createElement('h3'),{className:'zoneTitle',textContent:'② 圖卡區：拖曳圖卡，或先點圖卡再點字卡'}),photos);
- const pictureNodes=new Map(),wordNodes=new Map();
- for(const item of shuffle(questions)){
-  const b=word(item);b.addEventListener('dragover',e=>e.preventDefault());
-  b.addEventListener('drop',e=>{e.preventDefault();const id=Number(e.dataTransfer.getData('text/plain'));place(id,item.id)});
-  b.onclick=()=>{if(selectedPicture!==null)place(selectedPicture,item.id);else describe('請先點選下方的圖卡，再選擇這張字卡。')};
-  words.append(b);wordNodes.set(item.id,b);
+function gridFor(n,forPictures=false){
+ const grid=document.createElement('div');grid.className='card-grid';
+ const narrow=innerWidth<700;
+ let cols;if(narrow){cols=n<=4?2:n<=8?3:n<=12?4:5}
+ else cols=n<=8?n:n<=12?6:n<=16?8:10;
+ // Let cards occupy their own rows and never clip overflowing illustrations.
+ grid.style.setProperty('--cols',String(cols));grid.style.setProperty('--rows',String(Math.ceil(n/cols)));
+ return grid;
+}
+function updateScoreboard(){
+ const root=$('scoreboard');root.replaceChildren();root.style.setProperty('--player-count',String(players.length));
+ players.forEach((p,i)=>{
+  const box=document.createElement('div');box.className='player'+(current===i?' active':'');
+  const avatar=document.createElement('span');avatar.className='avatar';
+  if(p.avatar){const img=document.createElement('img');img.alt='';img.src=p.avatar;img.onerror=()=>{img.remove();avatar.textContent='👤'};avatar.append(img)}
+  else avatar.textContent=['🌞','🌙','⭐','🌈'][i];
+  const name=document.createElement('span');name.className='player-name';name.textContent=p.name;
+  const score=document.createElement('span');score.className='points';score.textContent=p.score+' 分';
+  box.append(avatar,name,score);root.append(box);
+ });
+}
+function refresh(){text('done',solved.size+'/'+cards.length);text('attempts',attempts);text('clock',fmtTime());updateScoreboard()}
+function say(message){text('message',message)}
+function feedback(message){text('feedback',message)}
+function player(){return players[current]}
+function nextPlayer(){current=(current+1)%players.length;updateScoreboard()}
+function startClock(){stopClock();timer=setInterval(()=>{elapsed++;text('clock',fmtTime())},1000)}
+function stopClock(){if(timer){clearInterval(timer);timer=null}if(finishTimer){clearTimeout(finishTimer);finishTimer=null}}
+function showRosterOptions(){
+ const area=$('playerSetup');area.replaceChildren();
+ for(let i=0;i<numPlayers();i++){
+  const label=document.createElement('label');
+  const caption=document.createElement('span');caption.textContent='玩家 '+(i+1);
+  const control=roster?document.createElement('select'):document.createElement('input');
+  control.className='player-choice';control.dataset.position=String(i);
+  if(roster){
+   const empty=document.createElement('option');empty.value='';empty.textContent='請選擇學生';control.append(empty);
+   for(const person of roster.students){const option=document.createElement('option');option.value=person.id;option.textContent=person.no+'號 '+person.name;control.append(option)}
+  }else{control.value='玩家 '+(i+1);control.placeholder='玩家 '+(i+1);control.maxLength=30}
+  label.append(caption,control);area.append(label);
  }
- for(const item of shuffle(questions)){
-  const b=photo(item);b.draggable=true;
-  b.ondragstart=e=>{selectedPicture=item.id;e.dataTransfer.setData('text/plain',String(item.id));};
-  b.onclick=()=>{selectedPicture=item.id;photos.querySelectorAll('.card').forEach(c=>c.classList.toggle('highlight',c===b));describe('已選圖卡，請點上方對應的星座名稱。')};
-  photos.append(b);pictureNodes.set(item.id,b);
+}
+function readPlayers(){
+ const controls=[...document.querySelectorAll('.player-choice')],ids=controls.map(x=>x.value.trim());
+ if(ids.length!==numPlayers()||ids.some(v=>!v)){alert('請先選擇或輸入所有玩家。');return null}
+ if(new Set(ids).size!==ids.length){alert('玩家不能重複。');return null}
+ return ids.map((id,i)=>{
+  const st=roster?.students.find(x=>x.id===id);
+  return {name:st?st.no+'號 '+st.name:id,score:0,avatar:st?.avatar||'',index:i};
+ });
+}
+function reward(item){
+ player().score+=1;solved.add(item.id);
+ feedback('🌟 正確！「'+item.name+'」配對成功，獲得 1 分！');refresh();
+ if(solved.size===cards.length){finish();return true}
+ return false;
+}
+function loseTurn(){
+ nextPlayer();feedback('💪 這張還不對，圖卡回到原位，換下一位挑戰！');
+ say('🎯 輪到 '+player().name+'，請繼續找出正確的星座。');refresh();
+}
+function setupStack(){
+ const layout=document.createElement('div');layout.className='stack-layout';
+ const letters=document.createElement('section');letters.className='zone';
+ const pictures=document.createElement('section');pictures.className='zone';
+ const label1=document.createElement('h3');label1.textContent='① 字卡區：將正確圖卡放到星座名稱上';
+ const label2=document.createElement('h3');label2.textContent='② 圖卡區：先選圖卡，再點字卡（也可拖曳）';
+ const words=gridFor(cards.length),photos=gridFor(cards.length,true),pictureButtons=new Map(),wordButtons=new Map();
+ letters.append(label1,words);pictures.append(label2,photos);
+ for(const item of shuffle(cards)){
+  const b=word(item);wordButtons.set(item.id,b);words.append(b);
+  b.addEventListener('dragover',e=>{if(!waiting)e.preventDefault()});
+  b.addEventListener('drop',e=>{
+   e.preventDefault();const id=Number(e.dataTransfer.getData('text/plain'));
+   if(Number.isInteger(id))place(id,item.id);
+  });
+  b.addEventListener('click',()=>{
+   if(activeImage===null){feedback('請先點選下方一張圖卡，再點選上方對應的星座名稱。');return}
+   place(activeImage,item.id);
+  });
+ }
+ for(const item of shuffle(cards)){
+  const b=image(item);pictureButtons.set(item.id,b);photos.append(b);b.draggable=true;
+  b.addEventListener('dragstart',e=>{
+   if(waiting||solved.has(item.id)){e.preventDefault();return}
+   activeImage=item.id;e.dataTransfer.setData('text/plain',String(item.id));
+  });
+  b.addEventListener('click',()=>{
+   if(waiting||solved.has(item.id))return;
+   activeImage=item.id;photos.querySelectorAll('.card').forEach(x=>x.classList.toggle('selected',x===b));
+   feedback('已選圖卡！請點選上方對應的星座名稱。');
+  });
  }
  function place(pictureId,wordId){
-  if(block||solved.has(wordId)||solved.has(pictureId)||!Number.isInteger(pictureId))return;
-  rounds++;const pic=pictureNodes.get(pictureId),dest=wordNodes.get(wordId);
-  selectedPicture=null;photos.querySelectorAll('.card').forEach(c=>c.classList.remove('highlight'));
-  if(pictureId!==wordId){pic?.classList.add('error');setTimeout(()=>pic?.classList.remove('error'),330);feedbackBad();info();return}
-  pic.disabled=true;pic.classList.add('solved');dest.disabled=true;dest.classList.add('solved');
-  dest.textContent='';dest.append(getSprite(items[pictureId]),document.createTextNode(' '+items[pictureId].name));
-  feedbackGood(items[pictureId]);info();
- }
- main.append(upper,lower);field.append(main);
- status('🎯 '+currentPlayer().name+'：把下方圖卡拖到上方字卡，或點圖卡再點字卡！');
-}
-let pendingPick=null;
-function pickMode(){
- const main=document.createElement('div');main.className='quizBoard',question=document.createElement('div');question.className='question';
- const grid=gridOf(questions.length),pics=new Map();
- const order=shuffle(questions);pendingPick=shuffle(questions);
- for(const item of order){
-  const b=photo(item);b.onclick=()=>pick(item,b);grid.append(b);pics.set(item.id,b);
- }
- function showQuestion(){
-  const next=pendingPick[0];if(!next)return;
-  question.textContent=next.name;
-  if($('showHint').checked){const small=document.createElement('small');small.textContent='　⭐ '+next.hint;question.append(small)}
-  status('🎯 '+currentPlayer().name+'：請找出「'+next.name+'」的圖卡！');
- }
- function pick(item,button){
-  if(block||solved.has(item.id)||!pendingPick.length)return;
-  rounds++;const target=pendingPick[0];
-  if(item.id!==target.id){
-   button.classList.add('error');setTimeout(()=>button.classList.remove('error'),320);
-   feedbackBad();info();status('🎯 '+currentPlayer().name+'：請再找出「'+target.name+'」！');return;
+  if(waiting||solved.has(wordId)||solved.has(pictureId))return;
+  if(!pictureButtons.has(pictureId))return;
+  attempts++;activeImage=null;
+  photos.querySelectorAll('.card').forEach(x=>x.classList.remove('selected'));
+  const pic=pictureButtons.get(pictureId),dest=wordButtons.get(wordId);
+  if(pictureId!==wordId){
+   pic.classList.add('wrong');setTimeout(()=>pic.classList.remove('wrong'),350);loseTurn();return;
   }
-  button.disabled=true;button.classList.add('solved');pendingPick.shift();
-  const ended=feedbackGood(item);info();if(!ended)showQuestion();
+  pic.classList.add('solved');pic.disabled=true;dest.classList.add('solved');dest.disabled=true;
+  if(reward(cards.find(x=>x.id===pictureId)))return;
+  say('🎯 '+player().name+'：配對正確！可以繼續找下一張。');
  }
- main.append(question,grid);field.append(main);showQuestion();
+ layout.append(letters,pictures);playfield.append(layout);
+ say('🎯 '+player().name+'：把下方圖卡拖到上方字卡，或先點圖卡再點字卡。');
 }
-function memoryMode(){
- const main=document.createElement('div');main.className='memoryBoard';let cards=shuffle(questions.flatMap(item=>[{item,kind:'image'},{item,kind:'word'}]));
- const count=cards.length;
- const cols=count<=8?4:count<=16?4:count<=24?6:count<=32?8:10;
- main.style.setProperty('--cols',cols);main.style.setProperty('--rows',Math.ceil(count/cols));
- const version=gameId;openMemory=[];block=false;
- cards.forEach(({item,kind},i)=>{
-  const b=document.createElement('button');b.type='button';b.className='memoryCard '+kind;
-  b.setAttribute('aria-label','第'+(i+1)+'張未翻開的卡片');
-  const content=document.createElement('span');content.className='cardInner';
-  if(kind==='image')content.append(getSprite(item));else content.textContent=item.name;
-  b.dataset.kind=kind;b.append(content);
+function setupPick(){
+ const layout=document.createElement('div');layout.className='pick-layout';
+ const prompt=document.createElement('div');prompt.className='prompt';
+ const grid=gridFor(cards.length,true);remaining=shuffle(cards);
+ for(const item of shuffle(cards)){
+  const b=image(item);grid.append(b);
   b.onclick=()=>{
-   if(block||b.classList.contains('shown')||b.classList.contains('done'))return;
-   b.classList.add('shown');b.setAttribute('aria-label',item.name+(kind==='image'?'圖卡':'字卡'));
-   openMemory.push({b,item,kind});
-   if(openMemory.length!==2)return;
-   rounds++;const [a,c]=openMemory;
-   if(a.item.id===c.item.id&&a.kind!==c.kind){
-    for(const x of [a,c]){x.b.classList.add('done');x.b.disabled=true}
-    openMemory=[];feedbackGood(item);info();return;
+   if(waiting||b.disabled||!remaining.length)return;
+   attempts++;
+   const target=remaining[0];
+   if(item.id!==target.id){
+    b.classList.add('wrong');setTimeout(()=>b.classList.remove('wrong'),350);
+    loseTurn();displayQuestion();return;
    }
-   block=true;info();describe('再記住這兩張牌的位置！');
-   setTimeout(()=>{
-    if(gameId!==version)return;
-    for(const x of [a,c]){x.b.classList.remove('shown');x.b.setAttribute('aria-label','未翻開的卡片')}
-    openMemory=[];block=false;feedbackBad();
-   },1100);
+   b.disabled=true;b.classList.add('solved');remaining.shift();
+   if(reward(item))return;
+   displayQuestion();
   };
-  main.append(b);
- });
- field.append(main);status('🃏 '+currentPlayer().name+'：一次翻兩張，一張圖卡加一張字卡，找到相同星座！');
-}
-function setupPlayers(){
- const host=$('playerSetup'),count=playerCount();host.replaceChildren();
- for(let i=0;i<count;i++){
-  const label=document.createElement('label'),caption=document.createElement('span');caption.textContent='玩家 '+(i+1);
-  const picker=roster?document.createElement('select'):document.createElement('input');picker.className='playerInput';
-  picker.dataset.index=i;
-  if(roster){
-   const empty=document.createElement('option');empty.value='';empty.textContent='選擇學生';picker.append(empty);
-   for(const st of roster.students){const opt=document.createElement('option');opt.value=st.id;opt.textContent=st.no+'號 '+st.name;picker.append(opt)}
-  }else{picker.value='玩家 '+(i+1);picker.placeholder='玩家 '+(i+1);picker.maxLength=20}
-  label.append(caption,picker);host.append(label);
  }
-}
-function collectPlayers(){
- const controls=[...document.querySelectorAll('.playerInput')],count=playerCount();
- const values=controls.map(c=>c.value.trim());
- if(values.length!==count||values.some(v=>!v)){alert('請選好所有玩家。');return null}
- if(new Set(values).size!==values.length){alert('玩家不可重複。');return null}
- return values.map((v,i)=>{
-  const st=roster?.students.find(s=>s.id===v);return {name:st?st.no+'號 '+st.name:v,avatar:st?.avatar||'',score:0,matches:0,index:i};
- });
+ function displayQuestion(){
+  const target=remaining[0];if(!target)return;
+  prompt.replaceChildren();const textNode=document.createElement('strong');textNode.textContent=target.name;prompt.append(textNode);
+  if($('showHint').checked){const small=document.createElement('small');small.textContent='💡 '+target.hint;prompt.append(small)}
+  say('🎯 '+player().name+'：找出「'+target.name+'」的星座圖卡！');
+ }
+ layout.append(prompt,grid);playfield.append(layout);displayQuestion();
 }
 function launch(){
- let n=Number($('quantity').value);
- if(!Number.isInteger(n)||n<2||n>items.length){alert('請輸入 2～20 組卡片。');return}
- const chosen=collectPlayers();if(!chosen)return;
- people=chosen;mode=getMode();targetCount=n;turn=0;questions=shuffle(items).slice(0,n);
- solved=new Set();rounds=0;seconds=0;clearClock();tic();gameId++;block=false;activeWord=0;
- $('setup').hidden=true;$('game').hidden=false;field.replaceChildren();describe('');
- $('modeTitle').textContent={stack:'🧩 星座疊疊樂',pick:'🎯 星座快選王',memory:'🃏 星座翻翻樂'}[mode];
- if(mode==='stack')stackMode();else if(mode==='pick')pickMode();else memoryMode();
- info();
+ const number=Number($('quantity').value);
+ if(!Number.isInteger(number)||number<2||number>20){alert('請輸入 2～20 組配對題目。');return}
+ const chosen=readPlayers();if(!chosen)return;
+ version++;stopClock();cards=shuffle(LIST).slice(0,number);
+ players=chosen;current=0;solved=new Set();attempts=0;elapsed=0;waiting=false;activeImage=null;
+ mode=document.querySelector('input[name="mode"]:checked')?.value==='pick'?'pick':'stack';
+ $('setup').hidden=true;$('game').hidden=false;playfield.replaceChildren();feedback('');
+ text('modeTitle',modeName[mode]);
+ if(mode==='stack')setupStack();else setupPick();
+ refresh();startClock();
 }
-function fireworks(){
- const host=$('fireworks');host.replaceChildren();
- const colors=['#f7cc65','#b7f1d0','#d2b4fa','#a4dbff','#ffa3c5'];
- for(let i=0;i<90;i++){
-  const el=document.createElement('span');el.className='confetti';
-  el.style.setProperty('--x',Math.random()*100+'vw');el.style.setProperty('--dx',(Math.random()*240-120)+'px');
-  el.style.setProperty('--t',(2+Math.random()*2)+'s');el.style.setProperty('--c',colors[Math.floor(Math.random()*colors.length)]);
-  host.append(el);
+function celebrate(){
+ const area=$('confetti');area.replaceChildren();
+ const colors=['#ffcb6e','#8be0c2','#99c9ff','#ec9fca','#c1a5f8'];
+ for(let i=0;i<75;i++){
+  const p=document.createElement('span');p.className='spark';
+  p.style.setProperty('--x',(Math.random()*100)+'vw');
+  p.style.setProperty('--dx',((Math.random()-.5)*220)+'px');
+  p.style.setProperty('--c',colors[Math.floor(Math.random()*colors.length)]);
+  p.style.setProperty('--t',(2+Math.random()*2)+'s');area.append(p);
  }
- setTimeout(()=>host.replaceChildren(),4500);
+ setTimeout(()=>area.replaceChildren(),4500);
 }
 function finish(){
- clearClock();block=true;fireworks();
- const ranks=[...people].sort((a,b)=>b.score-a.score||a.index-b.index),winScore=ranks[0].score;
- const best=ranks.filter(p=>p.score===winScore).map(p=>p.name).join('、');
- $('results').textContent='🏆 '+(ranks.filter(p=>p.score===winScore).length>1?'並列冠軍：':'冠軍：')+best+
- '\\n完成 '+questions.length+' 組配對，使用 '+rounds+' 回合，時間 '+time()+
- '\\n'+ranks.map((p,i)=>(i+1)+'. '+p.name+'：'+p.score+' 分').join('\\n');
- setTimeout(()=>win.showModal(),400);
+ stopClock();waiting=true;celebrate();
+ const ranks=[...players].sort((a,b)=>b.score-a.score||a.index-b.index);
+ const champions=ranks.filter(p=>p.score===ranks[0].score);
+ text('results','🏆 '+(champions.length>1?'並列第一名：':'第一名：')+champions.map(p=>p.name).join('、')+
+   '\n完成 '+cards.length+' 組配對，總共作答 '+attempts+' 次，時間 '+fmtTime()+
+   '\n'+ranks.map((p,i)=>(i+1)+'. '+p.name+'：'+p.score+' 分').join('\n'));
+ const currentVersion=version;
+ finishTimer=setTimeout(()=>{finishTimer=null;if(version===currentVersion&&!dialog.open)dialog.showModal()},450);
 }
-function resetSetup(){clearClock();$('game').hidden=true;$('setup').hidden=false;gameId++;block=false;if(win.open)win.close()}
-$('start').onclick=launch;$('back').onclick=resetSetup;$('settings').onclick=resetSetup;
-$('again').onclick=()=>{if(win.open)win.close();launch()};
-document.querySelectorAll('input[name="players"]').forEach(x=>x.onchange=setupPlayers);
-$('quantity').onchange=()=>{$('quantity').value=Math.max(2,Math.min(20,Math.round(Number($('quantity').value)||6)))};
-$('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await app.requestFullscreen()}catch(e){alert('無法進入全螢幕，可以使用 F11。')}};
-document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'⤢ 離開全螢幕':'⛶ 全螢幕'});
-// Students are transferred only from an authenticated, same-origin FunDesk opener.
+function backToSetup(){version++;stopClock();if(dialog.open)dialog.close();$('game').hidden=true;$('setup').hidden=false;playfield.replaceChildren()}
+$('start').onclick=launch;$('back').onclick=backToSetup;$('settings').onclick=backToSetup;
+$('again').onclick=()=>{if(dialog.open)dialog.close();launch()};
+document.querySelectorAll('input[name="players"]').forEach(x=>x.addEventListener('change',showRosterOptions));
+$('quantity').addEventListener('change',()=>{$('quantity').value=Math.max(2,Math.min(20,Math.round(Number($('quantity').value)||6)))});
+$('fullscreen').onclick=async()=>{
+ try{if(document.fullscreenElement)await document.exitFullscreen();else await app.requestFullscreen()}
+ catch(e){alert('這個瀏覽器無法開啟全螢幕，可以嘗試 F11。')}
+};
+document.addEventListener('fullscreenchange',()=>{text('fullscreen',document.fullscreenElement?'⤢ 離開全螢幕':'⛶ 全螢幕')});
+// 安全接收 FunDesk 主程式傳來的目前班級學生名單：不在網址或檔案儲存姓名。
 if(token&&window.opener){
  window.addEventListener('message',e=>{
-  if(e.origin!==location.origin||e.source!==window.opener||e.data?.token!==token||e.data?.kind!=='fundesk-constellation-roster')return;
-  const d=e.data;if(!Array.isArray(d.students))return;
-  roster={label:String(d.className||'目前班級').slice(0,80),students:d.students.slice(0,100).map(st=>({
-   id:String(st.id||''),no:Number(st.no)||0,name:String(st.name||'').slice(0,50),
-   avatar:typeof st.avatar==='string'&&st.avatar.startsWith(location.origin+'/science-fundesk/')?st.avatar:''
+  if(e.origin!==location.origin||e.source!==window.opener||e.data?.kind!=='fundesk-constellation-roster'||e.data?.token!==token)return;
+  if(!Array.isArray(e.data.students))return;
+  roster={name:String(e.data.className||'目前班級').slice(0,60),students:e.data.students.slice(0,100).map(st=>({
+    id:String(st.id||''),name:String(st.name||'').slice(0,40),no:Number(st.no)||0,
+    avatar:typeof st.avatar==='string'&&st.avatar.startsWith(location.origin+'/science-fundesk/')?st.avatar:''
   })).filter(st=>st.id&&st.name)};
-  $('rosterStatus').textContent='✅ 已載入 '+roster.label+' 的學生，請選擇 1～4 位玩家。';
-  setupPlayers();
+  text('rosterStatus','✅ 已載入 '+roster.name+'（'+roster.students.length+' 位學生），請選擇玩家。');
+  showRosterOptions();
  });
  window.opener.postMessage({kind:'fundesk-constellation-ready',token},location.origin);
 }
-setupPlayers();
+showRosterOptions();
 })();
