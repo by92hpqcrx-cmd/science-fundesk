@@ -1602,7 +1602,7 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
 const KEY='science_fundesk_v1';
 // 連結不包含學生資料，預設網址可由老師在主頁修改。
 const LINK_KEY='science_fundesk_links_v1';
-const LINK_DEFAULTS={personal:'https://by92hpqcrx-cmd.github.io/nature-science-game/personal.html',sky:'https://by92hpqcrx-cmd.github.io/sky-adventure/arena.html',socialAdventure:'https://by92hpqcrx-cmd.github.io/science-fundesk/home-adventure/index.html',quizace:'https://quizace.knsh.com.tw/teacher/quizList',learnmode:'https://www.learnmode.net/home/',kangxuan:'https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=na&grade=all&item=ebook&bookcase=mybookcase',kahoot:'https://kahoot.com/',monopoly:'https://by92hpqcrx-cmd.github.io/dachen-monopoly/campus-challenge.html',petMemory:'https://by92hpqcrx-cmd.github.io/science-fundesk/memory-game/index.html',constellationMatch:'https://by92hpqcrx-cmd.github.io/science-fundesk/constellation-match/index.html',zodiac:'https://zodiac-story-atlas.corkylapwing2.chatgpt.site/',starLegends:'https://star-legends-atlas.corkylapwing2.chatgpt.site/'};
+const LINK_DEFAULTS={personal:'https://by92hpqcrx-cmd.github.io/nature-science-game/personal.html',sky:'https://by92hpqcrx-cmd.github.io/sky-adventure/arena.html',socialAdventure:'https://by92hpqcrx-cmd.github.io/science-fundesk/home-adventure/index.html',quizace:'https://quizace.knsh.com.tw/teacher/quizList',learnmode:'https://www.learnmode.net/home/',kangxuan:'https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=na&grade=all&item=ebook&bookcase=mybookcase',kahoot:'https://kahoot.com/',monopoly:'https://by92hpqcrx-cmd.github.io/dachen-monopoly/campus-challenge.html',petMemory:'https://by92hpqcrx-cmd.github.io/science-fundesk/memory-game/index.html',zodiac:'https://zodiac-story-atlas.corkylapwing2.chatgpt.site/',starLegends:'https://star-legends-atlas.corkylapwing2.chatgpt.site/'};
 let quickLinks={...LINK_DEFAULTS};
 const LINK_REVISION='3';
 try{
@@ -1677,44 +1677,15 @@ function bindQuickOrder(){
  });
 }
 function renderQuickLinks(){
- const cfg=[['personal','🎮','自然科學王・個人賽'],['sky','🌌','星空冒險島'],['socialAdventure','🏝️','家園探險王・社會冒險'],['zodiac','✨','星空故事館・十二星座篇'],['starLegends','🌠','星空故事館・星河傳說'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版'],['petMemory','🃏','班寵翻牌王・記憶配對'],['constellationMatch','🌟','星空配對王・星座圖卡']];
+ const cfg=[['personal','🎮','自然科學王・個人賽'],['sky','🌌','星空冒險島'],['socialAdventure','🏝️','家園探險王・社會冒險'],['zodiac','✨','星空故事館・十二星座篇'],['starLegends','🌠','星空故事館・星河傳說'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版'],['petMemory','🃏','班寵翻牌王・記憶配對']];
  cfg.unshift(['rps','✊','課間小遊戲・剪刀石頭布']);
  const sortedCfg=sortedQuickEntries(cfg);
- return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">✊</span><strong>課間小遊戲・剪刀石頭布</strong><small>選一位學生來挑戰老師</small></button>`;const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':id==='constellationMatch'?'data-fundesk-constellation="1"':''} target="_blank" rel="noopener noreferrer"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
+ return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">✊</span><strong>課間小遊戲・剪刀石頭布</strong><small>選一位學生來挑戰老師</small></button>`;const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':''} target="_blank" rel="noopener noreferrer"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
 }
 /* FunDesk 授權教師開啟校園大富翁時，才透過同源訊息傳遞最少量的玩家候選名單。
    學生名單不放在 URL，也不寫入公開檔案或 localStorage。 */
 /* 四人翻牌模式：教師授權後，只把目前班級名單送給新視窗。
    網址只包含短效隨機 token 與班寵代碼，不攜帶姓名。 */
-/* 星空配對王：同源短效 token 交付目前班級學生名單；姓名不寫入網址。 */
-function openFunDeskConstellation(event){
- const link=event.currentTarget.getAttribute('href')||'';
- let url;try{url=new URL(link,location.href)}catch{return}
- if(url.origin!==location.origin||url.pathname!=='/science-fundesk/constellation-match/index.html')return;
- event.preventDefault();
- // 遊戲本身可以單機練習；只有已登入老師才能挑選 FunDesk 學生。
- if(!cloudReady||!cloudSession){
-  window.open(url.href,'_blank');return;
- }
- const group=db.classes[cl];if(!group||!Array.isArray(group.students)){window.open(url.href,'_blank');return}
- const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);
- const token=[...bytes].map(v=>v.toString(16).padStart(2,'0')).join('');
- url.searchParams.set('fundeskToken',token);
- const child=window.open(url.href,'_blank');
- if(!child){alert('請允許瀏覽器開啟新視窗。');return}
- const selectedClass=cl;
- const list=group.students.map(st=>({
-  id:String(st.id),no:Number(st.no)||0,name:String(st.name||''),
-  avatar:studentAvatarPath(st)?new URL(studentAvatarPath(st),location.href).href:''
- }));
- const handle=e=>{
-  if(e.source!==child||e.origin!==location.origin||e.data?.kind!=='fundesk-constellation-ready'||e.data.token!==token)return;
-  window.removeEventListener('message',handle);
-  child.postMessage({kind:'fundesk-constellation-roster',token,className:classDisplay(selectedClass),students:list},location.origin);
- };
- window.addEventListener('message',handle);
- setTimeout(()=>window.removeEventListener('message',handle),60000);
-}
 function openFunDeskMemory(event){
  const link=event.currentTarget.getAttribute('href')||'';
  let url;try{url=new URL(link,location.href)}catch{return}
@@ -1797,7 +1768,7 @@ function openFunDeskMonopoly(event){
  const expire=setTimeout(()=>window.removeEventListener('message',receive),45000);
 }
 function openLinkSettings(){
- const cfg=[['personal','自然科學王・個人賽'],['sky','星空冒險島'],['socialAdventure','家園探險王・社會冒險'],['zodiac','星空故事館・十二星座篇'],['starLegends','星空故事館・星河傳說'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot! 互動測驗'],['monopoly','校園大富翁・單機版'],['petMemory','班寵翻牌王・記憶配對'],['constellationMatch','星空配對王・星座圖卡']];
+ const cfg=[['personal','自然科學王・個人賽'],['sky','星空冒險島'],['socialAdventure','家園探險王・社會冒險'],['zodiac','星空故事館・十二星座篇'],['starLegends','星空故事館・星河傳說'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot! 互動測驗'],['monopoly','校園大富翁・單機版'],['petMemory','班寵翻牌王・記憶配對']];
  $('modalContent').innerHTML=`<h2>教學快捷入口設定</h2><p class="hint">網址只儲存在目前瀏覽器；必須是 http:// 或 https:// 網址。</p><form id="quickLinkForm">${cfg.map(([id,title])=>`<label class="linkField"><strong>${title}</strong><input type="url" name="${id}" value="${esc(quickLinks[id])}" placeholder="https://..."></label>`).join('')}<div class="actions"><button class="btn" type="submit">儲存連結</button><button class="btn outline" type="button" id="cancelQuickLinks">取消</button></div></form>`;
  $('modal').classList.remove('hidden');$('cancelQuickLinks').onclick=()=>$('modal').classList.add('hidden');
  $('quickLinkForm').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);for(const k of Object.keys(LINK_DEFAULTS)){const v=String(fd.get(k)||'').trim();if(v&&!safeLink(v)){alert('網址格式有誤：'+k);return}quickLinks[k]=v}try{localStorage.setItem(LINK_KEY,JSON.stringify({...quickLinks,revision:LINK_REVISION}))}catch{}$('modal').classList.add('hidden');render()};
@@ -3766,7 +3737,7 @@ function hookClassManager(){
  $('manageSeats').onclick=()=>{view='seats';render()};
 }
 function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>🔐 動態教室密碼</h2><p class="hint">用於老師餵食，以及學生名片解鎖更換頭像。初始密碼為 13579，建議立即修改。</p><div class="formgrid"><label>目前密碼<input id="feedOldPassword" type="password" autocomplete="off"></label><label>新密碼<input id="feedNewPassword" type="password" autocomplete="new-password" placeholder="至少 5 位數字"></label><label>確認新密碼<input id="feedNewPasswordConfirm" type="password" autocomplete="new-password"></label></div><div class="actions"><button class="btn" type="button" id="feedPasswordSave">修改動態教室密碼</button></div></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
-function hookView(){if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();bindQuickOrder();const editLinksButton=$('editQuickLinks');if(editLinksButton)editLinksButton.onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings);document.querySelectorAll('[data-fundesk-monopoly]').forEach(x=>x.addEventListener('click',openFunDeskMonopoly));document.querySelectorAll('[data-fundesk-memory]').forEach(x=>x.addEventListener('click',openFunDeskMemory));document.querySelectorAll('[data-fundesk-constellation]').forEach(x=>x.addEventListener('click',openFunDeskConstellation));document.querySelectorAll('a.quickLink').forEach(a=>{if(a.getAttribute('href')?.includes('/memory-game/index.html'))a.addEventListener('click',()=>{try{const url=new URL(a.href);if(url.origin!==location.origin||url.pathname!=='/science-fundesk/memory-game/index.html')return;const pet=db.classes[cl]?.classPetType;if(pet&&ROOM_PETS.some(p=>p.id===pet))url.searchParams.set('pet',pet);else url.searchParams.delete('pet');a.href=url.href}catch(e){}})})}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='points'){
+function hookView(){if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();bindQuickOrder();const editLinksButton=$('editQuickLinks');if(editLinksButton)editLinksButton.onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings);document.querySelectorAll('[data-fundesk-monopoly]').forEach(x=>x.addEventListener('click',openFunDeskMonopoly));document.querySelectorAll('[data-fundesk-memory]').forEach(x=>x.addEventListener('click',openFunDeskMemory));document.querySelectorAll('a.quickLink').forEach(a=>{if(a.getAttribute('href')?.includes('/memory-game/index.html'))a.addEventListener('click',()=>{try{const url=new URL(a.href);if(url.origin!==location.origin||url.pathname!=='/science-fundesk/memory-game/index.html')return;const pet=db.classes[cl]?.classPetType;if(pet&&ROOM_PETS.some(p=>p.id===pet))url.searchParams.set('pet',pet);else url.searchParams.delete('pet');a.href=url.href}catch(e){}})})}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='points'){
  const toggleLast=$('toggleSeatLastRow');
  if(toggleLast)toggleLast.onclick=()=>{
   const key='fundesk_hide_last_seat_row_'+cl;
