@@ -80,6 +80,11 @@ function stackMode(){
  const main=document.createElement('div');main.className='stackBoard';
  const upper=document.createElement('section'),lower=document.createElement('section');
  const words=gridOf(questions.length),photos=gridOf(questions.length);
+ // 字卡較扁平、圖卡需足夠高度，六組以下每組盡可能各佔一欄。
+ const pictureCols=questions.length<=8?questions.length:questions.length<=12?6:questions.length<=16?8:10;
+ const wordCols=questions.length<=8?questions.length:columns(questions.length);
+ words.style.setProperty('--cols',wordCols);
+ photos.style.setProperty('--cols',pictureCols);
  upper.append(Object.assign(document.createElement('h3'),{className:'zoneTitle',textContent:'① 字卡區：把對應圖卡疊上來'}),words);
  lower.append(Object.assign(document.createElement('h3'),{className:'zoneTitle',textContent:'② 圖卡區：拖曳圖卡，或先點圖卡再點字卡'}),photos);
  const pictureNodes=new Map(),wordNodes=new Map();
