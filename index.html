@@ -381,6 +381,25 @@ body.roomFullscreen .movingRoomPanel{gap:0}
 .breakGameIcon{font-size:clamp(38px,5.6vw,72px)}.breakGameCard strong{font-size:clamp(20px,2.6vw,32px)}.breakGameCard small{font-size:clamp(13px,1.4vw,17px);text-align:center;color:#657a8b}
 .breakGameLaunch{background:#2c708a;color:#fff;padding:11px 26px;border-radius:999px;font-size:17px;font-weight:900;margin-top:auto}.breakGameCard:nth-child(2) .breakGameLaunch{background:#8056b5}
 #breakRpsGame[hidden],#breakGameMenu[hidden]{display:none!important}@media(max-width:640px){.breakGameCards{grid-template-columns:1fr}.breakGameCard{min-height:190px;padding:18px}}
+/* 猜拳遊戲全螢幕：放大老師與學生名片，出拳區完整填滿 */
+.rpsGameHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:5px 0 15px}
+.rpsGameHeader h2{font-size:clamp(21px,2.6vw,35px);margin:0;color:#28624c}
+#breakRpsGame:fullscreen{box-sizing:border-box;width:100vw;height:100dvh;max-height:100dvh;background:linear-gradient(145deg,#f2fbf5,#eaf4ff);padding:clamp(12px,2vh,24px) clamp(14px,3vw,46px);display:flex;flex-direction:column;overflow:hidden;color:#28513e}
+#breakRpsGame:fullscreen .rpsGameHeader{flex:0 0 auto;margin:0 0 7px}
+#breakRpsGame:fullscreen #rpsForm{flex:0 0 auto;display:flex;align-items:center;gap:clamp(8px,2vw,24px);flex-wrap:wrap;padding:6px 10px;background:#fff9;border:1px solid #c5e5d7;border-radius:15px}
+#breakRpsGame:fullscreen #rpsForm fieldset{margin:0;padding:8px 12px}
+#breakRpsGame:fullscreen #rpsForm .actions{margin:0}
+#breakRpsGame:fullscreen .rpsArena{min-height:0;flex:1 1 0;display:flex;flex-direction:column;justify-content:space-evenly;gap:clamp(5px,1.4vh,18px);padding:clamp(6px,1vh,14px)}
+#breakRpsGame:fullscreen .rpsPlayers{min-height:0;flex:1 1 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,3vw,40px);align-items:stretch}
+#breakRpsGame:fullscreen .rpsPlayer{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;border-radius:24px;padding:clamp(8px,1.2vw,20px);background:#fffdf3;border:3px solid #addcc3;box-shadow:0 8px 22px #345c4a29}
+#breakRpsGame:fullscreen .rpsPlayer>.studentAvatarThumb,#breakRpsGame:fullscreen .rpsPlayer .avatarMini,#breakRpsGame:fullscreen .rpsPlayer>img{width:clamp(72px,13vh,190px)!important;height:clamp(72px,13vh,190px)!important;object-fit:contain}
+#breakRpsGame:fullscreen .rpsName{font-size:clamp(24px,3.2vw,48px);font-weight:1000}
+#breakRpsGame:fullscreen .rpsHand{font-size:clamp(28px,6vh,75px)}
+#breakRpsGame:fullscreen #rpsStatus{flex:0 0 auto;text-align:center;font-size:clamp(19px,2.2vw,32px);margin:0}
+#breakRpsGame:fullscreen .rpsChoices{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:clamp(10px,3vw,45px);flex-wrap:wrap}
+#breakRpsGame:fullscreen .rpsChoices[hidden]{display:none!important}
+#breakRpsGame:fullscreen .rpsChoices button{min-width:clamp(125px,18vw,245px);font-size:clamp(20px,2.6vw,40px);padding:clamp(9px,1.6vh,19px)}
+@media(max-height:580px){#breakRpsGame:fullscreen .rpsPlayer>.studentAvatarThumb,#breakRpsGame:fullscreen .rpsPlayer .avatarMini,#breakRpsGame:fullscreen .rpsPlayer>img{height:65px!important;width:65px!important}#breakRpsGame:fullscreen .rpsGameHeader{margin:0}#breakRpsGame:fullscreen #rpsForm{padding:3px}}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -2520,7 +2539,7 @@ function renderRps(){
  <div class="breakGameMenu" id="breakGameMenu"><p class="breakGameIntro">請先選擇遊戲，再進入遊戲畫面</p><div class="breakGameCards">
  <button type="button" class="breakGameCard" id="rpsOpenGame"><span class="breakGameIcon">✊✋✌️</span><strong>和老師猜拳</strong><small>剪刀、石頭、布挑戰</small><span class="breakGameLaunch">進入遊戲</span></button>
  <button type="button" class="breakGameCard" data-guess-where="1"><span class="breakGameIcon">🚪🐾🚪</span><strong>猜猜我在哪兒</strong><small>抽選班寵，猜三扇門</small><span class="breakGameLaunch">進入遊戲</span></button></div></div>
- <div id="breakRpsGame" hidden><div class="actions"><button type="button" class="btn outline" id="rpsBackMenu">← 返回遊戲選單</button></div>
+ <div id="breakRpsGame" hidden><div class="rpsGameHeader"><h2>✊ 和老師猜拳</h2><div class="actions"><button type="button" class="btn outline" id="rpsFullscreenBtn">⛶ 全螢幕</button><button type="button" class="btn outline" id="rpsBackMenu">← 返回遊戲選單</button></div></div>
  ${!roster.length?'<p class="notice">班上至少需要一位學生才能開始遊戲。</p>':`
  <form id="rpsForm">
  <fieldset class="rpsModes"><legend>選擇學生</legend>
@@ -2535,9 +2554,18 @@ function renderRps(){
  </div>`}</div></section>`;
 }
 function bindRps(){
- const menu=$('breakGameMenu'),arena=$('breakRpsGame'),startGame=$('rpsOpenGame'),backGame=$('rpsBackMenu');
+ const menu=$('breakGameMenu'),arena=$('breakRpsGame'),startGame=$('rpsOpenGame'),backGame=$('rpsBackMenu'),fullBtn=$('rpsFullscreenBtn');
+ if(fullBtn&&arena){
+  fullBtn.onclick=async()=>{
+   try{
+    if(document.fullscreenElement===arena)await document.exitFullscreen();
+    else {if(document.fullscreenElement)await document.exitFullscreen();await arena.requestFullscreen()}
+   }catch(e){alert('目前無法切換全螢幕：'+String(e?.message||e))}
+  };
+  document.addEventListener('fullscreenchange',()=>{if(fullBtn.isConnected)fullBtn.textContent=document.fullscreenElement===arena?'↙ 退出全螢幕':'⛶ 全螢幕'});
+ }
  if(startGame&&arena&&menu)startGame.onclick=()=>{menu.hidden=true;arena.hidden=false};
- if(backGame&&arena&&menu)backGame.onclick=()=>{arena.hidden=true;menu.hidden=false};
+ if(backGame&&arena&&menu)backGame.onclick=async()=>{if(document.fullscreenElement===arena)await document.exitFullscreen();arena.hidden=true;menu.hidden=false};
  const form=$('rpsForm');
  if(!form)return;
  const picker=$('rpsStudent'),pickers=$('rpsSelects'),players=$('rpsPlayers'),status=$('rpsStatus'),start=$('rpsStart'),choices=$('rpsChoices');
