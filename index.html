@@ -1559,6 +1559,22 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
 .quicklinkGrid .quickDragging{opacity:.7!important;transform:scale(.98);outline:3px solid #e7a946!important;box-shadow:0 6px 17px #406b5f50!important}
 #quickSortToggle[aria-pressed="true"]{background:#d8f3e3;color:#176045;border-color:#62b58c}
 .quicklinkGrid .quickLink:focus-visible{outline:3px solid #f4ba4c;outline-offset:2px}
+</style><style id="fundeskInlinePointActions20261120">
+/* 座位卡片下方的加扣點控制列（一般座位及實驗分組共用） */
+.pointSeatsLayout .pointSeatWrapper{display:flex;flex-direction:column;gap:5px;min-width:0;position:relative}
+.pointSeatsLayout .pointSeatWrapper>.seat{flex:1 0 auto;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+.pointSeatsLayout .pointSeatActionPanel{width:100%;padding:5px;border:1px solid #a9d9cb;border-radius:10px;background:#f1fbf7;box-sizing:border-box}
+.pointSeatsLayout .pointSeatActionPanel[hidden]{display:none!important}
+.pointSeatsLayout .pointSeatButtons{display:flex;gap:4px}
+.pointSeatsLayout .pointSeatButtons button{flex:1;min-width:0;border:0;border-radius:8px;padding:7px 3px;font-size:clamp(12px,1vw,16px);font-weight:850;cursor:pointer;color:#fff;background:#248568}
+.pointSeatsLayout .pointSeatButtons button.deduct{background:#b9545d}
+.pointSeatsLayout .pointSeatButtons button[aria-pressed="true"]{outline:3px solid #f5cb62;outline-offset:-3px}
+.pointSeatsLayout .pointSeatBehavior{width:100%;max-width:100%;min-width:0;margin-top:6px;padding:7px 2px;border-radius:8px;border:1px solid #8ea9b5;background:#fff;font-weight:750;color:#263c50;font-size:clamp(11px,.95vw,14px)}
+.pointSeatsLayout .pointSeatHelper{font-size:11px;color:#326357;margin:4px 1px 0;line-height:1.3}
+.pointSeatsLayout .labGroupSeats .pointSeatWrapper{border:1px solid #bdcbd7;min-width:0}
+.pointSeatsLayout .labGroupSeats .pointSeatWrapper>.seat{min-height:70px;height:auto}
+.pointSeatsLayout .seatRotated180 .pointSeatWrapper{min-width:0}
+@media(max-width:750px){.pointSeatsLayout .pointSeatActionPanel{padding:3px}.pointSeatsLayout .pointSeatButtons button{font-size:12px;padding:6px 1px}}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
@@ -1878,6 +1894,8 @@ let legacyDb=null;try{legacyDb=JSON.parse(localStorage.getItem(KEY))}catch{}let 
 if(!Array.isArray(db.labTemplate)||db.labTemplate.length!==5)db.labTemplate=DEFAULT_LAB_TEMPLATE.map(g=>[...g]);
 // 本頁互動狀態：避免切換班級、積點、訂正與抽籤時發生 ReferenceError。
 let pointSelection = new Set();
+let pointActionOpenId = null;
+let pointActionSign = null;
 let quizList = [];
 let quizPicked = new Set();
 let quizScore = 10;
@@ -2004,7 +2022,7 @@ function swapTemplateCell(index){
 }
 function resetLabTemplate(){if(!confirm('恢復 PDF 原始座號位置？會清除七班已另行調整的實驗座位排列，但不會刪除學生與課堂紀錄。'))return;db.labTemplate=DEFAULT_LAB_TEMPLATE.map(g=>[...g]);CLASSES.forEach(code=>db.classes[code].seats.lab=[]);templatePicked=null;save();render()}
 function setSeat(kind,arr){cls().seats[kind]=arr;save()}
-function changeClass(c){if(!activeCodes().includes(c))return;if(view==='contact'&&contactDirty()&&!confirm('目前有未儲存的聯絡簿，確定切換班級並捨棄修改？')){syncClassOptions();return;} const u=new URL(location.href);u.searchParams.set('class',c);history.replaceState({},'',u.href);pointSelection.clear();quizList=[];quizPicked.clear();currentQuestion=null;gameAnswered=false;correctionTaskId='';cl=c;if(view==='classroom'){roomOriginalClass=c;roomCardClass=null}editSeats=false;editLabTemplate=false;templatePicked=null;studentId=null;selectedTask='';$('modal').classList.add('hidden');render()}
+function changeClass(c){if(!activeCodes().includes(c))return;if(view==='contact'&&contactDirty()&&!confirm('目前有未儲存的聯絡簿，確定切換班級並捨棄修改？')){syncClassOptions();return;} const u=new URL(location.href);u.searchParams.set('class',c);history.replaceState({},'',u.href);pointSelection.clear();pointActionOpenId=null;pointActionSign=null;quizList=[];quizPicked.clear();currentQuestion=null;gameAnswered=false;correctionTaskId='';cl=c;if(view==='classroom'){roomOriginalClass=c;roomCardClass=null}editSeats=false;editLabTemplate=false;templatePicked=null;studentId=null;selectedTask='';$('modal').classList.add('hidden');render()}
 function statCards(){let n=tally();$('stats').innerHTML=[['班級人數',students().length],['待補習作',n.missing],['待補考',n.exam],['缺席人數',students().filter(st=>att(st.id,$('sessionDate').value)==='缺席').length]].map(([a,b])=>`<div class="stat"><span>${a}</span><strong>${b}</strong></div>`).join('');const badge=$('sidebarPending');if(badge)badge.textContent=n.missing+n.exam||''}
 function renderTabletRules(){return `<div class="tabletGuide"><div class="tabletHero"><div><span class="tabletEyebrow">DA CHENG ELEMENTARY · DIGITAL LEARNING</span><h2>📱 學生平板使用守則</h2><p>先聽指令、專心學習、安全上網、準時歸還</p></div><span class="tabletHeroEmoji" aria-hidden="true">👩🏻‍🏫📲✨</span></div><div class="tabletPptLauncher" style="margin:16px 0 20px;padding:16px 18px;border:1px solid #c8deee;border-radius:16px;background:#f7fbff"><strong style="display:block;font-size:19px;color:#194c79;margin-bottom:10px">📽️ 平板守則簡報</strong><div class="tabletPptButtons" style="display:flex;gap:12px;flex-wrap:wrap"></div><small style="display:block;margin-top:9px;color:#627994">簡報上傳完成後即可由此下載。</small></div><div class="tabletIntro">我們的約定：平板是全校共用的學習工具，用得正確、用得安全，下一位同學也能安心使用。</div><div class="tabletNav"><a href="#tabletSec1">🎒 領取前</a><a href="#tabletSec2">💻 上課中</a><a href="#tabletSec3">🛡️ 安全與健康</a><a href="#tabletSec4">🔌 歸還</a><a href="#tabletPhotos">📷 操作圖解</a></div><section class="tabletSection" id="tabletSec1"><h3 style="background:#dceeff">🎒 ① 領取前：先聽指令，再拿平板</h3><div class="tabletRulesGrid"><article class="tabletRuleItem"><span class="tabletRuleNo">01</span><div><b>依座號領取</b><p>依照老師指定的座號或設備編號領取，不擅自更換，也不幫別人亂拿。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">02</span><div><b>雙手拿穩</b><p>拿取時雙手托住平板，避免抓螢幕、甩動保護套或推擠。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">03</span><div><b>先平放桌面</b><p>領到後平放桌面，等全班領取完畢，老師說開始才能操作。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">04</span><div><b>先檢查外觀</b><p>發現螢幕破裂、保護殼鬆脫、無法開機或電量異常，先告訴老師，不自行拆修。</p></div></article></div></section><section class="tabletSection" id="tabletSec2"><h3 style="background:#d9f7ed">💻 ② 上課中：專心學習、輕觸操作</h3><div class="tabletRulesGrid"><article class="tabletRuleItem"><span class="tabletRuleNo">05</span><div><b>只開指定內容</b><p>只使用老師指定的 App 或網站；不得自行看影片、玩遊戲、拍照錄影或瀏覽無關網頁。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">06</span><div><b>輕點輕滑</b><p>用手指輕觸操作，不用力敲打、連續猛點，也不拿筆尖或硬物戳螢幕。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">07</span><div><b>平板不離桌</b><p>未經老師同意，不拿著平板走動、奔跑或換位置；需要移動先鎖定畫面並雙手拿穩。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">08</span><div><b>遇到問題先舉手</b><p>操作卡住或畫面異常，先停止操作、舉手等候，可小聲提醒老師，不大聲喊叫。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">09</span><div><b>尊重同學</b><p>不搶拿或擅自碰觸別人的平板，不刪改他人作品，不隨意播放聲音干擾課堂。</p></div></article></div></section><section class="tabletSection" id="tabletSec3"><h3 style="background:#fff0dc">🛡️ ③ 安全與健康：保護自己，也保護資料</h3><div class="tabletRulesGrid"><article class="tabletRuleItem"><span class="tabletRuleNo">10</span><div><b>保護個資與帳號</b><p>不公開姓名、座號、密碼、照片或聯絡方式；不替別人登入，也不儲存自己的密碼在公用平板。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">11</span><div><b>小心網路內容</b><p>不點陌生連結、廣告或可疑下載，不回覆陌生訊息；看到不適當內容立即告知老師。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">12</span><div><b>拍照先取得同意</b><p>老師允許且有學習需要時才拍照或錄影；不偷拍、惡搞或傳播同學的影像。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">13</span><div><b>維持良好姿勢</b><p>將平板放穩、保持適當觀看距離，不趴著看；眼睛疲勞時依老師指示休息、望遠。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">14</span><div><b>保持乾燥清潔</b><p>不在平板旁放飲料和食物；手髒或手濕時先清潔擦乾，避免液體流入設備。</p></div></article></div></section><section class="tabletSection" id="tabletSec4"><h3 style="background:#efe7ff">🔌 ④ 下課後：正確登出、歸位充電</h3><div class="tabletRulesGrid"><article class="tabletRuleItem"><span class="tabletRuleNo">15</span><div><b>聽到停止立刻停</b><p>老師宣布停止使用後，先停止操作，不拖延或繼續遊戲。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">16</span><div><b>登出並整理畫面</b><p>依老師指示儲存學習成果、登出個人帳號，關閉使用中的 App。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">17</span><div><b>依號碼歸還</b><p>確認設備編號，依原來位置放回充電車；保護蓋朝上、朝右。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">18</span><div><b>不要跨到隔壁</b><p>保護蓋與平板不可跨進隔壁槽位，避免卡住或壓到其他設備。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">19</span><div><b>充電線插妥</b><p>在老師指導下確認平板放穩、充電接頭正確插入，不硬扯電線。</p></div></article><article class="tabletRuleItem"><span class="tabletRuleNo">20</span><div><b>回座安靜等候</b><p>平板歸還後回座位安靜等待，直到全班完成。</p></div></article></div></section><section class="tabletSection" id="tabletEmergency"><h3 style="background:#ffe4e4">🚨 發生狀況怎麼辦？</h3><table class="tabletIncident"><tbody><tr><th>摔落、破裂、進水</th><td>立刻停止使用，告訴老師；不自行開機測試或修理。</td></tr><tr><th>畫面異常或出現廣告</th><td>不要亂點，舉手請老師協助。</td></tr><tr><th>帳號忘記登出</th><td>立即向老師報告，請老師協助處理。</td></tr><tr><th>設備或充電線有異味、發熱</th><td>停止觸碰與充電，立刻通知老師。</td></tr></tbody></table><p class="tabletNotice">班級提醒｜違反使用規範時，依教師課堂管理規定提醒、扣點或暫停使用。設備損壞應立即通報，後續責任依學校規定處理。</p></section><section class="tabletSection" id="tabletPhotos"><h3 style="background:#dceeff">📷 平板怎麼拿、怎麼放、怎麼充電？</h3><p class="tabletMuted">以下照片保留自原始《平板使用規則》，請依學校設備實際狀況及老師指示操作。</p><div class="tabletPhotosGrid"><article class="tabletPhoto"><img src="tablet_photo_1.jpg" alt="領取後先平放" loading="lazy"><div><b>01 領取後先平放</b><p>平板先放在桌面上，等老師宣布開始。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_2.jpg" alt="正確立起保護套" loading="lazy"><div><b>02 正確立起保護套</b><p>使用保護套支架，確認支撐穩固。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_3.jpg" alt="核對設備編號" loading="lazy"><div><b>03 核對設備編號</b><p>按座號或老師指定號碼領取、歸還。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_4.jpg" alt="歸還時先平放" loading="lazy"><div><b>04 歸還時先平放</b><p>停止操作、登出後，依序整理平板。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_5.jpg" alt="放回正確槽位" loading="lazy"><div><b>05 放回正確槽位</b><p>對準對應的充電槽，保護蓋朝上朝右。</p></div></article><article class="tabletPhoto"><img src="tablet_photo_6.jpg" alt="不跨隔壁並充電" loading="lazy"><div><b>06 不跨隔壁並充電</b><p>保護蓋不壓隔壁設備；插妥充電線。</p></div></article></div></section><div class="tabletPledge">🌈 我會遵守：輕拿輕放｜專心學習｜安全上網｜準時歸還</div><div class="tabletActions"><button type="button" class="btn outline" onclick="window.print()">🖨️ 列印守則</button><button type="button" class="btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ 回到頁首</button></div></div>`;}
 const pageScenes={
@@ -2368,7 +2386,15 @@ function bindRps(){
 }
 
 function renderHomeStudentCards(){return `${renderQuickLinks()}<div class="homeSeatsSingle"><section class="panel"><div class="panelHead"><h2>👩‍🎓 ${esc(classDisplay(cl))}學生名片</h2><span class="pill">依座號排列 · 點選查看學生資料</span></div><div class="personGrid">${pointCards().replaceAll("data-point-person=", "data-open=")}</div></section></div>`;}
-function renderPointSeats(){return renderSeats().replace(renderQuickLinks(),"").replace('class="homeSeatsSingle"','class="pointSeatsLayout"').replace("座位表</h2>","課堂表現座位選取</h2>");}
+function renderPointSeats(){
+ // 將每個座位按鈕與其加扣點控制列包成獨立卡片，避免在 button 內嵌 button/select。
+ return renderSeats().replace(renderQuickLinks(),"").replace('class="homeSeatsSingle"','class="pointSeatsLayout"').replace("座位表</h2>","課堂表現座位選取</h2>")
+ .replace(/<button\b[^>]*class="seat\b[^>]*data-sid="([^"]*)"[^>]*>[\s\S]*?<\/button>/g,(markup,sid)=>{
+  if(!sid)return markup;
+  return '<div class="pointSeatWrapper" data-point-seat-id="'+esc(sid)+'">'+markup+
+   '<div class="pointSeatActionPanel" data-point-seat-actions="'+esc(sid)+'" hidden></div></div>';
+ });
+}
 function renderSeats(){
  const arr=layoutMap(layout),date=$('sessionDate').value;
  const hideLastRow=layout==='normal'&&localStorage.getItem('fundesk_hide_last_seat_row_'+cl)==='1';
@@ -3008,10 +3034,47 @@ function bindNewFeatures(){
    });
   };
   if(ledgerSelect){ledgerSelect.onchange=drawLedger;drawLedger()}
-  document.querySelectorAll('[data-point-person]').forEach(b=>b.onclick=()=>{let id=b.dataset.pointPerson;pointSelection.has(id)?pointSelection.delete(id):pointSelection.add(id);b.classList.toggle('selected',pointSelection.has(id));b.setAttribute('aria-pressed',pointSelection.has(id));$('selectedPointCount').textContent=pointSelection.size});
+  document.querySelectorAll('[data-point-person]').forEach(b=>b.onclick=()=>{let id=b.dataset.pointPerson;pointSelection.has(id)?pointSelection.delete(id):pointSelection.add(id);b.classList.toggle('selected',pointSelection.has(id));b.setAttribute('aria-pressed',pointSelection.has(id));$('selectedPointCount').textContent=pointSelection.size;syncPointSeatActions()});
   document.querySelectorAll('[data-select-points]').forEach(b=>b.onclick=()=>{let val=b.dataset.selectPoints;if(val==='clear')pointSelection.clear();if(val==='all')students().forEach(s=>pointSelection.add(s.id));if(val==='group'){let group=Number($('pointGroup').value);students().forEach(s=>{if(studentGroupIndex(s.id)===([2,3,4,0,1][group]))pointSelection.add(s.id)})}render()});
   function give(d,reason){if(!pointSelection.size){alert('請先選擇學生、全班或組別');return}const n=pointSelection.size;const enrolled=students();if(d<0&&enrolled.length>1&&enrolled.every(s=>pointSelection.has(s.id))){alert('為避免全班連坐扣分，請改為選取個別需要提醒的學生；全班加分仍可使用。');return}if(!confirm(`確定對 ${classDisplay(cl)} ${n} 位學生各${d>=0?'加':'扣'} ${Math.abs(d)} 分？`))return;pointAdd([...pointSelection],d,reason||$('pointsReason').value.trim()||'課堂表現')}
   function selectedBehavior(selectId,sign){const idx=Number($(selectId).value),row=BEHAVIORS[idx];if(!row||Math.sign(row[1])!==sign)return alert('請選擇有效行為');give(row[1],row[0])}
+  // 點座位下方「加點／扣點」後才展開行為選單；同一行為套用全部已選學生。
+  function syncPointSeatActions(){
+   document.querySelectorAll('[data-point-seat-actions]').forEach(panel=>{
+    const id=panel.dataset.pointSeatActions,selected=pointSelection.has(id);
+    const seat=panel.parentElement?.querySelector('.seat');
+    if(seat){seat.classList.toggle('selected',selected);seat.setAttribute('aria-pressed',String(selected))}
+    panel.hidden=!selected;
+    if(!selected){panel.replaceChildren();return}
+    const open=pointActionOpenId===id,sign=pointActionSign;
+    panel.innerHTML='<div class="pointSeatButtons"><button type="button" data-inline-point-sign="1" aria-pressed="'+(open&&sign===1)+'">＋ 加點</button>'+
+     '<button type="button" class="deduct" data-inline-point-sign="-1" aria-pressed="'+(open&&sign===-1)+'">－ 扣點</button></div>'+
+     (open?'<select class="pointSeatBehavior" data-inline-point-behavior aria-label="選擇行為並套用已選學生"><option value="">選擇'+(sign===1?'加點':'扣點')+'行為…</option>'+
+      BEHAVIORS.map(([name,delta],i)=>Math.sign(delta)===sign?'<option value="'+i+'">'+esc(name)+'（'+(delta>0?'+':'')+delta+'點）</option>':'').join('')+'</select>'+
+      '<div class="pointSeatHelper">將套用到已選 '+pointSelection.size+' 位學生</div>':'');
+   });
+  }
+  const pointSeatHost=$('pointPeople');
+  if(pointSeatHost){
+   pointSeatHost.addEventListener('click',event=>{
+    const button=event.target.closest('[data-inline-point-sign]');
+    if(!button)return;
+    const panel=button.closest('[data-point-seat-actions]'),id=panel?.dataset.pointSeatActions;
+    if(!id||!pointSelection.has(id))return;
+    const sign=Number(button.dataset.inlinePointSign);
+    if(pointActionOpenId===id&&pointActionSign===sign){pointActionOpenId=null;pointActionSign=null}
+    else{pointActionOpenId=id;pointActionSign=sign}
+    syncPointSeatActions();
+   });
+   pointSeatHost.addEventListener('change',event=>{
+    const select=event.target.closest('[data-inline-point-behavior]');
+    if(!select||!select.value)return;
+    const row=BEHAVIORS[Number(select.value)],sid=select.closest('[data-point-seat-actions]')?.dataset.pointSeatActions;
+    if(!row||!pointSelection.has(sid)||Math.sign(row[1])!==pointActionSign)return;
+    give(row[1],row[0]);
+   });
+  }
+  syncPointSeatActions();
   if($('applyAddBehavior'))$('applyAddBehavior').onclick=()=>selectedBehavior('pointAddBehavior',1);
   if($('applyDeductBehavior'))$('applyDeductBehavior').onclick=()=>selectedBehavior('pointDeductBehavior',-1);
   if($('giveCustomPoint'))$('giveCustomPoint').onclick=()=>{let n=Number($('customPoint').value);if(!Number.isInteger(n)||Math.abs(n)>100||n===0)return alert('請輸入 -100 至 100 之間的非零整數');give(n)};
@@ -3747,7 +3810,7 @@ function hookView(){if(view==='classroom'){startMovingClassroom();return}if(view
  };
  document.querySelectorAll('[data-layout]').forEach(b=>b.onclick=()=>{layout=b.dataset.layout;editSeats=false;editLabTemplate=false;templatePicked=null;render()});const seatEditButton=$('seatEdit');if(seatEditButton)seatEditButton.onclick=()=>{editSeats=!editSeats;render()};
  if(layout==='lab'&&$('templateEdit')){$('templateEdit').onclick=()=>{if(!editLabTemplate){if(!confirm('進入七班共用模板編輯？交換座號會同步套用七班，並清除各班個別實驗座位排列；所有學生紀錄保留。'))return;editSeats=false;}editLabTemplate=!editLabTemplate;templatePicked=null;render()};if(editLabTemplate&&$('templateReset')){$('templateReset').onclick=resetLabTemplate;document.querySelectorAll('[data-template-index]').forEach(b=>b.onclick=()=>swapTemplateCell(Number(b.dataset.templateIndex)));}}
- document.querySelectorAll('.seat:not(.templateSeat)').forEach(b=>{b.onclick=()=>{if(editSeats)return;let id=b.dataset.sid;if(!id)return;if(view==='points'){pointSelection.has(id)?pointSelection.delete(id):pointSelection.add(id);b.classList.toggle('selected',pointSelection.has(id));b.setAttribute('aria-pressed',pointSelection.has(id));const count=$('selectedPointCount');if(count)count.textContent=pointSelection.size}else openStudent(id)};b.ondragstart=e=>{if(!editSeats){e.preventDefault();return}e.dataTransfer.setData('text/plain',b.dataset.seat)};b.ondragover=e=>{if(editSeats){e.preventDefault();b.classList.add('dragover')}};b.ondragleave=()=>b.classList.remove('dragover');b.ondrop=e=>{e.preventDefault();b.classList.remove('dragover');let from=Number(e.dataTransfer.getData('text/plain'));let target=Number(b.dataset.seat);if(!Number.isInteger(from)||from<0)return;let a=layoutMap(layout);[a[from],a[target]]=[a[target],a[from]];setSeat(layout,a);render()}})
+ document.querySelectorAll('.seat:not(.templateSeat)').forEach(b=>{b.onclick=()=>{if(editSeats)return;let id=b.dataset.sid;if(!id)return;if(view==='points'){pointSelection.has(id)?pointSelection.delete(id):pointSelection.add(id);b.classList.toggle('selected',pointSelection.has(id));b.setAttribute('aria-pressed',pointSelection.has(id));if(!pointSelection.has(id)&&pointActionOpenId===id){pointActionOpenId=null;pointActionSign=null}const count=$('selectedPointCount');if(count)count.textContent=pointSelection.size;syncPointSeatActions()}else openStudent(id)};b.ondragstart=e=>{if(!editSeats){e.preventDefault();return}e.dataTransfer.setData('text/plain',b.dataset.seat)};b.ondragover=e=>{if(editSeats){e.preventDefault();b.classList.add('dragover')}};b.ondragleave=()=>b.classList.remove('dragover');b.ondrop=e=>{e.preventDefault();b.classList.remove('dragover');let from=Number(e.dataTransfer.getData('text/plain'));let target=Number(b.dataset.seat);if(!Number.isInteger(from)||from<0)return;let a=layoutMap(layout);[a[from],a[target]]=[a[target],a[from]];setSeat(layout,a);render()}})
 }if(view==='attendance')document.querySelectorAll('[data-att-row]').forEach(row=>{
  const sid=row.dataset.attRow,date=()=>$('sessionDate').value;
  bindAttendanceControl(row,sid,date,()=>{
