@@ -15,7 +15,7 @@ async function post(path,body,token){
 }
 function signin(){
  $('body').innerHTML=form;
- $('signin').onsubmit=async e=>{
+ const signInForm=$('signin');if(!signInForm){$('status').textContent='登入表單載入失敗，請重新整理。';return}signInForm.onsubmit=async e=>{
   e.preventDefault();$('status').textContent='正在驗證…';
   try{session=await post('/auth/v1/token?grant_type=password',{email:$('email').value.trim(),password:$('password').value});localStorage.setItem(storageKey,JSON.stringify(session));confirmPage()}
   catch(err){$('status').textContent='登入失敗：'+err.message}
@@ -29,19 +29,21 @@ async function confirmPage(){
   const user=await res.json();
   $('body').innerHTML='<p>目前教師帳號：<strong id="teacherEmail"></strong></p><button id="approve">✅ 允許教室電腦登入</button><button id="change" style="background:#edf3f0;color:#17483a">切換教師帳號</button>';
   $('teacherEmail').textContent=user.email||'';
-  $('change').onclick=()=>{localStorage.removeItem(storageKey);session=null;signin()};
-  $('approve').onclick=async()=>{
-   $('approve').disabled=true;$('status').textContent='正在核准一次性登入…';
+  const changeButton=$('change'),approveButton=$('approve');
+  if(!changeButton||!approveButton)throw Error('授權按鈕尚未載入，請重新整理');
+  changeButton.onclick=()=>{localStorage.removeItem(storageKey);session=null;signin()};
+  approveButton.onclick=async()=>{
+   approveButton.disabled=true;$('status').textContent='正在核准一次性登入…';
    try{
     const r=await fetch(cfg.url+'/functions/v1/fundesk-qr-approve',{method:'POST',headers:{apikey:cfg.key,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({id,phoneSecret})});
     const data=await r.json().catch(()=>({}));
     if(!r.ok)throw Error(data.message||'核准失敗');
     $('body').innerHTML='<h2>✅ 已授權</h2><p>請回到教室電腦查看 FunDesk。</p>';
     $('status').textContent='授權只適用於本次掃碼。';
-   }catch(e){$('status').textContent=e.message;$('approve').disabled=false}
+   }catch(e){$('status').textContent=e.message;if(approveButton.isConnected)approveButton.disabled=false}
   };
   $('status').textContent='請確認後才按下允許登入。';
- }catch{localStorage.removeItem(storageKey);session=null;signin();$('status').textContent='請先驗證教師身分。'}
+ }catch(e){localStorage.removeItem(storageKey);session=null;signin();$('status').textContent='請先驗證教師身分。'+(e.message?'（'+e.message+'）':'')}
 }
 if(session)confirmPage();else signin();
 })();
