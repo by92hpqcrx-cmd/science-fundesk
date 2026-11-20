@@ -61,6 +61,26 @@ button:focus-visible{outline:3px solid #ffc867;outline-offset:2px}
  #students .remoteLabRoom .labCells .student strong{font-size:12px}
  #students .remoteLabRoom .labCells .student span{font-size:11px}
 }
+</style><style id="remoteParity20261120">
+body{background:#f5f7fb!important;color:#1f2b42!important}
+header{background:linear-gradient(120deg,#4d91ba,#70bca1)!important}
+.panel{border:1px solid #d7e9e2!important;box-shadow:0 5px 18px #174b5020!important}
+#students .remote-seat-wrap{min-width:0;display:flex;flex-direction:column;gap:3px;background:#f8fcfa;border:1px solid #c0d9d2;border-radius:11px;padding:3px}
+#students .remote-seat-wrap>.student{width:100%;min-height:82px!important;padding:8px 3px!important;align-items:center;justify-content:center;border-radius:9px;gap:3px;overflow-wrap:anywhere}
+#students .remote-seat-wrap>.student strong{font-size:clamp(12px,1.3vw,18px);line-height:1.3}
+#students .remote-seat-wrap>.student .score{font-size:clamp(11px,1vw,15px)}
+#students .remote-avatar{height:clamp(28px,3vw,46px);width:clamp(28px,3vw,46px);object-fit:contain;border-radius:50%;display:grid;place-items:center;background:#e5f2ed}
+#students .remote-seat-action{min-width:0;padding:5px;background:#ecf9f3;border:1px solid #9ed5bf;border-radius:9px}
+#students .remote-point-buttons{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+#students .remote-point-buttons button{padding:6px 1px!important;min-height:34px;font-size:clamp(11px,1vw,14px);color:white;background:#29846b;border-radius:7px}
+#students .remote-point-buttons .remote-action-minus{background:#be5961}
+#students .remote-point-buttons button[aria-pressed="true"]{outline:2px solid #ffd671;outline-offset:-2px}
+#students .remote-behavior-select{width:100%;max-width:100%;min-width:0;min-height:38px;margin:6px 0 2px;padding:3px;font-size:clamp(11px,1vw,14px);border:1px solid #a4b5bf}
+#students .remote-seat-action small{display:block;font-size:10px;color:#416b62;line-height:1.35}
+#students.normalSeats .seatGrid{grid-template-columns:repeat(6,minmax(0,1fr))}
+#students.labSeats .remoteLabRoom{width:100%}
+#students .remoteLabRoom .labCells{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:700px){#students .remote-seat-wrap{padding:2px}#students .remote-seat-wrap>.student{min-height:68px!important}#students .remote-seat-wrap>.student strong{font-size:11px}#students .remote-point-buttons button{font-size:10px;padding:5px 0!important}#students .remote-behavior-select{font-size:11px}#students .remote-avatar{width:26px;height:26px}}
 </style></head>
 <body><header><h1>📱 FunDesk 課堂表現遙控器</h1><button id="logout" class="secondary hidden">🚪 登出</button></header>
 <main>
@@ -93,7 +113,7 @@ const $=id=>document.getElementById(id);
 const esc=x=>String(x??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const today=()=>{const a=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Taipei",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()).map(x=>[x.type,x.value]));return a.year+"-"+a.month+"-"+a.day};
 const behaviors=[['主動發言',1,'🙋'],['專心上課',1,'👂'],['完成任務',2,'✏️'],['合作良好',2,'🤝'],['實驗表現',2,'🔬'],['主動服務',2,'⭐'],['筆記認真',2,'📝'],['平板使用優良',2,'💻'],['平時考100分',5,'💯'],['期中期末考100分',10,'🏅'],['習作字體工整（每次）',2,'✍️'],['習作書寫無錯誤（每次）',2,'✅'],['干擾上課',-1,'🗣️'],['任意走動',-1,'🚶'],['未帶課習',-1,'📚'],['上課分心',-1,'💭'],['上課遲到',-1,'⏰'],['不尊重同學',-2,'😠'],['實驗違規',-2,'⚠️'],['平板違規',-2,'🎮'],['在自然教室喧鬧',-1,'🔊'],['攜帶非學用品至教室',-1,'🎲'],['亂動課室物品',-1,'🧪'],['發言不舉手',-1,'✋'],['說髒話',-2,'🚫'],['上課吃東西',-2,'🍪'],['上課玩東西',-2,'🧸']];
-let session=null,rows=[],meta={},selection=new Set(),saving=false,classCode="",seatLayout="normal";
+let session=null,rows=[],meta={},selection=new Set(),saving=false,classCode="",seatLayout="normal",openPointStudent="",openPointSign="";
 function status(s,type=""){const e=$("status");e.textContent=s;e.className="status "+type}
 async function api(path,options={},auth=false,retry=true){
  const headers={apikey:KEY,...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})};
@@ -146,9 +166,18 @@ function draw(){
   seats=Array.from({length:Math.max(36,Math.ceil(seats.length/6)*6)},(_,i)=>seats[i]||null);
  }
  const byId=new Map(students.map(p=>[p.id,p]));
- const cell=(sid)=>{const st=byId.get(sid);if(!st)return '<div class="student emptySeat">空位</div>';
-  const total=studentTotal(sid);
-  return '<button type="button" class="student '+(selection.has(sid)?'active':'')+'" data-sid="'+esc(sid)+'" aria-pressed="'+selection.has(sid)+'"><strong>'+esc(st.no)+' 號</strong><span>'+esc(st.name)+'</span><span class="score">'+(total>0?'+':'')+total+' 點</span></button>';
+ if(!selection.has(openPointStudent)){openPointStudent='';openPointSign='';}
+ const cell=(sid)=>{
+  const st=byId.get(sid);
+  if(!st)return '<div class="student emptySeat">空位</div>';
+  const total=studentTotal(sid),active=selection.has(sid),opened=openPointStudent===sid&&active;
+  const avatar=String(st.avatar||st.avatarUrl||'');
+  const safeAvatar=(avatar.startsWith('data:image/')||avatar.startsWith('https://'))?
+    '<img class="remote-avatar" src="'+esc(avatar)+'" alt="" loading="lazy">':
+    '<span class="remote-avatar remote-avatar-fallback">👩‍🎓</span>';
+  const options=sign=>'<option value="">請選擇行為</option>'+behaviors.map(([name,d],i)=>Math.sign(d)===sign?'<option value="'+i+'">'+esc(name)+'（'+(d>0?'+':'')+d+'）</option>':'').join('');
+  const panel=opened?'<div class="remote-seat-action"><div class="remote-point-buttons"><button type="button" data-sign="1" data-owner="'+esc(sid)+'" aria-pressed="'+(openPointSign==='add')+'">＋ 加點</button><button type="button" class="remote-action-minus" data-sign="-1" data-owner="'+esc(sid)+'" aria-pressed="'+(openPointSign==='deduct')+'">－ 扣點</button></div>'+(openPointSign?'<select class="remote-behavior-select" data-owner="'+esc(sid)+'" data-sign="'+(openPointSign==='add'?1:-1)+'" aria-label="選擇加扣點行為">'+options(openPointSign==='add'?1:-1)+'</select><small>套用至已選取的 '+selection.size+' 位學生</small>':'')+'</div>':'';
+  return '<div class="remote-seat-wrap"><button type="button" class="student '+(active?'active':'')+'" data-sid="'+esc(sid)+'" aria-pressed="'+active+'">'+safeAvatar+'<strong>'+esc(st.no)+' 號 · '+esc(st.name)+'</strong><span class="score">可用 '+(total>0?'+':'')+total+' 點</span></button>'+panel+'</div>';
  };
  if(seatLayout==='normal'){
   $("students").className='normalSeats';
@@ -165,7 +194,7 @@ function draw(){
 }
 $("normalLayout").onclick=()=>{seatLayout='normal';draw()};
 $("labLayout").onclick=()=>{seatLayout='lab';draw()};
-function chooseClass(){classCode=$("classes").value;selection.clear();draw()}
+function chooseClass(){classCode=$("classes").value;selection.clear();openPointStudent="";openPointSign="";draw()}
 async function reload(silent=false){
  if(saving)return;
  if(!silent)status("正在讀取教師雲端班級資料…");
@@ -201,7 +230,29 @@ $("reload").onclick=()=>reload().catch(err=>status("讀取失敗："+err.message
 $("classes").onchange=chooseClass;
 $("selectAll").onclick=()=>{selection=new Set(people().map(x=>x.id));draw()};
 $("clear").onclick=()=>{selection.clear();draw()};
-$("students").onclick=e=>{const b=e.target.closest("[data-sid]");if(!b)return;const id=b.dataset.sid;if(selection.has(id))selection.delete(id);else selection.add(id);draw()};
+$("students").onclick=e=>{
+ const action=e.target.closest('[data-sign][data-owner]');
+ if(action){
+  const id=action.dataset.owner;
+  if(!selection.has(id))selection.add(id);
+  openPointStudent=id;openPointSign=Number(action.dataset.sign)>0?'add':'deduct';
+  draw();return;
+ }
+ const b=e.target.closest("[data-sid]");if(!b)return;
+ const id=b.dataset.sid;
+ if(selection.has(id)){
+  selection.delete(id);
+  if(openPointStudent===id){openPointStudent='';openPointSign='';}
+ }else{selection.add(id);openPointStudent=id;openPointSign='';}
+ draw();
+};
+$("students").onchange=e=>{
+ const select=e.target.closest('.remote-behavior-select');
+ if(!select||select.value==='')return;
+ const row=behaviors[Number(select.value)];
+ if(!row||Math.sign(row[1])!==Number(select.dataset.sign))return;
+ addPoints(row[1],row[0]);
+};
 $("selectGroup").onclick=selectGroup;
 $("pointAddBehavior").innerHTML=behaviors.map(([name,d],i)=>d>0?'<option value="'+i+'">'+esc(name)+'（+'+d+' 點）</option>':'').join('');
 $("pointDeductBehavior").innerHTML=behaviors.map(([name,d],i)=>d<0?'<option value="'+i+'">'+esc(name)+'（'+d+' 點）</option>':'').join('');
