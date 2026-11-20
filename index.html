@@ -1862,7 +1862,7 @@ function openFunDeskMonopoly(event){
  const expire=setTimeout(()=>window.removeEventListener('message',receive),45000);
 }
 function openLinkSettings(){
- const cfg=[['personal','自然科學王・個人賽'],['sky','星空冒險島'],['socialAdventure','家園探險王・社會冒險'],['zodiac','星空故事館・十二星座篇'],['starLegends','星空故事館・星河傳說'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot! 互動測驗'],['monopoly','校園大富翁・單機版'],['petMemory','記憶翻牌遊戲・三大主題']];
+ const cfg=[['personal','自然科學王・三大模式'],['sky','星空冒險島'],['socialAdventure','家園探險王・社會冒險'],['zodiac','星空故事館・十二星座篇'],['starLegends','星空故事館・星河傳說'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot! 互動測驗'],['monopoly','校園大富翁・單機版'],['petMemory','記憶翻牌遊戲・三大主題']];
  $('modalContent').innerHTML=`<h2>教學快捷入口設定</h2><p class="hint">網址只儲存在目前瀏覽器；必須是 http:// 或 https:// 網址。</p><form id="quickLinkForm">${cfg.map(([id,title])=>`<label class="linkField"><strong>${title}</strong><input type="url" name="${id}" value="${esc(quickLinks[id])}" placeholder="https://..."></label>`).join('')}<div class="actions"><button class="btn" type="submit">儲存連結</button><button class="btn outline" type="button" id="cancelQuickLinks">取消</button></div></form>`;
  $('modal').classList.remove('hidden');$('cancelQuickLinks').onclick=()=>$('modal').classList.add('hidden');
  $('quickLinkForm').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);for(const k of Object.keys(LINK_DEFAULTS)){const v=String(fd.get(k)||'').trim();if(v&&!safeLink(v)){alert('網址格式有誤：'+k);return}quickLinks[k]=v}try{localStorage.setItem(LINK_KEY,JSON.stringify({...quickLinks,revision:LINK_REVISION}))}catch{}$('modal').classList.add('hidden');render()};
