@@ -1693,10 +1693,10 @@ function bindQuickOrder(){
  });
 }
 function renderQuickLinks(){
- const cfg=[['personal','🎮','自然科學王・三大模式'],['sky','🌌','星空冒險島'],['socialAdventure','🏝️','家園探險王・社會冒險'],['zodiac','✨','星空故事館・十二星座篇'],['starLegends','🌠','星空故事館・星河傳說'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版'],['petMemory','🃏','記憶翻牌遊戲・三大主題']];
- cfg.unshift(['rps','✊','課間小遊戲・剪刀石頭布']);
+ const cfg=[['personal','🎮','自然科學王・四大模式'],['sky','🌌','星空冒險島'],['socialAdventure','🏝️','家園探險王・社會冒險'],['zodiac','✨','星空故事館・十二星座篇'],['starLegends','🌠','星空故事館・星河傳說'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版'],['petMemory','🃏','記憶翻牌遊戲・三大主題']];
+ cfg.unshift(['rps','🎲','課間小遊戲']);
  const sortedCfg=sortedQuickEntries(cfg);
- return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">✊</span><strong>課間小遊戲・剪刀石頭布</strong><small>選一位學生來挑戰老師</small></button>`;const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='personal'?'data-fundesk-king="1"':id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':''} target="_blank" ${id==='petMemory'||id==='personal'?'':'rel="noopener noreferrer"'}><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
+ return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">🎲</span><strong>課間小遊戲</strong><small>剪刀石頭布・猜猜我在哪兒</small></button>`;const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='personal'?'data-fundesk-king="1"':id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':''} target="_blank" ${id==='petMemory'||id==='personal'?'':'rel="noopener noreferrer"'}><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
 }
 /* FunDesk 授權教師開啟校園大富翁時，才透過同源訊息傳遞最少量的玩家候選名單。
    學生名單不放在 URL，也不寫入公開檔案或 localStorage。 */
@@ -1729,6 +1729,54 @@ function openFunDeskMemory(event){
  window.addEventListener('message',listener);
  setTimeout(()=>window.removeEventListener('message',listener),60000);
 }
+
+/* 猜猜我在哪兒：教師端掌握參賽身分與雲端計分權限。學生名單不放在 URL。 */
+function openFundeskGuessWhere(){
+ if(!cloudReady||!cloudSession||cloudBlocked){alert('請先登入 FunDesk，確認雲端同步正常。');return;}
+ const code=cl,group=db.classes[code],roster=(group?.students||[]).filter(s=>s&&s.id!=null&&Number(s.no)>0).sort((a,b)=>Number(a.no)-Number(b.no));
+ if(!roster.length){alert('目前班級沒有學生名單，請先匯入。');return;}
+ const seat=prompt('請輸入這一局參賽學生的座號（'+classDisplay(code)+'）：\n'+roster.map(s=>String(s.no)+'號 '+s.name).join('、'));
+ if(seat===null)return;
+ if(!/^\d{1,3}$/.test(seat.trim())){alert('請輸入正確座號。');return;}
+ const chosen=roster.find(s=>Number(s.no)===Number(seat.trim()));
+ if(!chosen){alert('找不到這個座號的學生，請重新操作。');return;}
+ const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);
+ const token=[...bytes].map(x=>x.toString(16).padStart(2,'0')).join('');
+ const url=new URL('./guess-where-pet.html',location.href);url.searchParams.set('fundeskToken',token);
+ const child=window.open(url.href,'_blank');
+ if(!child){alert('瀏覽器阻擋了遊戲視窗，請允許開啟彈出視窗。');return;}
+ const studentId=String(chosen.id),studentLabel=String(chosen.no)+'號 '+String(chosen.name||'');
+ const awardIds=new Set(),pendingIds=new Set();
+ const pets=ROOM_PETS.map(p=>({id:p.id,name:p.name,image:new URL('./class-pets/'+encodeURIComponent(p.id)+'.svg',location.href).href}));
+ const send=(payload)=>{try{if(!child.closed)child.postMessage({...payload,token},location.origin)}catch{}};
+ const listener=async e=>{
+  if(e.origin!==location.origin||e.source!==child||e.data?.token!==token)return;
+  const d=e.data;
+  if(d.kind==='fundesk-guess-ready'){send({kind:'fundesk-guess-config',studentLabel,pets});return;}
+  if(d.kind!=='fundesk-guess-award')return;
+  const round=Number(d.round),petId=String(d.petId||'');
+  if(!Number.isInteger(round)||round<1||round>1000000||!pets.some(p=>p.id===petId))return;
+  const awardId=token+':'+round;
+  const reply=(ok,error='')=>send({kind:'fundesk-guess-award-result',round,ok,error});
+  if(awardIds.has(awardId)){reply(true);return;}
+  if(pendingIds.has(awardId))return;
+  const current=db.classes[code];
+  if(!cloudReady||!cloudSession||cloudBlocked||!current?.students?.some(s=>String(s.id)===studentId)){reply(false,'雲端或學生資料未準備完成');return;}
+  if((current.points||[]).some(p=>p.guessWhereRoundId===awardId)){awardIds.add(awardId);reply(true);return;}
+  pendingIds.add(awardId);
+  const date=($('sessionDate')?.value||today());
+  const item={id:uid(),sid:chosen.id,date,delta:1,reason:'猜猜我在哪兒・答對',kind:'guess-where',guessWhereRoundId:awardId,petId};
+  if(!Array.isArray(current.points))current.points=[];
+  current.points.push(item);
+  try{await cloudQueueSave();if(cloudBlocked)throw Error('FunDesk 雲端同步未完成');
+   awardIds.add(awardId);contactQueuePointsSync(code,date);render();reply(true);
+  }catch(err){const i=current.points.indexOf(item);if(i>=0)current.points.splice(i,1);reply(false,String(err?.message||err));}
+  finally{pendingIds.delete(awardId)}
+ };
+ window.addEventListener('message',listener);
+ setTimeout(()=>window.removeEventListener('message',listener),2*60*60*1000);
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-guess-where]');if(!b)return;e.preventDefault();openFundeskGuessWhere()});
 
 function openFunDeskKing(event){
  let url;try{url=new URL(event.currentTarget.getAttribute('href'),location.href)}catch{return}
@@ -2428,7 +2476,7 @@ const rpsResult=(left,right)=>(left-right+3)%3;
 function renderRps(){
  const roster=[...students()].sort((a,b)=>a.no-b.no);
  const options=roster.map(s=>`<option value="${esc(s.id)}">${esc(s.no)} 號　${esc(s.name)}</option>`).join('');
- return `<section class="panel rpsPanel"><div class="panelHead"><h2>✊ 和老師猜拳</h2><button class="btn outline" type="button" data-goto="seats">回首頁</button></div>
+ return `<section class="panel rpsPanel"><div class="panelHead"><h2>🎲 課間小遊戲</h2><button class="btn" type="button" data-guess-where="1">🐾 猜猜我在哪兒</button><button class="btn outline" type="button" data-goto="seats">回首頁</button></div>
  ${!roster.length?'<p class="notice">班上至少需要一位學生才能開始遊戲。</p>':`
  <form id="rpsForm">
  <fieldset class="rpsModes"><legend>選擇學生</legend>
