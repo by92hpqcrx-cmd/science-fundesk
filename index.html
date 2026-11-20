@@ -1743,11 +1743,43 @@ function openFundeskGuessWhere(){
  if(!cloudReady||!cloudSession||cloudBlocked){alert('請先登入 FunDesk，確認雲端同步正常。');return;}
  const code=cl,group=db.classes[code],roster=(group?.students||[]).filter(s=>s&&s.id!=null&&Number(s.no)>0).sort((a,b)=>Number(a.no)-Number(b.no));
  if(!roster.length){alert('目前班級沒有學生名單，請先匯入。');return;}
- const seat=prompt('請輸入這一局參賽學生的座號（'+classDisplay(code)+'）：\n'+roster.map(s=>String(s.no)+'號 '+s.name).join('、'));
- if(seat===null)return;
- if(!/^\d{1,3}$/.test(seat.trim())){alert('請輸入正確座號。');return;}
- const chosen=roster.find(s=>Number(s.no)===Number(seat.trim()));
- if(!chosen){alert('找不到這個座號的學生，請重新操作。');return;}
+ document.querySelector('#fundeskGuessStudentDialog')?.remove();
+ const dialog=document.createElement('dialog');dialog.id='fundeskGuessStudentDialog';
+ dialog.setAttribute('aria-label','猜猜我在哪兒：選擇參賽學生');
+ dialog.style.cssText='border:3px solid #add8c9;border-radius:24px;background:#f8fff9;color:#294e41;padding:25px;width:min(92vw,520px);box-shadow:0 20px 70px #0005;max-height:90vh;overflow:auto';
+ const title=document.createElement('h2');title.textContent='🐾 猜猜我在哪兒｜選擇學生';dialog.append(title);
+ const note=document.createElement('p');note.textContent=classDisplay(code)+'｜選擇隨機抽選或老師指定學生';dialog.append(note);
+ const form=document.createElement('form');form.style.cssText='display:grid;gap:15px';form.method='dialog';
+ const options=document.createElement('div');options.style.cssText='display:flex;gap:12px;flex-wrap:wrap';
+ for(const [mode,label] of [['random','🎲 隨機抽選'],['specific','👩‍🏫 老師指定']]){
+  const wrapper=document.createElement('label');wrapper.style.cssText='padding:11px 14px;border:2px solid #b9d8c4;border-radius:12px;background:white;font-weight:800;cursor:pointer';
+  const radio=document.createElement('input');radio.type='radio';radio.name='guessStudentMode';radio.value=mode;radio.checked=mode==='random';wrapper.append(radio,document.createTextNode(' '+label));options.append(wrapper);
+ }
+ form.append(options);
+ const selectRow=document.createElement('label');selectRow.style.cssText='display:none;font-weight:800';
+ selectRow.append(document.createTextNode('指定參賽學生'));
+ const picker=document.createElement('select');picker.style.cssText='display:block;width:100%;padding:14px;font-size:19px;margin-top:8px';
+ roster.forEach(st=>picker.add(new Option(st.no+'號　'+st.name,String(st.id))));
+ selectRow.append(picker);form.append(selectRow);
+ options.onchange=()=>{const selected=form.querySelector('input[name="guessStudentMode"]:checked')?.value;selectRow.style.display=selected==='specific'?'block':'none'};
+ const actions=document.createElement('div');actions.style.cssText='display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap';
+ const cancel=document.createElement('button');cancel.type='button';cancel.className='btn outline';cancel.textContent='取消';cancel.onclick=()=>dialog.close();
+ const play=document.createElement('button');play.type='submit';play.className='btn';play.textContent='▶ 開始遊戲';
+ actions.append(cancel,play);form.append(actions);dialog.append(form);document.body.append(dialog);
+ dialog.addEventListener('close',()=>dialog.remove(),{once:true});
+ form.onsubmit=event=>{
+  event.preventDefault();
+  const mode=form.querySelector('input[name="guessStudentMode"]:checked')?.value;
+  let chosen;
+  if(mode==='specific')chosen=roster.find(st=>String(st.id)===picker.value);
+  else {const nums=new Uint32Array(1);crypto.getRandomValues(nums);chosen=roster[nums[0]%roster.length]}
+  if(!chosen){alert('請重新選擇參賽學生');return}
+  dialog.close();
+  launchFundeskGuessWhere(chosen,code);
+ };
+ dialog.showModal();
+}
+function launchFundeskGuessWhere(chosen,code){
  const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);
  const token=[...bytes].map(x=>x.toString(16).padStart(2,'0')).join('');
  const url=new URL('./guess-where-pet.html',location.href);url.searchParams.set('fundeskToken',token);
