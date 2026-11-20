@@ -172,7 +172,7 @@ function begin(){
  const source=category==='planets'?planets:category==='constellations'?constellations:pets;
  const dir=category==='planets'?'planets':category==='constellations'?'constellations':'';
  const types=shuffle(source).slice(0,kinds).map(p=>({
-  pet:p,key:p[0],src:dir?'./assets/'+dir+'/'+encodeURIComponent(p[0])+'.webp':''
+  pet:p,key:p[0],src:dir?(window.MEMORY_GAME_ASSETS?.[dir+'/'+p[0]]||'./assets/'+dir+'/'+encodeURIComponent(p[0])+'.webp'):''
  }));
  deck=shuffle(types.flatMap(x=>[x,x,x,x]));
  board.replaceChildren();deck.forEach((x,i)=>board.appendChild(makeCard(x,i)));
