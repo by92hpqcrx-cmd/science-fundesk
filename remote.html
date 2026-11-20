@@ -81,6 +81,10 @@ header{background:linear-gradient(120deg,#4d91ba,#70bca1)!important}
 #students.labSeats .remoteLabRoom{width:100%}
 #students .remoteLabRoom .labCells{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:700px){#students .remote-seat-wrap{padding:2px}#students .remote-seat-wrap>.student{min-height:68px!important}#students .remote-seat-wrap>.student strong{font-size:11px}#students .remote-point-buttons button{font-size:10px;padding:5px 0!important}#students .remote-behavior-select{font-size:11px}#students .remote-avatar{width:26px;height:26px}}
+
+#students .remote-seat-wrap:has(.remote-seat-action){position:relative;z-index:2;overflow:visible}
+#students .remote-seat-action{overflow:visible!important}
+#students .remote-behavior-select{position:relative;z-index:3;appearance:auto!important;pointer-events:auto!important}
 </style></head>
 <body><header><h1>📱 FunDesk 課堂表現遙控器</h1><button id="logout" class="secondary hidden">🚪 登出</button></header>
 <main>
@@ -134,6 +138,22 @@ function className(c){
 }
 function current(){return rows.find(x=>x.class_code===classCode)}
 function people(){return (current()?.payload?.students||[]).slice().sort((a,b)=>Number(a.no)-Number(b.no))}
+const REMOTE_ZODIAC_FILES={aries:'01_牡羊座.svg',taurus:'02_金牛座.svg',gemini:'03_雙子座.svg',cancer:'04_巨蟹座.svg',leo:'05_獅子座.svg',virgo:'06_處女座.svg',libra:'07_天秤座.svg',scorpio:'08_天蠍座.svg',sagittarius:'09_射手座.svg',capricorn:'10_摩羯座.svg',aquarius:'11_水瓶座.svg',pisces:'12_雙魚座.svg'};
+function remoteAvatarPath(st){
+ if(!st)return '';
+ const avatar=String(st.avatar||st.avatarUrl||'').trim();
+ if(avatar.startsWith('data:image/')||avatar.startsWith('https://')||avatar.startsWith('./avatars/'))return avatar;
+ if(avatar){
+  if(!/^[a-z0-9_-]+$/i.test(avatar))return '';
+  if(avatar.startsWith('zodiac-')){
+   const name=REMOTE_ZODIAC_FILES[avatar.slice(7)];
+   return name?'./avatars/'+name:'';
+  }
+  return './avatars/'+avatar+'.svg';
+ }
+ const n=Number(st.no);
+ return n>=1&&n<=14?'./avatars/default-boy.svg':n>=15&&n<=28?'./avatars/default-girl.svg':'';
+}
 function studentTotal(sid){return (current()?.payload?.points||[]).filter(p=>p.sid===sid).reduce((sum,p)=>sum+(Number(p.delta)||0),0)}
 function labGroupOf(sid){
  const payload=current()?.payload||{};
@@ -171,9 +191,9 @@ function draw(){
   const st=byId.get(sid);
   if(!st)return '<div class="student emptySeat">空位</div>';
   const total=studentTotal(sid),active=selection.has(sid),opened=openPointStudent===sid&&active;
-  const avatar=String(st.avatar||st.avatarUrl||'');
-  const safeAvatar=(avatar.startsWith('data:image/')||avatar.startsWith('https://'))?
-    '<img class="remote-avatar" src="'+esc(avatar)+'" alt="" loading="lazy">':
+  const avatar=remoteAvatarPath(st);
+  const safeAvatar=avatar?
+    '<img class="remote-avatar" src="'+esc(avatar)+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'avatars/default-boy.svg\'">':
     '<span class="remote-avatar remote-avatar-fallback">👩‍🎓</span>';
   const options=sign=>'<option value="">請選擇行為</option>'+behaviors.map(([name,d],i)=>Math.sign(d)===sign?'<option value="'+i+'">'+esc(name)+'（'+(d>0?'+':'')+d+'）</option>':'').join('');
   const panel=opened?'<div class="remote-seat-action"><div class="remote-point-buttons"><button type="button" data-sign="1" data-owner="'+esc(sid)+'" aria-pressed="'+(openPointSign==='add')+'">＋ 加點</button><button type="button" class="remote-action-minus" data-sign="-1" data-owner="'+esc(sid)+'" aria-pressed="'+(openPointSign==='deduct')+'">－ 扣點</button></div>'+(openPointSign?'<select class="remote-behavior-select" data-owner="'+esc(sid)+'" data-sign="'+(openPointSign==='add'?1:-1)+'" aria-label="選擇加扣點行為">'+options(openPointSign==='add'?1:-1)+'</select><small>套用至已選取的 '+selection.size+' 位學生</small>':'')+'</div>':'';
@@ -231,7 +251,7 @@ $("classes").onchange=chooseClass;
 $("selectAll").onclick=()=>{selection=new Set(people().map(x=>x.id));draw()};
 $("clear").onclick=()=>{selection.clear();draw()};
 $("students").onclick=e=>{
- const action=e.target.closest('[data-sign][data-owner]');
+ const action=e.target.closest('button[data-sign][data-owner]');
  if(action){
   const id=action.dataset.owner;
   if(!selection.has(id))selection.add(id);
