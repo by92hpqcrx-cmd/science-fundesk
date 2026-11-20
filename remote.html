@@ -347,7 +347,7 @@ async function addPoints(delta,chosenReason=""){
    try{
     const revision=await api("/rest/v1/rpc/fundesk_save_teacher_data",{method:"POST",body:JSON.stringify({p_class_code:classCode,p_payload:payload,p_expected_revision:Number(row.revision)||0})});
     if(typeof revision!=="number")throw Error("儲存回傳版本異常");
-    const local=current();if(local){local.payload=payload;local.revision=revision}draw()
+    const local=current();if(local){local.payload=payload;local.revision=revision}draw();refreshRemoteLedger()
     let contactResult='';try{contactResult=await syncPublishedContact(classCode,date,payload)}catch(contactError){
      console.warn('班級聯絡簿同步失敗：',contactError);
      contactResult='⚠️ 加扣點已存入教師資料庫，但聯絡簿同步失敗，請使用主程式檢查同步';
