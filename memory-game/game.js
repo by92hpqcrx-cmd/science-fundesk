@@ -139,7 +139,7 @@ function makeCard(item,index){
  const face=document.createElement('span');face.className='card-side card-front';
  const image=document.createElement('img');image.className='pet-image'+(item.src?' memory-theme-image':'');image.src=item.src||('../class-pets/'+encodeURIComponent(item.pet[0])+'.svg');image.alt=item.pet[1];image.draggable=false;
  if(item.src)face.classList.add('category-front');
- image.onerror=()=>{image.remove();const fallback=document.createElement('span');fallback.className='fallback';fallback.textContent=item.pet[2];face.appendChild(fallback)};
+ image.onerror=()=>{image.remove();const fallback=document.createElement('span');fallback.className='fallback';fallback.textContent=item.pet[1];face.appendChild(fallback);console.error('[記憶翻牌遊戲] 圖卡載入失敗:',item.pet[1]);};
  const name=document.createElement('span');name.className='pet-name';name.textContent=item.pet[1];
  face.append(image,name);inside.append(back,face);b.append(inside);
  b.onclick=()=>flip(b,item,index);
@@ -169,10 +169,11 @@ function begin(){
  if(mode==='multi'&&gameStarted){players.forEach(p=>{p.score=0;p.pairs=0;p.turns=0});active=0}showScores();
  // 一個圖案四張相同的牌，任兩張相同即可配對。星球主題最大 10 種（40 張）。
  const kinds=count()/4;
+ if(category!=='pets'&&!window.MEMORY_GAME_ASSETS){$('categoryHint').textContent='⚠️ 星座／星球圖庫未載入，請強制重新整理';console.error('記憶翻牌遊戲：圖庫未載入');}
  const source=category==='planets'?planets:category==='constellations'?constellations:pets;
  const dir=category==='planets'?'planets':category==='constellations'?'constellations':'';
  const types=shuffle(source).slice(0,kinds).map(p=>({
-  pet:p,key:p[0],src:dir?(window.MEMORY_GAME_ASSETS?.[dir+'/'+p[0]]||'./assets/'+dir+'/'+encodeURIComponent(p[0])+'.webp'):''
+  pet:p,key:p[0],src:dir?(window.MEMORY_GAME_ASSETS?.[dir+'/'+p[0]+'.webp']||''):''
  }));
  deck=shuffle(types.flatMap(x=>[x,x,x,x]));
  board.replaceChildren();deck.forEach((x,i)=>board.appendChild(makeCard(x,i)));
