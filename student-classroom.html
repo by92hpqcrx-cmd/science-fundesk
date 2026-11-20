@@ -101,7 +101,7 @@
 .stage.scene-beach{background:#fff3df url('./backgrounds/beach-faded.png') center/cover no-repeat}
 </style></head><body>
 <div id="app">
-<header class="top"><div class="topHeading"><h1>🏫 FunDesk 學生端動態教室</h1><strong id="classTitle">讀取班級中…</strong><span class="sub" id="classCount"></span><div class="topControls"><div class="petChoice"><label for="petSelect">🐾 班寵</label><select id="petSelect"></select></div><label>背景<select id="sceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option><option value="space">🚀 太空</option><option value="amusement">🎡 遊樂園</option><option value="park">🌳 公園</option><option value="mountain">⛰️ 山上風景區</option><option value="beach">🏖️ 海邊</option></select></label><label>速度<select id="speed"><option value="slow">慢</option><option value="medium" selected>中</option><option value="fast">快</option></select></label><button class="btn" type="button" id="pause">⏸ 暫停</button><span class="status" id="status">請點學生名片使用餵食券，或點老師頭像輸入動態教室密碼。</span></div><span id="sync" class="sub">準備連線</span><button class="btn" id="reload" type="button">↻ 同步</button><button class="btn primary" id="fullscreen" type="button">⛶ 全螢幕</button></div></header>
+<header class="top"><div class="topHeading"><h1>🏫 FunDesk 學生端動態教室</h1><strong id="classTitle">讀取班級中…</strong><span class="sub" id="classCount"></span><div class="topControls"><div class="petChoice"><span>🐾 班寵</span><strong id="petFixedLabel" aria-live="polite">由老師設定</strong></div><label>背景<select id="sceneSelect"><option value="classroom">教室</option><option value="playground">操場</option><option value="activity">活動中心</option><option value="space">🚀 太空</option><option value="amusement">🎡 遊樂園</option><option value="park">🌳 公園</option><option value="mountain">⛰️ 山上風景區</option><option value="beach">🏖️ 海邊</option></select></label><label>速度<select id="speed"><option value="slow">慢</option><option value="medium" selected>中</option><option value="fast">快</option></select></label><button class="btn" type="button" id="pause">⏸ 暫停</button><span class="status" id="status">請點學生名片使用餵食券，或點老師頭像輸入動態教室密碼。</span></div><span id="sync" class="sub">準備連線</span><button class="btn" id="reload" type="button">↻ 同步</button><button class="btn primary" id="fullscreen" type="button">⛶ 全螢幕</button></div></header>
 <main class="layout"><aside class="panel foodShelf" id="foodShelf" aria-label="左側餵食工具欄"></aside><div class="stage" id="stage"><div class="window"></div><div class="board" id="board">動態教室</div><div id="walkers"></div></div></main><div class="foot">學生端免登入 · 需持有本班聯絡簿專屬連結 · 不開啟主程式</div>
 </div>
 <div class="loginCurtain" id="login" hidden><form class="loginBox" id="loginForm"><h2>🏫 動態教室登入</h2><p class="hint">請使用 FunDesk 教師帳號。此頁面只顯示指定班級的動態教室，不開啟主程式。</p><label>教師電子郵件<input type="email" id="email" autocomplete="username" required></label><label>教師密碼<input type="password" id="password" autocomplete="current-password" required></label><button class="btn primary" type="submit">登入並開啟動態教室</button><p id="loginError" class="hint" role="alert"></p></form></div>
@@ -136,10 +136,8 @@ async function load(){
  const abs=new Set((data.attendance||[]).filter(x=>x.date===today()&&x.status==="缺席").map(x=>String(x.sid)));
  $("classCount").textContent="出席 "+(data.students||[]).filter(x=>!abs.has(String(x.id))).length+" 人";
  $("board").textContent=$("classTitle").textContent+" · 動態教室";
- $("petSelect").innerHTML='<option value="">不顯示班寵</option>'+ROOM_PETS.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.emoji+" "+p.name)+'</option>').join("");
- if(previewPetId===null)previewPetId=ROOM_PETS.some(x=>x.id===data.classPetType)?data.classPetType:"";
- $("petSelect").value=ROOM_PETS.some(x=>x.id===previewPetId)?previewPetId:"";
- $("petSelect").disabled=false;
+ const activePet=ROOM_PETS.find(p=>p.id===data.classPetType);
+ $("petFixedLabel").textContent=activePet?activePet.emoji+" "+activePet.name:"尚未指定班寵";
  $("sceneSelect").value=["classroom","playground","activity","space","amusement","park","mountain","beach"].includes(data.roomScene)?data.roomScene:"classroom";
  $("stage").className="stage scene-"+$("sceneSelect").value;
  renderWalkers();setSync("✅ 學生端已連線");
@@ -158,9 +156,8 @@ function tickets(sid){const pts=data&&data.points||[],logs=data&&data.roomFeedin
  const legacy=logs.filter(p=>p.ticketUsed&&String(p.feederSid)===String(sid)&&!p.ledgerId).length;
  return Math.max(0,bought-used-legacy);
 }
-// 學生端可切換展示的班寵；正式餵食仍依教師端設定的班寵。
-let previewPetId=null;
-function getPet(){return ROOM_PETS.find(p=>p.id===(previewPetId===null?data&&data.classPetType:previewPetId))}
+// 學生端班寵只能顯示教師端指定種類；學生不可切換或預覽其他班寵。
+function getPet(){return ROOM_PETS.find(p=>p.id===(data&&data.classPetType))}
 // 每餵一次成長：學生/老師 3 次 2 倍，班寵 10 次 2 倍；冷卻期間漸縮。
 function feedGrowth(type,id,now=Date.now()){
  const raw=type==="student"?st().roomFeeding?.[String(id)]:type==="teacher"?st().roomTeacherFeed:type==="pet"?st().classPetFeedings?.[String(id)]:null;
@@ -282,7 +279,6 @@ async function feed(){
 $("modalClose").onclick=closeModal;$("modal").onclick=e=>{if(e.target===$("modal"))closeModal()};
 $("reload").onclick=async()=>{if(busy)return;try{await load();setStatus("已同步最新資料")}catch(e){setSync("⚠️ 同步失敗",true);alert(e.message)}};
 
-$("petSelect").onchange=()=>{previewPetId=$("petSelect").value;renderWalkers();const official=st().classPetType;if(previewPetId&&previewPetId!==official)setStatus("目前預覽 "+(getPet()?.name||"班寵")+"；餵食僅限老師設定的班寵，請先由老師端切換班寵。");else setStatus("已切換班寵顯示，點頭像可查看紀錄及餵食。");};
 $("sceneSelect").onchange=()=>{$("stage").className="stage scene-"+$("sceneSelect").value};
 $("pause").onclick=()=>{paused=!paused;$("pause").textContent=paused?"▶ 繼續":"⏸ 暫停"};
 $("fullscreen").onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $("app").requestFullscreen()}catch(e){setStatus("瀏覽器不支援自動進入全螢幕，可使用 F11。")}};
