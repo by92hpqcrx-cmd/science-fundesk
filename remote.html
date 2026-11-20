@@ -110,16 +110,7 @@ header{background:linear-gradient(120deg,#4d91ba,#70bca1)!important}
 <div class="inlineControls"><label>選擇實驗小組<select id="pointGroup"><option value="0">第一組</option><option value="1">第二組</option><option value="2">第三組</option><option value="3">第四組</option><option value="4">第五組</option></select></label><button class="secondary" type="button" id="selectGroup">選實驗小組</button></div>
 <p class="note">已選取 <span id="selectedCount">0</span> 人。可選個人、全班或實驗小組；全班允許加分，禁止連坐扣分。</p></section>
 <section class="panel"><h2>選擇學生</h2><p class="note">可多選學生，並查看目前積點。</p><div class="seatToolbar"><button type="button" class="secondary active" id="normalLayout">一般座位</button><button type="button" class="secondary" id="labLayout">實驗分組</button></div><div id="students"></div></section>
-<section class="panel"><h2>★ 課堂表現｜加扣點</h2>
-<div class="actionSections">
-<div class="actionSection"><h3>🌟 加點行為</h3><label>選擇加點項目<select id="pointAddBehavior"></select></label><button class="primary" type="button" id="applyAddBehavior">＋ 登記加點</button></div>
-<div class="actionSection deduct"><h3>📌 扣點行為</h3><label>選擇扣點項目<select id="pointDeductBehavior"></select></label><button class="danger" type="button" id="applyDeductBehavior">－ 登記扣點</button></div>
-</div>
-<div class="inlineControls"><label>自訂點數（-100～100）<input id="customPoint" type="number" min="-100" max="100" value="1"></label><button class="secondary" type="button" id="giveCustomPoint">套用</button></div>
-<label>補充備註（自訂點數時使用）<input id="reason" maxlength="90" placeholder="選填：例如 筆記認真"></label>
-<h3 class="sectionTitle">常用行為一鍵記錄（8 格）</h3><div id="reasons" class="pointQuickEight"></div>
-<p class="note">與 FunDesk 主程式相同：選好學生後，點選行為按鈕或登記加扣點，確認後儲存。全班扣點會被阻擋。</p>
-</section><section class="panel remoteLedgerPanel" id="remoteLedgerPanel"><h2>🧾 積點抵扣／誤記取消</h2><p class="note">選擇學生可使用積點抵扣或取消誤記；選擇全班可取消有完整批次識別的全班加點。原始紀錄僅標記取消，不刪除。</p><label for="ledgerStudent">選擇學生或全班<select id="ledgerStudent"><option value="">請先登入</option></select></label><div id="ledgerDetails" aria-live="polite"><p class="note">請先選擇學生。</p></div></section></div>
+<section class="panel remoteLedgerPanel" id="remoteLedgerPanel"><h2>🧾 積點抵扣／誤記取消</h2><p class="note">選擇學生可使用積點抵扣或取消誤記；選擇全班可取消有完整批次識別的全班加點。原始紀錄僅標記取消，不刪除。</p><label for="ledgerStudent">選擇學生或全班<select id="ledgerStudent"><option value="">請先登入</option></select></label><div id="ledgerDetails" aria-live="polite"><p class="note">請先選擇學生。</p></div></section></div>
 <div id="status" class="status" role="status">請以教師帳號登入。</div>
 <p class="note">平板遙控器僅供教師使用。每次修改會以雲端版本比對，發現同時操作時會重新讀取，避免覆蓋其他裝置的紀錄。</p>
 </main>
@@ -288,14 +279,6 @@ $("students").onchange=e=>{
  addPoints(row[1],row[0]);
 };
 $("selectGroup").onclick=selectGroup;
-$("pointAddBehavior").innerHTML=behaviors.map(([name,d],i)=>d>0?'<option value="'+i+'">'+esc(name)+'（+'+d+' 點）</option>':'').join('');
-$("pointDeductBehavior").innerHTML=behaviors.map(([name,d],i)=>d<0?'<option value="'+i+'">'+esc(name)+'（'+d+' 點）</option>':'').join('');
-$("reasons").innerHTML=[...behaviors.map((r,i)=>[...r,i]).filter(r=>r[1]<0).slice(0,4),...behaviors.map((r,i)=>[...r,i]).filter(r=>r[1]>0).slice(0,4)].map(([name,d,emoji,i])=>'<button type="button" class="behaviorButton" data-reason="'+i+'" aria-label="'+esc(name)+' 加 '+d+' 點"><b>'+emoji+' ＋'+d+' 點</b><span>'+esc(name)+'</span></button>').join('');
-$("reasons").onclick=e=>{const b=e.target.closest('[data-reason]');if(!b)return;const [name,delta]=behaviors[Number(b.dataset.reason)];addPoints(delta,name)};
-function applyBehavior(selectId,sign){const row=behaviors[Number($(selectId).value)];if(!row||Math.sign(row[1])!==sign)return status('請選擇有效行為','error');addPoints(row[1],row[0])}
-$("applyAddBehavior").onclick=()=>applyBehavior('pointAddBehavior',1);
-$("applyDeductBehavior").onclick=()=>applyBehavior('pointDeductBehavior',-1);
-$("giveCustomPoint").onclick=()=>{const d=Number($("customPoint").value);if(!Number.isInteger(d)||d===0||Math.abs(d)>100)return status('請輸入 -100 至 100 間的非零整數','error');addPoints(d)};
 const CONTACT_POINT_START='[FunDesk積點START]',CONTACT_POINT_END='[FunDesk積點END]';
 function contactPublishedSlice(text){
  const raw=String(text||''),begin=raw.indexOf(CONTACT_POINT_START),end=raw.indexOf(CONTACT_POINT_END,begin+CONTACT_POINT_START.length);
@@ -328,12 +311,12 @@ async function syncPublishedContact(code,date,payload){
 }
 async function addPoints(delta,chosenReason=""){
  if(saving||!session)return;
- const ids=[...selection],name=className(classCode),date=$("date").value,reason=chosenReason||$("reason").value.trim()||"課堂表現";
+ const ids=[...selection],name=className(classCode),date=$("date").value,reason=chosenReason||"課堂表現";
  if(!ids.length)return status("請先點選學生。","error");
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return status("請確認上課日期。","error");
  if(delta<0&&ids.length===people().length&&people().length>1)return status("禁止全班連坐扣分，請改選個別學生。","error");
  if(!confirm("確定要在 "+name+" "+date+" 對 "+ids.length+" 位學生各"+(delta>0?"加":"扣")+Math.abs(delta)+" 分？\n原因："+reason))return;
- saving=true;document.querySelectorAll("#reasons button,#applyAddBehavior,#applyDeductBehavior,#giveCustomPoint").forEach(x=>x.disabled=true);
+ saving=true;document.querySelectorAll("#students .remote-point-buttons button,#students .remote-behavior-select").forEach(x=>x.disabled=true);
  try{
   for(let attempt=0;attempt<4;attempt++){
    const data=await api("/rest/v1/fundesk_teacher_data?select=class_code,payload,revision&class_code=eq."+encodeURIComponent(classCode));
@@ -359,7 +342,7 @@ async function addPoints(delta,chosenReason=""){
    }
   }
  }catch(err){status("❌ 儲存失敗，請勿重複按鈕以免重複記分："+err.message,"error")}
- finally{saving=false;document.querySelectorAll("#reasons button,#applyAddBehavior,#applyDeductBehavior,#giveCustomPoint").forEach(x=>x.disabled=false)}
+ finally{saving=false;document.querySelectorAll("#students .remote-point-buttons button,#students .remote-behavior-select").forEach(x=>x.disabled=false)}
 }
 
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&session&&!saving)reload(true).catch(()=>{})});
