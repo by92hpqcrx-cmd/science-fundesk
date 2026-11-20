@@ -117,6 +117,24 @@ function makeCard(item,index){
  b.onclick=()=>flip(b,item,index);
  return b;
 }
+function markMatchedCard(card,player){
+ const face=card.querySelector('.card-front');
+ if(!face||!player)return;
+ const stamp=document.createElement('span');
+ stamp.className='match-owner';stamp.title='由 '+player.name+' 配對成功';
+ stamp.setAttribute('aria-label','配對成功：'+player.name);
+ const portrait=document.createElement('span');portrait.className='match-owner-avatar';
+ const fallback=document.createElement('span');
+ fallback.className='match-owner-fallback';fallback.textContent=(player.name||'同學').slice(0,1);
+ portrait.append(fallback);
+ if(player.avatar&&player.avatar.startsWith(location.origin+'/science-fundesk/')){
+  const img=document.createElement('img');img.alt='';img.src=player.avatar;
+  img.onerror=()=>{img.remove()};portrait.prepend(img);
+ }
+ const name=document.createElement('span');name.className='match-owner-name';name.textContent=player.name;
+ stamp.append(portrait,name);face.append(stamp);
+ card.setAttribute('aria-label',card.getAttribute('aria-label')+'，由 '+player.name+' 配對成功');
+}
 function begin(){
  version++;stop();if(dialog.open)dialog.close();$('confetti').replaceChildren();
  opened=[];turns=0;matched=0;elapsed=0;locked=false;
@@ -137,7 +155,7 @@ function flip(b,item,index){
  turns++;if(mode==='multi'&&gameStarted)players[active].turns++;stats();const [a,c]=opened;
  if(a.item.key===c.item.key){
   a.b.classList.add('matched');c.b.classList.add('matched');
-  a.b.disabled=true;c.b.disabled=true;opened=[];matched++;if(mode==='multi'&&gameStarted){players[active].score+=10;players[active].pairs++;showScores()}stats();beep(780,.19);
+  a.b.disabled=true;c.b.disabled=true;opened=[];matched++;if(mode==='multi'&&gameStarted){const winner=players[active];markMatchedCard(a.b,winner);markMatchedCard(c.b,winner);winner.score+=10;winner.pairs++;showScores()}stats();beep(780,.19);
   if(matched===deck.length/2)complete();
  }else{
   locked=true;a.b.classList.add('nope');c.b.classList.add('nope');
