@@ -143,6 +143,10 @@ body.remote-student-only #remoteLedgerPanel,body.remote-student-only #status{
  #remoteStudentPanel:fullscreen #students .remote-avatar,body.remote-student-only #students .remote-avatar{width:30px;height:30px}
  #remoteStudentPanel:fullscreen #students .student,body.remote-student-only #students .student{min-height:62px!important}
 }
+</style><style id="remoteFullscreenClassName20261120">
+#remoteStudentPanel .remoteCurrentClass{display:inline-block;vertical-align:middle;margin-left:9px;padding:5px 12px;border-radius:12px;background:#e1f6e9;border:2px solid #8ec7aa;color:#176144;font-size:clamp(17px,2vw,27px);font-weight:950;line-height:1.25;letter-spacing:.02em}
+#remoteStudentPanel:fullscreen .remoteCurrentClass,#remoteStudentPanel:-webkit-full-screen .remoteCurrentClass,body.remote-student-only #remoteStudentPanel .remoteCurrentClass{background:#d8f4e3!important;color:#115f40!important;font-size:clamp(23px,3vw,42px)!important;padding:7px 17px!important}
+@media(max-width:520px){#remoteStudentPanel .remoteCurrentClass{margin-left:4px;padding:4px 7px;font-size:16px}#remoteStudentPanel:fullscreen .remoteCurrentClass,body.remote-student-only #remoteStudentPanel .remoteCurrentClass{font-size:20px!important;padding:4px 9px!important}}
 </style></head>
 <body><header><h1>📱 FunDesk 課堂表現遙控器</h1><button id="logout" class="secondary hidden">🚪 登出</button></header>
 <main>
@@ -153,7 +157,7 @@ body.remote-student-only #remoteLedgerPanel,body.remote-student-only #status{
 <div class="controls"><button class="secondary" id="reload">↻ 更新學生與點數</button><button class="secondary" id="selectAll">選全班</button><button class="secondary" id="clear">清除選取</button></div>
 <div class="inlineControls"><label>選擇實驗小組<select id="pointGroup"><option value="0">第一組</option><option value="1">第二組</option><option value="2">第三組</option><option value="3">第四組</option><option value="4">第五組</option></select></label><button class="secondary" type="button" id="selectGroup">選實驗小組</button></div>
 <p class="note">已選取 <span id="selectedCount">0</span> 人。可選個人、全班或實驗小組；全班允許加分，禁止連坐扣分。</p></section>
-<section class="panel" id="remoteStudentPanel"><div class="remoteStudentPanelHeader"><div><h2>選擇學生</h2><p class="note">可多選學生，並查看目前積點。</p></div><button type="button" class="secondary remoteFullscreenToggle" id="studentFullscreen" aria-pressed="false">⛶ 全螢幕</button></div><div class="seatToolbar"><button type="button" class="secondary active" id="normalLayout">一般座位</button><button type="button" class="secondary" id="labLayout">實驗分組</button></div><div id="students"></div></section>
+<section class="panel" id="remoteStudentPanel"><div class="remoteStudentPanelHeader"><div><h2>選擇學生 <span id="remoteCurrentClass" class="remoteCurrentClass" aria-live="polite">尚未選擇班級</span></h2><p class="note">可多選學生，並查看目前積點。</p></div><button type="button" class="secondary remoteFullscreenToggle" id="studentFullscreen" aria-pressed="false">⛶ 全螢幕</button></div><div class="seatToolbar"><button type="button" class="secondary active" id="normalLayout">一般座位</button><button type="button" class="secondary" id="labLayout">實驗分組</button></div><div id="students"></div></section>
 <section class="panel remoteLedgerPanel" id="remoteLedgerPanel"><h2>🧾 積點抵扣／誤記取消</h2><p class="note">選擇學生可使用積點抵扣或取消誤記；選擇全班可取消有完整批次識別的全班加點。原始紀錄僅標記取消，不刪除。</p><label for="ledgerStudent">選擇學生或全班<select id="ledgerStudent"><option value="">請先登入</option></select></label><div id="ledgerDetails" aria-live="polite"><p class="note">請先選擇學生。</p></div></section></div>
 <div id="status" class="status" role="status">請以教師帳號登入。</div>
 <p class="note">平板遙控器僅供教師使用。每次修改會以雲端版本比對，發現同時操作時會重新讀取，避免覆蓋其他裝置的紀錄。</p>
@@ -260,6 +264,7 @@ function draw(){
  $("normalLayout").classList.toggle('active',seatLayout==='normal');
  $("labLayout").classList.toggle('active',seatLayout==='lab');
  $("selectedCount").textContent=String(selection.size);
+ $("remoteCurrentClass").textContent=classCode?className(classCode):"尚未選擇班級";
 }
 $("normalLayout").onclick=()=>{seatLayout='normal';draw()};
 $("labLayout").onclick=()=>{seatLayout='lab';draw()};
@@ -281,6 +286,7 @@ async function reload(silent=false){
 }
 function logout(){
  session=null;rows=[];selection.clear();classCode="";
+ $("remoteCurrentClass").textContent="尚未選擇班級";
  $("app").classList.add("hidden");$("login").classList.remove("hidden");$("logout").classList.add("hidden");
  $("password").value="";status("已登出，請重新登入。");
 }
