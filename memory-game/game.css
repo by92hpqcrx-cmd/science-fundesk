@@ -162,3 +162,13 @@ button{font:inherit;cursor:pointer}button:focus-visible,input:focus-visible+span
 /* 天鷹座替換圖：原圖 1086×1448，維持3:4直式比例完整顯示 */
 .memory-card{aspect-ratio:3/4!important}
 .card-front.category-front .memory-theme-image{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;display:block!important}
+
+/* 2026-11-20 主題比例：班寵3:4，星座1:1，星球1:1 */
+.board .memory-card{aspect-ratio:var(--card-ratio,3 / 4)!important}
+.board[data-category="pets"] .memory-card{aspect-ratio:3 / 4!important}
+.board[data-category="constellations"] .memory-card,
+.board[data-category="planets"] .memory-card{aspect-ratio:1 / 1!important}
+.board .card-front.category-front .memory-theme-image{
+ width:100%!important;height:100%!important;object-fit:contain!important;
+ object-position:center!important;max-width:100%!important;max-height:100%!important
+}
