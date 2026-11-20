@@ -373,6 +373,14 @@ body.roomFullscreen .movingRoomPanel{gap:0}
 
 /* 動態教室名片僅開放餵食券與密碼保護的頭像編輯 */
 .roomAvatarProtected{margin:12px 0;padding:12px;border:1px solid #cee2ec;border-radius:12px;background:#f7fbff}.roomAvatarProtected>#roomUnlockAvatar{width:100%;text-align:center}.roomAvatarProtected #roomAvatarHidden[hidden]{display:none!important}.roomAvatarProtected .avatarPicker{margin:12px 0 0}.roomAvatarProtected .avatarOptions{max-height:min(55vh,400px);overflow:auto}
+/* 課間遊戲選擇畫面 */
+.breakGameMenu{padding:clamp(8px,2vw,24px) 4px 20px}.breakGameIntro{font-size:clamp(17px,2vw,23px);font-weight:800;text-align:center;color:#456780;margin:8px 0 24px}
+.breakGameCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,2vw,26px);max-width:980px;margin:auto}
+.breakGameCard{background:linear-gradient(145deg,#f2fbff,#fff);border:3px solid #9ecae1;border-radius:26px;padding:clamp(20px,3vw,38px);min-height:250px;color:#194d62;display:flex;align-items:center;flex-direction:column;justify-content:center;gap:13px;font:inherit;cursor:pointer;box-shadow:0 10px 24px #294b6d1a;transition:transform .15s}
+.breakGameCard:nth-child(2){background:linear-gradient(145deg,#f5f0ff,#fff9ff);border-color:#c5afe9;color:#644586}.breakGameCard:hover{transform:translateY(-5px)}
+.breakGameIcon{font-size:clamp(38px,5.6vw,72px)}.breakGameCard strong{font-size:clamp(20px,2.6vw,32px)}.breakGameCard small{font-size:clamp(13px,1.4vw,17px);text-align:center;color:#657a8b}
+.breakGameLaunch{background:#2c708a;color:#fff;padding:11px 26px;border-radius:999px;font-size:17px;font-weight:900;margin-top:auto}.breakGameCard:nth-child(2) .breakGameLaunch{background:#8056b5}
+#breakRpsGame[hidden],#breakGameMenu[hidden]{display:none!important}@media(max-width:640px){.breakGameCards{grid-template-columns:1fr}.breakGameCard{min-height:190px;padding:18px}}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
@@ -1696,7 +1704,7 @@ function renderQuickLinks(){
  const cfg=[['personal','🎮','自然科學王・四大模式'],['sky','🌌','星空冒險島'],['socialAdventure','🏝️','家園探險王・社會冒險'],['zodiac','✨','星空故事館・十二星座篇'],['starLegends','🌠','星空故事館・星河傳說'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版'],['petMemory','🃏','記憶翻牌遊戲・三大主題']];
  cfg.unshift(['rps','🎲','課間小遊戲']);
  const sortedCfg=sortedQuickEntries(cfg);
- return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">🎲</span><strong>課間小遊戲</strong><small>剪刀石頭布・猜猜我在哪兒</small></button>`;const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='personal'?'data-fundesk-king="1"':id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':''} target="_blank" ${id==='petMemory'||id==='personal'?'':'rel="noopener noreferrer"'}><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
+ return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">🎲</span><strong>課間小遊戲</strong><small>先選遊戲，再進入遊戲畫面</small></button>`;const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='personal'?'data-fundesk-king="1"':id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':''} target="_blank" ${id==='petMemory'||id==='personal'?'':'rel="noopener noreferrer"'}><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
 }
 /* FunDesk 授權教師開啟校園大富翁時，才透過同源訊息傳遞最少量的玩家候選名單。
    學生名單不放在 URL，也不寫入公開檔案或 localStorage。 */
@@ -2476,7 +2484,11 @@ const rpsResult=(left,right)=>(left-right+3)%3;
 function renderRps(){
  const roster=[...students()].sort((a,b)=>a.no-b.no);
  const options=roster.map(s=>`<option value="${esc(s.id)}">${esc(s.no)} 號　${esc(s.name)}</option>`).join('');
- return `<section class="panel rpsPanel"><div class="panelHead"><h2>🎲 課間小遊戲</h2><button class="btn" type="button" data-guess-where="1">🐾 猜猜我在哪兒</button><button class="btn outline" type="button" data-goto="seats">回首頁</button></div>
+ return `<section class="panel rpsPanel"><div class="panelHead"><h2>🎲 課間小遊戲</h2><button class="btn outline" type="button" data-goto="seats">回首頁</button></div>
+ <div class="breakGameMenu" id="breakGameMenu"><p class="breakGameIntro">請先選擇遊戲，再進入遊戲畫面</p><div class="breakGameCards">
+ <button type="button" class="breakGameCard" id="rpsOpenGame"><span class="breakGameIcon">✊✋✌️</span><strong>和老師猜拳</strong><small>剪刀、石頭、布挑戰</small><span class="breakGameLaunch">進入遊戲</span></button>
+ <button type="button" class="breakGameCard" data-guess-where="1"><span class="breakGameIcon">🚪🐾🚪</span><strong>猜猜我在哪兒</strong><small>抽選班寵，猜三扇門</small><span class="breakGameLaunch">進入遊戲</span></button></div></div>
+ <div id="breakRpsGame" hidden><div class="actions"><button type="button" class="btn outline" id="rpsBackMenu">← 返回遊戲選單</button></div>
  ${!roster.length?'<p class="notice">班上至少需要一位學生才能開始遊戲。</p>':`
  <form id="rpsForm">
  <fieldset class="rpsModes"><legend>選擇學生</legend>
@@ -2488,9 +2500,12 @@ function renderRps(){
  <div class="rpsArena"><div class="rpsPlayers" id="rpsPlayers"></div>
  <p id="rpsStatus" role="status" aria-live="polite">選一位學生來挑戰老師！</p>
  <div class="rpsChoices" id="rpsChoices" hidden>${rpsMoves.map(([icon,name],index)=>`<button class="btn" type="button" data-rps-hand="${index}">${icon} ${name}</button>`).join('')}</div>
- </div>`}</section>`;
+ </div>`}</div></section>`;
 }
 function bindRps(){
+ const menu=$('breakGameMenu'),arena=$('breakRpsGame'),startGame=$('rpsOpenGame'),backGame=$('rpsBackMenu');
+ if(startGame&&arena&&menu)startGame.onclick=()=>{menu.hidden=true;arena.hidden=false};
+ if(backGame&&arena&&menu)backGame.onclick=()=>{arena.hidden=true;menu.hidden=false};
  const form=$('rpsForm');
  if(!form)return;
  const picker=$('rpsStudent'),pickers=$('rpsSelects'),players=$('rpsPlayers'),status=$('rpsStatus'),start=$('rpsStart'),choices=$('rpsChoices');
