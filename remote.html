@@ -85,6 +85,20 @@ header{background:linear-gradient(120deg,#4d91ba,#70bca1)!important}
 #students .remote-seat-wrap:has(.remote-seat-action){position:relative;z-index:2;overflow:visible}
 #students .remote-seat-action{overflow:visible!important}
 #students .remote-behavior-select{position:relative;z-index:3;appearance:auto!important;pointer-events:auto!important}
+</style><style id="remoteLedgerStyle20261120">
+.remoteLedgerPanel{background:#fffdf7!important;border:2px solid #e9d6aa!important}
+.remoteLedgerPanel h2{color:#76512b}
+.remoteLedgerSummary{background:#edf7f0;border-radius:12px;padding:12px;font-weight:750}
+.remoteLedgerActions{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin:12px 0}
+.remoteLedgerActions label{flex:1;min-width:120px;margin:0}
+.remoteLedgerActions input{max-width:145px}
+.remoteLedgerTable{overflow:auto;max-height:440px;border:1px solid #d6e5db;border-radius:12px;margin-top:12px}
+.remoteLedgerTable table{border-collapse:collapse;width:100%;font-size:14px}
+.remoteLedgerTable th,.remoteLedgerTable td{padding:10px 8px;border-bottom:1px solid #e2ebe5;text-align:left;vertical-align:middle;overflow-wrap:anywhere}
+.remoteLedgerTable th{position:sticky;top:0;background:#eaf3ed;z-index:1}
+.remoteLedgerTable .ledgerVoid{background:#fae7e5;color:#9c3c47;padding:7px 10px;min-height:35px;font-size:13px}
+.remoteLedgerTable .cancelledRow{opacity:.55}
+@media(max-width:540px){.remoteLedgerTable th,.remoteLedgerTable td{padding:7px 4px;font-size:12px}.remoteLedgerTable .ledgerVoid{font-size:12px;padding:5px}}
 </style></head>
 <body><header><h1>📱 FunDesk 課堂表現遙控器</h1><button id="logout" class="secondary hidden">🚪 登出</button></header>
 <main>
@@ -105,7 +119,7 @@ header{background:linear-gradient(120deg,#4d91ba,#70bca1)!important}
 <label>補充備註（自訂點數時使用）<input id="reason" maxlength="90" placeholder="選填：例如 筆記認真"></label>
 <h3 class="sectionTitle">常用行為一鍵記錄（8 格）</h3><div id="reasons" class="pointQuickEight"></div>
 <p class="note">與 FunDesk 主程式相同：選好學生後，點選行為按鈕或登記加扣點，確認後儲存。全班扣點會被阻擋。</p>
-</section></div>
+</section><section class="panel remoteLedgerPanel" id="remoteLedgerPanel"><h2>🧾 積點抵扣／誤記取消</h2><p class="note">選擇學生可使用積點抵扣或取消誤記；選擇全班可取消有完整批次識別的全班加點。原始紀錄僅標記取消，不刪除。</p><label for="ledgerStudent">選擇學生或全班<select id="ledgerStudent"><option value="">請先登入</option></select></label><div id="ledgerDetails" aria-live="polite"><p class="note">請先選擇學生。</p></div></section></div>
 <div id="status" class="status" role="status">請以教師帳號登入。</div>
 <p class="note">平板遙控器僅供教師使用。每次修改會以雲端版本比對，發現同時操作時會重新讀取，避免覆蓋其他裝置的紀錄。</p>
 </main>
@@ -154,7 +168,7 @@ function remoteAvatarPath(st){
  const n=Number(st.no);
  return n>=1&&n<=14?'./avatars/default-boy.svg':n>=15&&n<=28?'./avatars/default-girl.svg':'';
 }
-function studentTotal(sid){return (current()?.payload?.points||[]).filter(p=>p.sid===sid).reduce((sum,p)=>sum+(Number(p.delta)||0),0)}
+function studentTotal(sid){return ledgerAvailable(sid)}
 function labGroupOf(sid){
  const payload=current()?.payload||{};
  const lab=payload.seats?.lab;
@@ -298,7 +312,7 @@ async function syncPublishedContact(code,date,payload){
  const entry=eligible[0];if(!entry)return '尚無已授權的加扣點聯絡簿，本次不公開';
  const part=contactPublishedSlice(entry.reminders);
  const students=new Map((payload.students||[]).map(st=>[st.id,st]));
- const latest=(payload.points||[]).filter(p=>p.date===date&&p.kind!=='redemption'&&students.has(p.sid)).map(p=>{
+ const latest=(payload.points||[]).filter(p=>p.date===date&&!p.cancelled&&!['redemption','correction-log','penalty-offset'].includes(p.kind)&&students.has(p.sid)).map(p=>{
   const st=students.get(p.sid);
   return {no:st.no,name:String(st.name||'').slice(0,25),delta:Number(p.delta)||0,reason:String(p.reason||'').slice(0,90),date};
  });
@@ -327,7 +341,9 @@ async function addPoints(delta,chosenReason=""){
    const studentIds=new Set(row.payload.students.map(x=>x.id));if(ids.some(id=>!studentIds.has(id)))throw Error("學生名單已異動，請重新載入");
    const payload=structuredClone(row.payload),stamp=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
    if(!Array.isArray(payload.points))payload.points=[];
-   ids.forEach((sid,j)=>payload.points.push({sid,date,delta,reason,id:"remote-"+stamp+"-"+j}));
+   const allClass=delta>0&&ids.length===row.payload.students.length&&row.payload.students.every(s=>ids.includes(s.id));
+   const batchId=allClass?'remote-class-'+stamp:null;
+   ids.forEach((sid,j)=>payload.points.push({sid,date,delta,reason,id:"remote-"+stamp+"-"+j,...(batchId?{classAwardBatchId:batchId}:{})}));
    try{
     const revision=await api("/rest/v1/rpc/fundesk_save_teacher_data",{method:"POST",body:JSON.stringify({p_class_code:classCode,p_payload:payload,p_expected_revision:Number(row.revision)||0})});
     if(typeof revision!=="number")throw Error("儲存回傳版本異常");
@@ -347,4 +363,4 @@ async function addPoints(delta,chosenReason=""){
 }
 
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&session&&!saving)reload(true).catch(()=>{})});
-</script></body></html>
+</script><script src="./remote-ledger.js?v=20261120-ledger-v1"></script></body></html>
