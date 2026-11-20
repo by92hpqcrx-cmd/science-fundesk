@@ -400,6 +400,28 @@ body.roomFullscreen .movingRoomPanel{gap:0}
 #breakRpsGame:fullscreen .rpsChoices[hidden]{display:none!important}
 #breakRpsGame:fullscreen .rpsChoices button{min-width:clamp(125px,18vw,245px);font-size:clamp(20px,2.6vw,40px);padding:clamp(9px,1.6vh,19px)}
 @media(max-height:580px){#breakRpsGame:fullscreen .rpsPlayer>.studentAvatarThumb,#breakRpsGame:fullscreen .rpsPlayer .avatarMini,#breakRpsGame:fullscreen .rpsPlayer>img{height:65px!important;width:65px!important}#breakRpsGame:fullscreen .rpsGameHeader{margin:0}#breakRpsGame:fullscreen #rpsForm{padding:3px}}
+
+/* 猜拳雙卡片置中：限制整組卡片寬度，左右與上下保持對稱 */
+#breakRpsGame:fullscreen .rpsArena{
+ width:100%;align-items:center;justify-content:center;gap:clamp(8px,1.7vh,18px);
+}
+#breakRpsGame:fullscreen .rpsPlayers{
+ width:min(100%,1040px);max-width:1040px;
+ flex:1 1 auto;min-height:0;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ justify-content:center;align-items:center;align-content:center;
+ margin-inline:auto;
+}
+#breakRpsGame:fullscreen .rpsPlayer{
+ width:100%;max-width:490px;height:min(100%,390px);
+ min-height:0;justify-self:center;align-self:center;
+}
+#breakRpsGame:fullscreen #rpsStatus,
+#breakRpsGame:fullscreen .rpsChoices{width:100%;max-width:1040px;margin-inline:auto;text-align:center}
+@media(max-width:680px){
+ #breakRpsGame:fullscreen .rpsPlayers{gap:10px}
+ #breakRpsGame:fullscreen .rpsPlayer{padding:6px}
+}
 </style>
 <style id="cloudAddonCSS">
 body.cloud-locked .shell,body.cloud-locked #siteError{display:none!important}
