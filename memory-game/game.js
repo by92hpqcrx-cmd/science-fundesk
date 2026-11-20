@@ -3,8 +3,23 @@ const pets=[
 ['dino','小恐龍','🦖'],['bear','小熊','🐻'],['panda','小貓','🐱'],['cat','小兔','🐰'],['rabbit','熊貓','🐼'],
 ['501','企鵝','🐧'],['502','兔兔','🐰'],['503','松鼠','🐿️'],['504','小鳥','🐦'],['505','貓貓','🐱'],['506','小狗','🐶'],['507','大象','🐘']
 ];
+const constellations=[
+['cassiopeia','仙后座','⭐'],['big-dipper','北斗七星','✨'],
+['orion','獵戶座','⭐'],['bootes','牧夫座','✨'],
+['lyra','天琴座','⭐'],['pegasus','飛馬座','✨'],
+['cygnus','天鵝座','⭐'],['leo','獅子座','✨'],
+['pisces','雙魚座','⭐'],['scorpius','天蠍座','✨'],
+['gemini','雙子座','⭐'],['aquila','天鷹座','✨']
+];
+const planets=[
+['sun','太陽','☀️'],['mercury','水星','⚪'],['venus','金星','🟡'],
+['earth','地球','🌍'],['mars','火星','🔴'],['jupiter','木星','🪐'],
+['saturn','土星','🪐'],['uranus','天王星','🔵'],
+['neptune','海王星','🔵'],['moon','月球','🌕']
+];
+let category='pets';
 const $=id=>document.getElementById(id),board=$('board'),shell=$('shell'),dialog=$('winDialog');
-const levels={24:'簡單',36:'中等',48:'困難'};
+const levels={24:'簡單',36:'中等',40:'困難',48:'困難'};
 let deck=[],opened=[],turns=0,matched=0,elapsed=0,ticker=null,pending=null,version=0,locked=false,sound=false,ctx=null;
 let mode='solo',roster=null,players=[],active=0,gameStarted=false;
 const petId=new URLSearchParams(location.search).get('pet'),current=pets.find(p=>p[0]===petId);
@@ -81,6 +96,18 @@ $('startMatch').onclick=startMulti;
 $('playerCount').onchange=()=>{gameStarted=false;players=[];active=0;renderPlayerSelectors();$('playerSetup').hidden=mode!=='multi';showScores();begin()};
 renderPlayerSelectors();
 function count(){return Number(document.querySelector('input[name=level]:checked').value)}
+function categorySet(value){
+ category=['pets','constellations','planets'].includes(value)?value:'pets';
+ const hard=document.querySelector('#hardLevel');
+ const n=category==='planets'?40:48;
+ hard.value=String(n);
+ $('hardCount').textContent=n+' 張';
+ $('categoryHint').textContent=category==='pets'?'🐾 班級寵物圖片配對':category==='constellations'?'✨ 星座圖形記憶配對':'🪐 太陽、八大行星與月球的彩色圖卡';
+ if(mode==='multi'&&gameStarted){gameStarted=false;players=[];active=0;$('playerSetup').hidden=false;showScores()}
+ begin();
+}
+document.querySelectorAll('input[name="category"]').forEach(r=>r.addEventListener('change',()=>{if(r.checked)categorySet(r.value)}));
+
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function timeLabel(){return String(Math.floor(elapsed/60)).padStart(2,'0')+':'+String(elapsed%60).padStart(2,'0')}
 function stats(){$('pairs').textContent=matched+' / '+(deck.length/2);$('moves').textContent=turns;$('time').textContent=timeLabel()}
@@ -110,7 +137,8 @@ function makeCard(item,index){
  const logo=document.createElement('img');logo.alt='';logo.src='../fundesk-app-icon.svg';logo.draggable=false;
  const small=document.createElement('small');small.textContent='FD · FunDesk';back.append(logo,small);
  const face=document.createElement('span');face.className='card-side card-front';
- const image=document.createElement('img');image.className='pet-image';image.src='../class-pets/'+encodeURIComponent(item.pet[0])+'.svg';image.alt=item.pet[1];image.draggable=false;
+ const image=document.createElement('img');image.className='pet-image'+(item.src?' memory-theme-image':'');image.src=item.src||('../class-pets/'+encodeURIComponent(item.pet[0])+'.svg');image.alt=item.pet[1];image.draggable=false;
+ if(item.src)face.classList.add('category-front');
  image.onerror=()=>{image.remove();const fallback=document.createElement('span');fallback.className='fallback';fallback.textContent=item.pet[2];face.appendChild(fallback)};
  const name=document.createElement('span');name.className='pet-name';name.textContent=item.pet[1];
  face.append(image,name);inside.append(back,face);b.append(inside);
@@ -139,9 +167,13 @@ function begin(){
  version++;stop();if(dialog.open)dialog.close();$('confetti').replaceChildren();
  opened=[];turns=0;matched=0;elapsed=0;locked=false;
  if(mode==='multi'&&gameStarted){players.forEach(p=>{p.score=0;p.pairs=0;p.turns=0});active=0}showScores();
- // 每種班寵固定四張同圖牌；每次配對只需要任意兩張相同。
+ // 一個圖案四張相同的牌，任兩張相同即可配對。星球主題最大 10 種（40 張）。
  const kinds=count()/4;
- const types=shuffle(pets).slice(0,kinds).map(p=>({pet:p,key:p[0]}));
+ const source=category==='planets'?planets:category==='constellations'?constellations:pets;
+ const dir=category==='planets'?'planets':category==='constellations'?'constellations':'';
+ const types=shuffle(source).slice(0,kinds).map(p=>({
+  pet:p,key:p[0],src:dir?'./assets/'+dir+'/'+encodeURIComponent(p[0])+'.webp':''
+ }));
  deck=shuffle(types.flatMap(x=>[x,x,x,x]));
  board.replaceChildren();deck.forEach((x,i)=>board.appendChild(makeCard(x,i)));
  layout();stats();
