@@ -114,10 +114,31 @@ function stats(){$('pairs').textContent=matched+' / '+(deck.length/2);$('moves')
 function timer(){if(!ticker)ticker=setInterval(()=>{elapsed++;stats()},1000)}
 function stop(){if(ticker){clearInterval(ticker);ticker=null}if(pending){clearTimeout(pending);pending=null}}
 function layout(){
- const n=deck.length,narrow=innerWidth<780||innerHeight>innerWidth;
- const cols=n===24?(narrow?4:8):n===36?(narrow?6:9):(narrow?6:12);
- board.style.setProperty('--columns',cols);board.style.setProperty('--rows',Math.ceil(n/cols));
- board.setAttribute('aria-label',n+'張翻牌記憶遊戲');
+ const n=deck.length;
+ if(!n)return;
+ const area=board.parentElement;
+ const availW=Math.max(180,area.clientWidth-20);
+ const full=!!document.fullscreenElement;
+ const availH=Math.max(220,full?area.clientHeight-18:Math.max(440,area.clientHeight-40));
+ const gap=innerWidth<=540?3:innerWidth<=860?4:7;
+ let best={cols:6,rows:Math.ceil(n/6),cardW:30,cardH:42,area:0};
+ // 每張牌寬:高約 3:4，在可用畫面內選擇最大且不會裁切的直式牌。
+ for(let cols=3;cols<=12;cols++){
+  const rows=Math.ceil(n/cols);
+  const cardW=Math.min((availW-gap*(cols-1))/cols,(availH-gap*(rows-1))/rows*.75);
+  if(cardW<=0)continue;
+  const cardH=cardW/0.75;
+  const score=cardW*cardH;
+  if(score>best.area)best={cols,rows,cardW,cardH,area:score};
+ }
+ const width=best.cardW*best.cols+gap*(best.cols-1);
+ const height=best.cardH*best.rows+gap*(best.rows-1);
+ board.style.setProperty('--columns',best.cols);
+ board.style.setProperty('--rows',best.rows);
+ board.style.setProperty('--card-gap',gap+'px');
+ board.style.width=width+'px';
+ board.style.height=height+'px';
+ board.setAttribute('aria-label',n+'張直式翻牌記憶遊戲');
 }
 function beep(freq=640,duration=.16){
  if(!sound)return;
