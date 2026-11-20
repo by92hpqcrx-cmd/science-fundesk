@@ -99,6 +99,50 @@ header{background:linear-gradient(120deg,#4d91ba,#70bca1)!important}
 .remoteLedgerTable .ledgerVoid{background:#fae7e5;color:#9c3c47;padding:7px 10px;min-height:35px;font-size:13px}
 .remoteLedgerTable .cancelledRow{opacity:.55}
 @media(max-width:540px){.remoteLedgerTable th,.remoteLedgerTable td{padding:7px 4px;font-size:12px}.remoteLedgerTable .ledgerVoid{font-size:12px;padding:5px}}
+</style><style id="remoteStudentFullscreen20261120">
+#remoteStudentPanel{min-width:0}
+#remoteStudentPanel .remoteStudentPanelHeader{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#remoteStudentPanel .remoteStudentPanelHeader h2{margin:0 0 5px}
+#remoteStudentPanel .remoteStudentPanelHeader .note{margin:0 0 8px}
+#studentFullscreen{flex-shrink:0;min-width:110px;white-space:nowrap;background:#d1f3df;color:#1d654d;border:2px solid #81c8a8}
+#remoteStudentPanel:fullscreen,#remoteStudentPanel:-webkit-full-screen,
+body.remote-student-only #remoteStudentPanel{
+ background:#f6fcf8!important;color:#213553!important;border:0!important;
+ border-radius:0!important;box-shadow:none!important;
+ width:100vw!important;height:100vh!important;height:100dvh!important;
+ max-width:none!important;max-height:none!important;min-width:0!important;min-height:0!important;
+ padding:clamp(8px,1.5vw,20px)!important;margin:0!important;
+ display:flex!important;flex-direction:column!important;gap:7px!important;overflow:hidden!important;
+ box-sizing:border-box!important
+}
+#remoteStudentPanel:fullscreen #students,#remoteStudentPanel:-webkit-full-screen #students,
+body.remote-student-only #remoteStudentPanel #students{
+ flex:1 1 auto!important;min-height:0!important;max-height:none!important;
+ margin:0!important;overflow-y:auto!important;overflow-x:hidden!important;
+ padding:5px!important;align-content:start!important
+}
+#remoteStudentPanel:fullscreen .seatToolbar,#remoteStudentPanel:-webkit-full-screen .seatToolbar,
+body.remote-student-only #remoteStudentPanel .seatToolbar{flex:0 0 auto!important;margin:0 0 3px!important;flex-wrap:wrap}
+#remoteStudentPanel:fullscreen .remoteStudentPanelHeader,#remoteStudentPanel:-webkit-full-screen .remoteStudentPanelHeader,
+body.remote-student-only #remoteStudentPanel .remoteStudentPanelHeader{flex:0 0 auto!important}
+#remoteStudentPanel:fullscreen .remoteStudentPanelHeader .note,#remoteStudentPanel:-webkit-full-screen .remoteStudentPanelHeader .note,
+body.remote-student-only #remoteStudentPanel .remoteStudentPanelHeader .note{display:none!important}
+#remoteStudentPanel:fullscreen #students .seatGrid,#remoteStudentPanel:-webkit-full-screen #students .seatGrid,
+body.remote-student-only #remoteStudentPanel #students .seatGrid{gap:clamp(4px,.65vw,12px)!important}
+body.remote-student-only{overflow:hidden!important}
+body.remote-student-only #remoteStudentPanel{
+ position:fixed!important;inset:0!important;z-index:99999!important
+}
+body.remote-student-only header,body.remote-student-only #login,
+body.remote-student-only #remoteLedgerPanel,body.remote-student-only #status{
+ visibility:hidden!important
+}
+@media(max-width:650px){
+ #remoteStudentPanel .remoteStudentPanelHeader{gap:5px}
+ #studentFullscreen{min-width:95px!important;min-height:40px!important;padding:7px!important;font-size:13px}
+ #remoteStudentPanel:fullscreen #students .remote-avatar,body.remote-student-only #students .remote-avatar{width:30px;height:30px}
+ #remoteStudentPanel:fullscreen #students .student,body.remote-student-only #students .student{min-height:62px!important}
+}
 </style></head>
 <body><header><h1>📱 FunDesk 課堂表現遙控器</h1><button id="logout" class="secondary hidden">🚪 登出</button></header>
 <main>
@@ -109,7 +153,7 @@ header{background:linear-gradient(120deg,#4d91ba,#70bca1)!important}
 <div class="controls"><button class="secondary" id="reload">↻ 更新學生與點數</button><button class="secondary" id="selectAll">選全班</button><button class="secondary" id="clear">清除選取</button></div>
 <div class="inlineControls"><label>選擇實驗小組<select id="pointGroup"><option value="0">第一組</option><option value="1">第二組</option><option value="2">第三組</option><option value="3">第四組</option><option value="4">第五組</option></select></label><button class="secondary" type="button" id="selectGroup">選實驗小組</button></div>
 <p class="note">已選取 <span id="selectedCount">0</span> 人。可選個人、全班或實驗小組；全班允許加分，禁止連坐扣分。</p></section>
-<section class="panel"><h2>選擇學生</h2><p class="note">可多選學生，並查看目前積點。</p><div class="seatToolbar"><button type="button" class="secondary active" id="normalLayout">一般座位</button><button type="button" class="secondary" id="labLayout">實驗分組</button></div><div id="students"></div></section>
+<section class="panel" id="remoteStudentPanel"><div class="remoteStudentPanelHeader"><div><h2>選擇學生</h2><p class="note">可多選學生，並查看目前積點。</p></div><button type="button" class="secondary remoteFullscreenToggle" id="studentFullscreen" aria-pressed="false">⛶ 全螢幕</button></div><div class="seatToolbar"><button type="button" class="secondary active" id="normalLayout">一般座位</button><button type="button" class="secondary" id="labLayout">實驗分組</button></div><div id="students"></div></section>
 <section class="panel remoteLedgerPanel" id="remoteLedgerPanel"><h2>🧾 積點抵扣／誤記取消</h2><p class="note">選擇學生可使用積點抵扣或取消誤記；選擇全班可取消有完整批次識別的全班加點。原始紀錄僅標記取消，不刪除。</p><label for="ledgerStudent">選擇學生或全班<select id="ledgerStudent"><option value="">請先登入</option></select></label><div id="ledgerDetails" aria-live="polite"><p class="note">請先選擇學生。</p></div></section></div>
 <div id="status" class="status" role="status">請以教師帳號登入。</div>
 <p class="note">平板遙控器僅供教師使用。每次修改會以雲端版本比對，發現同時操作時會重新讀取，避免覆蓋其他裝置的紀錄。</p>
@@ -344,6 +388,43 @@ async function addPoints(delta,chosenReason=""){
  }catch(err){status("❌ 儲存失敗，請勿重複按鈕以免重複記分："+err.message,"error")}
  finally{saving=false;document.querySelectorAll("#students .remote-point-buttons button,#students .remote-behavior-select").forEach(x=>x.disabled=false)}
 }
+
+
+/* 只放大「選擇學生」區塊：支援標準 Fullscreen API 與 iPad 不支援時的滿版後備模式 */
+const remoteStudentPanel=$('remoteStudentPanel');
+const remoteFullscreenButton=$('studentFullscreen');
+let remoteFullscreenFallback=false;
+function syncRemoteFullscreenButton(){
+ const active=document.fullscreenElement===remoteStudentPanel||remoteFullscreenFallback;
+ remoteFullscreenButton.textContent=active?'⤢ 離開全螢幕':'⛶ 全螢幕';
+ remoteFullscreenButton.setAttribute('aria-pressed',String(active));
+ document.body.classList.toggle('remote-student-only',remoteFullscreenFallback);
+}
+async function toggleRemoteStudentFullscreen(){
+ const active=document.fullscreenElement===remoteStudentPanel||remoteFullscreenFallback;
+ if(active){
+  if(document.fullscreenElement===remoteStudentPanel&&document.exitFullscreen){
+   try{await document.exitFullscreen()}catch(e){console.warn('退出全螢幕失敗',e)}
+  }
+  remoteFullscreenFallback=false;syncRemoteFullscreenButton();return;
+ }
+ if(typeof remoteStudentPanel.requestFullscreen==='function'){
+  try{
+   await remoteStudentPanel.requestFullscreen();
+   remoteFullscreenFallback=false;syncRemoteFullscreenButton();
+   return;
+  }catch(e){console.warn('裝置改用頁面滿版模式',e)}
+ }
+ remoteFullscreenFallback=true;syncRemoteFullscreenButton();
+}
+remoteFullscreenButton.addEventListener('click',toggleRemoteStudentFullscreen);
+document.addEventListener('fullscreenchange',()=>{
+ if(document.fullscreenElement!==remoteStudentPanel)remoteFullscreenFallback=false;
+ syncRemoteFullscreenButton();
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&remoteFullscreenFallback){remoteFullscreenFallback=false;syncRemoteFullscreenButton();}
+});
 
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&session&&!saving)reload(true).catch(()=>{})});
 </script><script src="./remote-ledger.js?v=20261120-ledger-v1"></script></body></html>
