@@ -72,7 +72,7 @@ function startMulti(){
 }
 function setMode(value){
  mode=value;gameStarted=false;players=[];active=0;
- $('playerSetup').hidden=value!=='four';
+ $('playerSetup').hidden=value!=='multi';
  $('rosterState').textContent=roster?'✅ 已載入 '+roster.name:'請從 FunDesk 首頁開啟以選擇學生';
  showScores();begin();
 }
