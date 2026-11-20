@@ -92,12 +92,11 @@ function makeCard(item,index){
  const back=document.createElement('span');back.className='card-side card-back';
  const logo=document.createElement('img');logo.alt='';logo.src='../fundesk-app-icon.svg';logo.draggable=false;
  const small=document.createElement('small');small.textContent='FD · FunDesk';back.append(logo,small);
- const face=document.createElement('span');face.className='card-side card-front';face.dataset.theme=item.theme;
- const tag=document.createElement('span');tag.className='pet-variant';tag.textContent=item.theme==='sun'?'☀️ 陽光':'🌙 星光';
+ const face=document.createElement('span');face.className='card-side card-front';
  const image=document.createElement('img');image.className='pet-image';image.src='../class-pets/'+encodeURIComponent(item.pet[0])+'.svg';image.alt=item.pet[1];image.draggable=false;
  image.onerror=()=>{image.remove();const fallback=document.createElement('span');fallback.className='fallback';fallback.textContent=item.pet[2];face.appendChild(fallback)};
  const name=document.createElement('span');name.className='pet-name';name.textContent=item.pet[1];
- face.append(tag,image,name);inside.append(back,face);b.append(inside);
+ face.append(image,name);inside.append(back,face);b.append(inside);
  b.onclick=()=>flip(b,item,index);
  return b;
 }
@@ -105,17 +104,17 @@ function begin(){
  version++;stop();if(dialog.open)dialog.close();$('confetti').replaceChildren();
  opened=[];turns=0;matched=0;elapsed=0;locked=false;
  if(mode==='four'&&gameStarted){players.forEach(p=>{p.score=0;p.pairs=0;p.turns=0});active=0}showScores();
- const pairs=count()/2;
- const types=pets.map(p=>({pet:p,theme:'sun',key:p[0]+'-sun'}))
-   .concat(pets.map(p=>({pet:p,theme:'moon',key:p[0]+'-moon'}))).slice(0,pairs);
- deck=shuffle(types.flatMap(x=>[x,x]));
+ // 每種班寵固定四張同圖牌；每次配對只需要任意兩張相同。
+ const kinds=count()/4;
+ const types=shuffle(pets).slice(0,kinds).map(p=>({pet:p,key:p[0]}));
+ deck=shuffle(types.flatMap(x=>[x,x,x,x]));
  board.replaceChildren();deck.forEach((x,i)=>board.appendChild(makeCard(x,i)));
  layout();stats();
 }
 function flip(b,item,index){
  if(locked||(mode==='four'&&!gameStarted)||b.classList.contains('flipped')||b.classList.contains('matched')||opened.length>=2)return;
  timer();b.classList.add('flipped');b.setAttribute('aria-pressed','true');
- b.setAttribute('aria-label','第'+(index+1)+'張，'+item.pet[1]+(item.theme==='sun'?'陽光版':'星光版'));
+ b.setAttribute('aria-label','第'+(index+1)+'張，'+item.pet[1]);
  opened.push({b,item,index});beep(480,.11);
  if(opened.length!==2)return;
  turns++;if(mode==='four'&&gameStarted)players[active].turns++;stats();const [a,c]=opened;
