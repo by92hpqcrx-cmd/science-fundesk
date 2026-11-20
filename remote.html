@@ -36,7 +36,7 @@ button:focus-visible{outline:3px solid #ffc867;outline-offset:2px}
 .hidden{display:none!important}#login{max-width:530px;margin:42px auto}#selectedCount{font-weight:800}
 @media(max-width:700px){.actionSections{grid-template-columns:1fr}.pointQuickEight{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:550px){.actions{grid-template-columns:repeat(2,minmax(0,1fr))}#students{grid-template-columns:repeat(3,minmax(0,1fr))}.student{padding:9px 4px}header{flex-wrap:wrap}}
-.seatToolbar{display:flex;gap:8px;margin-bottom:12px}.seatToolbar .active{background:#246f5d;color:#fff}#students.normalSeats,#students.labSeats{display:block}.seatGrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}.blackboard{margin:12px auto;background:#e8eef7;color:#28415c;border:2px solid #9bacc2;border-radius:9px;text-align:center;padding:10px;width:78%;font-weight:900;letter-spacing:4px}.labGroups{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}.labGroup{grid-column:span 2;background:#f5f9ff;border:2px solid #b9cce2;border-top:5px solid #7597c8;border-radius:12px;padding:7px;text-align:center}.labGroup:nth-child(2){border-top-color:#6b9f95}.labGroup:nth-child(3){border-top-color:#a08cc4}.labGroup:nth-child(4){grid-column:2/span 2;border-top-color:#cd9d65}.labGroup:nth-child(5){border-top-color:#8e9cba}.labCells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-top:8px}.seatGrid .student,.labCells .student{min-width:0;padding:8px 3px;min-height:82px}.emptySeat{opacity:.45;justify-content:center}.labCells .student strong{font-size:14px}.labCells .student span{font-size:12px}@media(max-width:650px){.seatGrid{gap:3px}.seatGrid .student{min-height:68px;padding:5px 1px}.seatGrid .student strong{font-size:12px}.seatGrid .student span{font-size:11px}.labGroups{gap:5px}.labGroup{padding:3px}.labCells{gap:2px}.labCells .student{padding:4px 1px}.labCells .student strong{font-size:11px}.labCells .student span{font-size:10px}.labCells .student .score{font-size:11px}} 
+.seatToolbar{display:flex;gap:8px;margin-bottom:12px}.seatToolbar .active{background:#246f5d;color:#fff}#students.normalSeats,#students.labSeats{display:block}.seatGrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}.blackboard{margin:12px auto;background:#e8eef7;color:#28415c;border:2px solid #9bacc2;border-radius:9px;text-align:center;padding:10px;width:78%;font-weight:900;letter-spacing:4px}.labGroups{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}.labGroup{grid-column:span 2;background:#f5f9ff;border:2px solid #b9cce2;border-top:5px solid #7597c8;border-radius:12px;padding:7px;text-align:center}.labGroup:nth-child(2){border-top-color:#6b9f95}.labGroup:nth-child(3){border-top-color:#a08cc4}.labGroup:nth-child(4){border-top-color:#cd9d65}.labGroup:nth-child(5){border-top-color:#8e9cba}.labGroup:nth-child(1){grid-column:2/span 2}.labGroup:nth-child(2){grid-column:4/span 2}.labGroup:nth-child(3),.labGroup:nth-child(4),.labGroup:nth-child(5){grid-column:span 2}.labCells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-top:8px}.seatGrid .student,.labCells .student{min-width:0;padding:8px 3px;min-height:82px}.emptySeat{opacity:.45;justify-content:center}.labCells .student strong{font-size:14px}.labCells .student span{font-size:12px}@media(max-width:650px){.seatGrid{gap:3px}.seatGrid .student{min-height:68px;padding:5px 1px}.seatGrid .student strong{font-size:12px}.seatGrid .student span{font-size:11px}.labGroups{gap:5px}.labGroup{padding:3px}.labCells{gap:2px}.labCells .student{padding:4px 1px}.labCells .student strong{font-size:11px}.labCells .student span{font-size:10px}.labCells .student .score{font-size:11px}} 
 </style></head>
 <body><header><h1>📱 FunDesk 課堂表現遙控器</h1><button id="logout" class="secondary hidden">🚪 登出</button></header>
 <main>
@@ -109,7 +109,7 @@ function draw(){
  const students=people(),ids=new Set(students.map(x=>x.id));selection=new Set([...selection].filter(x=>ids.has(x)));
  const payload=current()?.payload||{},seatMap=payload.seats||{},shared=rows.find(x=>x.class_code==='shared')?.payload||{};
  let seats=seatMap[seatLayout];
- if(!Array.isArray(seats)||!seats.length){
+ if(!Array.isArray(seats)||(seatLayout==='lab'&&seats.length!==30)||!seats.length){
   if(seatLayout==='lab'&&Array.isArray(shared.labTemplate))seats=shared.labTemplate.flat().map(no=>students.find(p=>Number(p.no)===Number(no))?.id||null);
   else seats=students.map(p=>p.id);
  }
@@ -123,8 +123,8 @@ function draw(){
   $("students").innerHTML='<div class="seatGrid">'+seats.slice().reverse().map(cell).join('')+'</div><div class="blackboard">講 台 ／ 黑 板</div>';
  }else{
   $("students").className='labSeats';
-  const names=['第一組','第二組','第三組','第四組','第五組'];
-  $("students").innerHTML='<div class="blackboard">黑 板</div><div class="labGroups">'+names.map((name,i)=>'<div class="labGroup group'+(i+1)+'"><b>'+name+'</b><div class="labCells">'+seats.slice(i*6,i*6+6).map(cell).join('')+'</div></div>').join('')+'</div>';
+  const names=['第四組','第五組','第一組','第二組','第三組'];
+  $("students").innerHTML='<div class="labGroups">'+names.map((name,i)=>'<div class="labGroup group'+(i+1)+'"><b>'+name+'</b><div class="labCells">'+seats.slice(i*6,i*6+6).map(cell).join('')+'</div></div>').join('')+'</div><div class="blackboard">黑 板</div>';
  }
  $("normalLayout").classList.toggle('active',seatLayout==='normal');
  $("labLayout").classList.toggle('active',seatLayout==='lab');
