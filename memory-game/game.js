@@ -18,6 +18,7 @@ const planets=[
 ['neptune','海王星','🔵'],['moon','月球','🌕']
 ];
 let category='pets';
+const CARD_RATIOS=Object.freeze({pets:3/4,constellations:1,planets:1});
 const $=id=>document.getElementById(id),board=$('board'),shell=$('shell'),dialog=$('winDialog');
 const levels={24:'簡單',36:'中等',40:'困難',48:'困難'};
 let deck=[],opened=[],turns=0,matched=0,elapsed=0,ticker=null,pending=null,version=0,locked=false,sound=false,ctx=null;
@@ -116,29 +117,30 @@ function stop(){if(ticker){clearInterval(ticker);ticker=null}if(pending){clearTi
 function layout(){
  const n=deck.length;
  if(!n)return;
+ const ratio=CARD_RATIOS[category]||1;
  const area=board.parentElement;
- const availW=Math.max(180,area.clientWidth-20);
+ const availW=Math.max(160,area.clientWidth-20);
  const full=!!document.fullscreenElement;
  const availH=Math.max(220,full?area.clientHeight-18:Math.max(440,area.clientHeight-40));
  const gap=innerWidth<=540?3:innerWidth<=860?4:7;
- let best={cols:6,rows:Math.ceil(n/6),cardW:30,cardH:42,area:0};
- // 每張牌寬:高約 3:4，在可用畫面內選擇最大且不會裁切的直式牌。
- for(let cols=3;cols<=12;cols++){
+ let best=null;
+ for(let cols=3;cols<=Math.min(14,n);cols++){
   const rows=Math.ceil(n/cols);
-  const cardW=Math.min((availW-gap*(cols-1))/cols,(availH-gap*(rows-1))/rows*.75);
-  if(cardW<=0)continue;
-  const cardH=cardW/0.75;
-  const score=cardW*cardH;
-  if(score>best.area)best={cols,rows,cardW,cardH,area:score};
+  const cellW=Math.min((availW-gap*(cols-1))/cols,(availH-gap*(rows-1))/rows*ratio);
+  if(cellW<=0)continue;
+  const cellH=cellW/ratio;
+  const score=cellW*cellH;
+  if(!best||score>best.score)best={cols,rows,cellW,cellH,score};
  }
- const width=best.cardW*best.cols+gap*(best.cols-1);
- const height=best.cardH*best.rows+gap*(best.rows-1);
+ if(!best)return;
  board.style.setProperty('--columns',best.cols);
  board.style.setProperty('--rows',best.rows);
  board.style.setProperty('--card-gap',gap+'px');
- board.style.width=width+'px';
- board.style.height=height+'px';
- board.setAttribute('aria-label',n+'張直式翻牌記憶遊戲');
+ board.style.setProperty('--card-ratio',category==='pets'?'3 / 4':'1 / 1');
+ board.dataset.category=category;
+ board.style.width=(best.cellW*best.cols+gap*(best.cols-1))+'px';
+ board.style.height=(best.cellH*best.rows+gap*(best.rows-1))+'px';
+ board.setAttribute('aria-label',n+'張'+(ratio===1?'正方形':'直式')+'記憶翻牌');
 }
 function beep(freq=640,duration=.16){
  if(!sound)return;
