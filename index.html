@@ -1754,14 +1754,27 @@ function openFunDeskKing(event){
   if(e.data.kind==='fundesk-king-ready'){
    child.postMessage({kind:'fundesk-king-roster',token,classes:roster},location.origin);return;
   }
-  if(e.data.kind!=='fundesk-king-finish'||processing)return;
+  if(e.data.kind==='fundesk-king-live'){
+    const ranks=Array.isArray(e.data.top3)?e.data.top3.slice(0,3):[];
+    let box=document.getElementById('scienceKingLiveTop3');
+    if(!box){box=document.createElement('aside');box.id='scienceKingLiveTop3';
+     box.style.cssText='position:fixed;right:14px;bottom:15px;z-index:20000;padding:12px 16px;border-radius:16px;background:#e8faee;border:3px solid #72bc92;box-shadow:0 8px 25px #163c3655;font-weight:850;max-width:300px;color:#21583d;pointer-events:none';
+     document.body.append(box);}
+    box.innerHTML='<strong>🏆 科學王即時前三名</strong>'+
+     (ranks.length?ranks.map((p,i)=>'<div>'+(['🥇','🥈','🥉'][i])+' '+esc(String(p.no||''))+'號 '+esc(String(p.name||''))+'：'+Number(p.score||0)+'分</div>').join(''):'<div>等待學生作答</div>');
+    return;
+   }
+   if(e.data.kind==='fundesk-king-closed'){
+    document.getElementById('scienceKingLiveTop3')?.remove();return;
+   }
+   if(e.data.kind!=='fundesk-king-finish'||processing)return;
   processing=true;
   (async()=>{
    const d=e.data,id=String(d.gameId||''),mode=String(d.mode||''),subject=String(d.subject||''),count=Number(d.questionCount),players=d.players;
    if(!cloudReady||!cloudSession||cloudBlocked)throw Error('FunDesk 雲端未連線');
-   if(!/^[a-zA-Z0-9_-]{8,100}$/.test(id)||!['score','competition'].includes(mode)||
+   if(!/^[a-zA-Z0-9_-]{8,100}$/.test(id)||!['score','competition','tablet'].includes(mode)||
     !['science','math'].includes(subject)||!Number.isInteger(count)||count<1||count>300||
-    !Array.isArray(players)||players.length<(mode==='competition'?2:1)||players.length>(mode==='competition'?4:1))
+    !Array.isArray(players)||players.length<(mode==='competition'?2:1)||players.length>(mode==='competition'?4:mode==='tablet'?40:1))
     throw Error('遊戲資料格式不正確');
    const seen=new Set(),ranks=new Set();
    for(const p of players){
@@ -1777,6 +1790,12 @@ function openFunDeskKing(event){
    if(ranking.some((p,i)=>p.place!==i+1))throw Error('名次不一致');
    if(mode==='competition'){
     if(d.winner?.delta!==2||String(d.winner.id)!==String(ranking[0].id)||String(d.winner.code)!==String(ranking[0].code))throw Error('冠軍獎勵驗證失敗');
+   }else if(mode==='tablet'){
+    const awards=[5,3,1].slice(0,players.length),winners=d.winners;
+    if(!Array.isArray(winners)||winners.length!==awards.length||d.winner!==null||
+     winners.some((w,i)=>w.rank!==i+1||w.delta!==awards[i]||
+      String(w.id)!==String(ranking[i].id)||String(w.code)!==String(ranking[i].code)))
+      throw Error('平板競賽前三名獎勵不符合規則');
    }else if(d.winner!==null)throw Error('個人計分不可頒發競賽獎勵');
    if(Object.values(db.classes).some(group=>
     (group.students||[]).some(s=>(s.scienceKingResults||[]).some(x=>x.gameId===id))||
@@ -1794,9 +1813,18 @@ function openFunDeskKing(event){
     const item={sid:s.id,date,delta:2,reason:'科學王第一名',kind:'science-king',scienceKingGameId:id,id:uid()};
     group.points.push(item);changes.push({list:group.points,item});
    }
+   if(mode==='tablet'){
+    for(let i=0;i<Math.min(3,ranking.length);i++){
+     const p=ranking[i],group=db.classes[p.code],s=group.students.find(st=>String(st.id)===String(p.id));
+     const delta=[5,3,1][i],item={sid:s.id,date,delta,reason:'科學王平板競賽第'+(i+1)+'名',
+      kind:'science-king',scienceKingGameId:id,id:uid()};
+     group.points.push(item);changes.push({list:group.points,item});
+    }
+   }
    try{
     await cloudQueueSave();if(cloudBlocked)throw Error('雲端儲存尚未完成');
     if(mode==='competition')contactQueuePointsSync(ranking[0].code,date);
+    if(mode==='tablet')new Set(ranking.slice(0,3).map(x=>x.code)).forEach(code=>contactQueuePointsSync(code,date));
     render();send(true);
    }catch(error){
     for(const change of changes){const i=change.list.indexOf(change.item);if(i>=0)change.list.splice(i,1)}
