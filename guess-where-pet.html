@@ -4,12 +4,31 @@
 const doors=[...document.querySelectorAll(".door")],msg=document.querySelector("#message"),roulette=document.querySelector("#roulette"),status=document.querySelector("#status");
 const DEFAULT_FUNDESK_PETS=[{"id":"dino","name":"小恐龍","image":"./class-pets/dino.svg"},{"id":"bear","name":"小熊","image":"./class-pets/bear.svg"},{"id":"panda","name":"熊貓","image":"./class-pets/panda.svg"},{"id":"cat","name":"小貓","image":"./class-pets/cat.svg"},{"id":"rabbit","name":"小兔","image":"./class-pets/rabbit.svg"},{"id":"501","name":"企鵝","image":"./class-pets/501.svg"},{"id":"502","name":"兔兔","image":"./class-pets/502.svg"},{"id":"503","name":"松鼠","image":"./class-pets/503.svg"},{"id":"504","name":"小鳥","image":"./class-pets/504.svg"},{"id":"505","name":"貓貓","image":"./class-pets/505.svg"},{"id":"506","name":"小狗","image":"./class-pets/506.svg"},{"id":"507","name":"大象","image":"./class-pets/507.svg"}];
 let pets=DEFAULT_FUNDESK_PETS.slice(),picked=null,hidden=-1,round=0,busy=false;
+const params=new URLSearchParams(location.search),gameToken=params.get('fundeskToken')||'';
+let awardPending=false,studentLabel='',awardSequence=0;
+function tellTeacher(data){if(!gameToken||!window.opener)return;window.opener.postMessage({...data,token:gameToken},location.origin)}
+function readyTeacher(){tellTeacher({kind:'fundesk-guess-ready'})}
+window.addEventListener('message',e=>{
+ if(e.origin!==location.origin||e.source!==window.opener||!gameToken||e.data?.token!==gameToken)return;
+ if(e.data.kind==='fundesk-guess-config'){
+  if(typeof e.data.studentLabel==='string')studentLabel=e.data.studentLabel.slice(0,90);
+  if(Array.isArray(e.data.pets))acceptPets(e.data.pets);
+  document.querySelector('#status').textContent='參賽學生：'+studentLabel+'｜答對後由 FunDesk 雲端加 1 點';
+ }else if(e.data.kind==='fundesk-guess-award-result'){
+  if(Number(e.data.round)!==awardSequence)return;
+  awardPending=false;
+  const ok=e.data.ok===true;
+  msg.textContent=ok?'🎉 猜對了！已成功加 1 點！':'🎉 猜對了！但未成功加點：'+String(e.data.error||'請檢查雲端同步');
+ }
+});
+window.addEventListener('load',readyTeacher);if(gameToken)setTimeout(readyTeacher,300);
 function acceptPets(items){if(!Array.isArray(items))return;const good=items.filter(x=>x&&typeof x.name==="string"&&typeof x.image==="string"&&(/^(https?:|data:image\/)/.test(x.image)||x.image.startsWith("./")||x.image.startsWith("/")));if(good.length){pets=good;status.textContent="已載入 FunDesk 班寵圖片："+good.length+" 款";}}
 window.FunDeskGuessWhere={setPets:acceptPets,getPets:()=>pets.slice()};
 if(Array.isArray(window.FUNDESK_PETS))acceptPets(window.FUNDESK_PETS);
 window.addEventListener("message",e=>{if(e.origin!==location.origin)return;if(e.data?.type==="fundesk:guess-pets")acceptPets(e.data.pets)});
 try{const s=localStorage.getItem("fundesk_guess_pets");if(s)acceptPets(JSON.parse(s))}catch{}
-doors.forEach((d,i)=>d.addEventListener("click",()=>{if(busy||hidden<0||d.disabled)return;busy=true;doors.forEach((el,j)=>{el.disabled=true;el.classList.add("open");const spot=el.querySelector(".inside");spot.textContent="";if(j===hidden){const im=document.createElement("img");im.src=picked.image;im.alt=picked.name;spot.append(im)}else{spot.textContent="❌"}});if(i===hidden){msg.textContent="🎉 猜對了！恭喜你！";for(let k=0;k<35;k++){const s=document.createElement("span");s.className="spark";s.textContent=["🎉","✨","⭐","🎊"][k%4];s.style.left=(30+Math.random()*40)+"%";s.style.top=(35+Math.random()*30)+"%";s.style.setProperty("--dx",(Math.random()*800-400)+"px");s.style.setProperty("--dy",(Math.random()*-500-30)+"px");document.querySelector("#confetti").append(s);setTimeout(()=>s.remove(),1400)}window.dispatchEvent(new CustomEvent("fundesk:guess-result",{detail:{correct:true,pet:picked.name}}))}else{msg.textContent="好可惜喔！再試一次！";window.dispatchEvent(new CustomEvent("fundesk:guess-result",{detail:{correct:false,pet:picked.name}}))}}));
-document.querySelector("#start").addEventListener("click",()=>{if(!pets.length){msg.textContent="請先從 FunDesk 載入班寵圖片";return}if(busy===false&&hidden!==-1)return;busy=false;hidden=-1;picked=null;doors.forEach(d=>{d.disabled=true;d.classList.remove("open");d.querySelector(".inside").textContent=""});msg.textContent="輪盤轉動中……";let n=0;const id=++round;const tick=setInterval(()=>{if(id!==round){clearInterval(tick);return}roulette.textContent="🎡 "+pets[n++%pets.length].name;if(n>=16){clearInterval(tick);picked=pets[Math.floor(Math.random()*pets.length)];hidden=Math.floor(Math.random()*3);roulette.textContent="🎯 本局班寵："+picked.name;msg.textContent="班寵藏好了！請選擇一扇門";doors.forEach(d=>d.disabled=false)}},100)});
+doors.forEach((d,i)=>d.addEventListener("click",()=>{if(busy||hidden<0||d.disabled)return;busy=true;doors.forEach((el,j)=>{el.disabled=true;el.classList.add("open");const spot=el.querySelector(".inside");spot.textContent="";if(j===hidden){const im=document.createElement("img");im.src=picked.image;im.alt=picked.name;spot.append(im)}else{spot.textContent="❌"}});if(i===hidden){msg.textContent="🎉 猜對了！恭喜你！";for(let k=0;k<35;k++){const s=document.createElement("span");s.className="spark";s.textContent=["🎉","✨","⭐","🎊"][k%4];s.style.left=(30+Math.random()*40)+"%";s.style.top=(35+Math.random()*30)+"%";s.style.setProperty("--dx",(Math.random()*800-400)+"px");s.style.setProperty("--dy",(Math.random()*-500-30)+"px");document.querySelector("#confetti").append(s);setTimeout(()=>s.remove(),1400)}window.dispatchEvent(new CustomEvent("fundesk:guess-result",{detail:{correct:true,pet:picked.name}}));
+ if(gameToken){awardPending=true;awardSequence=round;msg.textContent="🎉 猜對了！正在同步 +1 點……";tellTeacher({kind:'fundesk-guess-award',round:awardSequence,petId:picked.id});}}else{msg.textContent="好可惜喔！再試一次！";window.dispatchEvent(new CustomEvent("fundesk:guess-result",{detail:{correct:false,pet:picked.name}}))}}));
+document.querySelector("#start").addEventListener("click",()=>{if(awardPending){msg.textContent="正在同步加點，請稍候再開始下一局";return}if(!pets.length){msg.textContent="請先從 FunDesk 載入班寵圖片";return}if(busy===false&&hidden!==-1)return;busy=false;hidden=-1;picked=null;doors.forEach(d=>{d.disabled=true;d.classList.remove("open");d.querySelector(".inside").textContent=""});msg.textContent="輪盤轉動中……";let n=0;const id=++round;const tick=setInterval(()=>{if(id!==round){clearInterval(tick);return}roulette.textContent="🎡 "+pets[n++%pets.length].name;if(n>=16){clearInterval(tick);picked=pets[Math.floor(Math.random()*pets.length)];hidden=Math.floor(Math.random()*3);roulette.textContent="🎯 本局班寵："+picked.name;msg.textContent="班寵藏好了！請選擇一扇門";doors.forEach(d=>d.disabled=false)}},100)});
 document.querySelector("#full").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
 </script></body></html>
