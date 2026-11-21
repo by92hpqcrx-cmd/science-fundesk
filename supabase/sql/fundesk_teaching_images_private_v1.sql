@@ -1,4 +1,4 @@
--- FUNDESK PRIVATE IMAGE LIBRARY SQL VERSION 2 / 2026-11-22
+-- FUNDESK PRIVATE IMAGE LIBRARY SQL VERSION 3 / 2026-11-22 (cleaned)
 -- FunDesk 教學圖片私人雲端庫 v1
 -- 請在正式 Supabase SQL Editor 以資料庫管理員執行；依賴 fundesk_access_roles_v1.sql。
 -- 每位 admin / teacher 各 20 MiB；所有儲存權限由資料庫 RLS 檢查，不依賴前端。
@@ -163,57 +163,5 @@ grant execute on function public.fundesk_teaching_images_can_upload(text,bigint,
 grant execute on function public.fundesk_teaching_images_upload_metadata_ok(text,jsonb) to authenticated;
 commit;
 
--- 檢查 bucket 必須 public=false：
--- select id,public,file_size_limit from storage.buckets where id='fundesk-teaching-images';
- then (metadata->>'size')::bigint
-   when (metadata->>'contentLength') ~ '^[0-9]+
-  metadata->>'mimetype'
- ));
-
-drop policy if exists "fundesk_images_storage_delete" on storage.objects;
-create policy "fundesk_images_storage_delete" on storage.objects
-for delete to authenticated
-using(bucket_id='fundesk-teaching-images'
- and public.fundesk_teaching_images_allowed()
- and exists(select 1 from public.fundesk_teaching_images t
-  where t.owner_id=auth.uid() and t.object_path=name));
-
--- 不允許用 overwrite/upsert 覆蓋檔案，避免繞過真實大小核對。
-revoke all on function public.fundesk_teaching_images_allowed() from public,anon;
-revoke all on function public.fundesk_teaching_images_reserve(text,bigint,text) from public,anon;
-revoke all on function public.fundesk_teaching_images_cancel(uuid) from public,anon;
-revoke all on function public.fundesk_teaching_images_can_upload(text,bigint,text) from public,anon;
-grant execute on function public.fundesk_teaching_images_allowed() to authenticated;
-grant execute on function public.fundesk_teaching_images_reserve(text,bigint,text) to authenticated;
-grant execute on function public.fundesk_teaching_images_cancel(uuid) to authenticated;
-grant execute on function public.fundesk_teaching_images_can_upload(text,bigint,text) to authenticated;
-commit;
-
--- 檢查 bucket 必須 public=false：
--- select id,public,file_size_limit from storage.buckets where id='fundesk-teaching-images';
- then (metadata->>'contentLength')::bigint
-   else -1 end,
-  metadata->>'mimetype'
- ));
-
-drop policy if exists "fundesk_images_storage_delete" on storage.objects;
-create policy "fundesk_images_storage_delete" on storage.objects
-for delete to authenticated
-using(bucket_id='fundesk-teaching-images'
- and public.fundesk_teaching_images_allowed()
- and exists(select 1 from public.fundesk_teaching_images t
-  where t.owner_id=auth.uid() and t.object_path=name));
-
--- 不允許用 overwrite/upsert 覆蓋檔案，避免繞過真實大小核對。
-revoke all on function public.fundesk_teaching_images_allowed() from public,anon;
-revoke all on function public.fundesk_teaching_images_reserve(text,bigint,text) from public,anon;
-revoke all on function public.fundesk_teaching_images_cancel(uuid) from public,anon;
-revoke all on function public.fundesk_teaching_images_can_upload(text,bigint,text) from public,anon;
-grant execute on function public.fundesk_teaching_images_allowed() to authenticated;
-grant execute on function public.fundesk_teaching_images_reserve(text,bigint,text) to authenticated;
-grant execute on function public.fundesk_teaching_images_cancel(uuid) to authenticated;
-grant execute on function public.fundesk_teaching_images_can_upload(text,bigint,text) to authenticated;
-commit;
-
--- 檢查 bucket 必須 public=false：
+-- 驗證私有 bucket：
 -- select id,public,file_size_limit from storage.buckets where id='fundesk-teaching-images';
