@@ -4913,6 +4913,7 @@ function cloudLoginForm(error=''){
  const showError=error?`<div class="cloudError">${esc(error)}</div>`:'';
  cloudGateMessage(`${showError}
  <form id="cloudLoginForm"><label>教師電子郵件</label><input id="cloudEmail" type="email" autocomplete="username" required placeholder="teacher@example.edu.tw"><label>教師密碼</label><input id="cloudPassword" type="password" autocomplete="current-password" required placeholder="Supabase Auth 帳號密碼"><button type="submit">登入並同步我的班級</button><button id="cloudForgotPassword" type="button" class="secondary" style="margin-top:8px">🔑 忘記密碼？寄送重設郵件</button><p id="cloudForgotStatus" class="cloudNote" role="status"></p></form>
+ <div style="margin-top:12px;padding:12px;border:1px solid #b9dac9;border-radius:12px;background:#f1f9f4"><a href="./demo.html" style="display:block;text-align:center;padding:12px;background:#e0f2e7;color:#155d40;border-radius:9px;text-decoration:none;font-weight:800">👀 免登入參觀 FunDesk（唯讀演示）</a><p class="cloudNote" style="margin:6px 0 0;text-align:center">只顯示示範內容，不提供實際功能或真實學生資料。</p></div>
  <div style="margin-top:14px;padding-top:12px;border-top:1px solid #dce7df"><button id="qrLoginStart" type="button" class="secondary">📱 iPhone 掃碼登入</button><p class="cloudNote">使用手機核准此電腦的登入請求；原本密碼登入仍可使用。</p><div id="qrLoginPanel" hidden></div></div>
  `);
  $('cloudForgotPassword').onclick=async()=>{
