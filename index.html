@@ -4261,7 +4261,37 @@ function accessBind(){
  };
 }
 
-function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>🔐 動態教室密碼</h2><p class="hint">用於老師餵食，以及學生名片解鎖更換頭像。初始密碼為 13579，建議立即修改。</p><div class="formgrid"><label>目前密碼<input id="feedOldPassword" type="password" autocomplete="off"></label><label>新密碼<input id="feedNewPassword" type="password" autocomplete="new-password" placeholder="至少 5 位數字"></label><label>確認新密碼<input id="feedNewPasswordConfirm" type="password" autocomplete="new-password"></label></div><div class="actions"><button class="btn" type="button" id="feedPasswordSave">修改動態教室密碼</button></div></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
+
+async function teacherChangeOwnPassword(event){
+ event.preventDefault();
+ const form=event.currentTarget;
+ const oldPass=$('teacherCurrentPassword').value;
+ const newPass=$('teacherNewPassword').value;
+ const confirmPass=$('teacherConfirmPassword').value;
+ const feedback=$('teacherPasswordStatus');
+ const button=$('teacherPasswordSubmit');
+ const email=String(cloudSession?.user?.email||'');
+ if(!cloudSession?.access_token||!email){feedback.textContent='請先以教師帳號登入';return}
+ if(newPass.length<12||newPass.length>128){feedback.textContent='新密碼須為 12 至 128 字元';return}
+ if(newPass!==confirmPass){feedback.textContent='兩次輸入的新密碼不一致';return}
+ if(newPass===oldPass){feedback.textContent='新密碼不可與目前密碼相同';return}
+ button.disabled=true;feedback.textContent='正在驗證原密碼…';
+ try{
+  // 只向 Supabase Auth 驗證原密碼，不將密碼保存在本機、資料庫或日誌。
+  const verified=await cloudFetch('/auth/v1/token?grant_type=password',{
+   method:'POST',body:JSON.stringify({email,password:oldPass})},true);
+  if(verified?.user?.id!==cloudSession.user.id)throw Error('目前密碼驗證失敗');
+  feedback.textContent='正在更新密碼…';
+  await cloudFetch('/auth/v1/user',{
+   method:'PUT',body:JSON.stringify({password:newPass})});
+  form.reset();
+  feedback.textContent='✅ 密碼已更新。請登出後使用新密碼重新登入。';
+ }catch(err){
+  feedback.textContent='修改失敗：'+(String(err.message||err).includes('invalid_grant')?'目前密碼不正確':String(err.message||err));
+ }finally{button.disabled=false}
+}
+
+function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>🔐 教師登入密碼</h2><p class="hint">僅修改自己登入 FunDesk 使用的 Supabase Auth 密碼，不影響其他教師或班級資料。密碼不會寫入 FunDesk 資料表。</p><form id="teacherChangePasswordForm"><div class="formgrid"><label>目前登入密碼<input id="teacherCurrentPassword" type="password" autocomplete="current-password" required></label><label>新密碼<input id="teacherNewPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required placeholder="至少 12 字元"></label><label>確認新密碼<input id="teacherConfirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label></div><p class="hint">建議使用至少 12 字元且不重複使用的密碼。修改後請使用新密碼重新登入。</p><div class="actions"><button class="btn" type="submit" id="teacherPasswordSubmit">更新我的登入密碼</button></div><p role="status" id="teacherPasswordStatus" aria-live="polite"></p></form></section><section class="panel"><h2>🔐 動態教室密碼</h2><p class="hint">用於老師餵食，以及學生名片解鎖更換頭像。初始密碼為 13579，建議立即修改。</p><div class="formgrid"><label>目前密碼<input id="feedOldPassword" type="password" autocomplete="off"></label><label>新密碼<input id="feedNewPassword" type="password" autocomplete="new-password" placeholder="至少 5 位數字"></label><label>確認新密碼<input id="feedNewPasswordConfirm" type="password" autocomplete="new-password"></label></div><div class="actions"><button class="btn" type="button" id="feedPasswordSave">修改動態教室密碼</button></div></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
 function hookView(){if(view==='access'){accessBind();return}if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();bindQuickOrder();const customButton=$('addCustomQuick');if(customButton){customButton.hidden=!customQuickAllowed();customButton.onclick=()=>openCustomQuickSettings();customQuickSyncNotice()};const editLinksButton=$('editQuickLinks');if(editLinksButton)editLinksButton.onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings);document.querySelectorAll('[data-fundesk-monopoly]').forEach(x=>x.addEventListener('click',openFunDeskMonopoly));document.querySelectorAll('[data-fundesk-king]').forEach(x=>x.addEventListener('click',openFunDeskKing));document.querySelectorAll('[data-fundesk-memory]').forEach(x=>x.addEventListener('click',openFunDeskMemory));document.querySelectorAll('a.quickLink').forEach(a=>{if(a.getAttribute('href')?.includes('/memory-game/index.html'))a.addEventListener('click',()=>{try{const url=new URL(a.href);if(url.origin!==location.origin||url.pathname!=='/science-fundesk/memory-game/index.html')return;const pet=db.classes[cl]?.classPetType;if(pet&&ROOM_PETS.some(p=>p.id===pet))url.searchParams.set('pet',pet);else url.searchParams.delete('pet');a.href=url.href}catch(e){}})})}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{if(!accessCan(b.dataset.goto))return alert('🔒 此功能未開放');view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='points'){
  const toggleLast=$('toggleSeatLastRow');
  if(toggleLast)toggleLast.onclick=()=>{
@@ -4308,7 +4338,7 @@ if(view==='students'){
   button.onclick=()=>removeStudent(button.dataset.deleteStudent);
  });
 }
-if(view==='settings'){$('feedPasswordSave').onclick=()=>{const old=$('feedOldPassword').value,pass=$('feedNewPassword').value,again=$('feedNewPasswordConfirm').value;if(old!==roomFeedingPassword())return alert('原密碼錯誤');if(!/^\d{5,12}$/.test(pass))return alert('請輸入 5 至 12 位數字密碼');if(pass!==again)return alert('確認密碼不一致');db.teacherFeedingPassword=pass;save();alert('動態教室密碼已更新');render()};$('exportJson').onclick=backup;$('importJson').onclick=()=>$('jsonImport').click();$('resetClass').onclick=()=>{if(prompt(`要重設 ${classDisplay(cl)}所有學生、出勤、習作、考試、點數，請輸入班級數字 ${cl}`)===cl){db.classes[cl]=freshClass();save();render()}}}
+if(view==='settings'){$('teacherChangePasswordForm').onsubmit=teacherChangeOwnPassword;$('feedPasswordSave').onclick=()=>{const old=$('feedOldPassword').value,pass=$('feedNewPassword').value,again=$('feedNewPasswordConfirm').value;if(old!==roomFeedingPassword())return alert('原密碼錯誤');if(!/^\d{5,12}$/.test(pass))return alert('請輸入 5 至 12 位數字密碼');if(pass!==again)return alert('確認密碼不一致');db.teacherFeedingPassword=pass;save();alert('動態教室密碼已更新');render()};$('exportJson').onclick=backup;$('importJson').onclick=()=>$('jsonImport').click();$('resetClass').onclick=()=>{if(prompt(`要重設 ${classDisplay(cl)}所有學生、出勤、習作、考試、點數，請輸入班級數字 ${cl}`)===cl){db.classes[cl]=freshClass();save();render()}}}
 if(view==='tools'){
 document.querySelectorAll('[data-time]').forEach(b=>b.onclick=()=>setTimer(Number(b.dataset.time)));
 $('timerStart').onclick=toggleTimer;$('timerReset').onclick=()=>setTimer(timerBaseSeconds);
