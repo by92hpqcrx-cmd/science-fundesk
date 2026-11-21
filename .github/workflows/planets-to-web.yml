@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: fundesk-planets-render
+  cancel-in-progress: false
 jobs:
   render:
     runs-on: ubuntu-latest
@@ -16,31 +19,42 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq libreoffice-impress poppler-utils fonts-noto-cjk
-      - name: Render PPTX into JPEG slides
+      - name: Render newest planets PPTX into browser slides
         shell: bash
         run: |
           set -euo pipefail
-          pptx=$(find teaching-slides -maxdepth 1 -name '*21頁.pptx' -print -quit)
+          # Prefer the updated 31-page presentation; keep the old deck playable until uploaded.
+          pptx=$(find teaching-slides -maxdepth 1 -type f -name '*31頁.pptx' -print -quit)
+          if [ -z "$pptx" ]; then
+            pptx=$(find teaching-slides -maxdepth 1 -type f -name '*21頁.pptx' -print -quit)
+          fi
           test -n "$pptx"
           mkdir -p /tmp/planet-render
           libreoffice -env:UserInstallation=file:///tmp/fundesk-planets-lo --headless --convert-to pdf --outdir /tmp/planet-render "$pptx"
           pdf=$(find /tmp/planet-render -maxdepth 1 -name '*.pdf' -print -quit)
           test -s "$pdf"
           count=$(pdfinfo "$pdf" | awk '/^Pages:/{print $2}')
-          test "$count" -eq 21
-          mkdir -p teaching-slides/planet-web/pages
+          if [ "$count" -lt 21 ] || [ "$count" -gt 80 ]; then
+            echo "::error::Unexpected page count $count"
+            exit 1
+          fi
+          mkdir -p /tmp/planet-pages teaching-slides/planet-web/pages
+          pdftoppm -f 1 -l "$count" -r 128 -jpeg -jpegopt quality=88,optimize=y -forcenum "$pdf" /tmp/planet-pages/slide
+          test "$(find /tmp/planet-pages -maxdepth 1 -name 'slide-*.jpg' | wc -l)" -eq "$count"
           rm -f teaching-slides/planet-web/pages/slide-*.jpg
-          pdftoppm -f 1 -l 21 -r 128 -jpeg -jpegopt quality=88,optimize=y -forcenum "$pdf" teaching-slides/planet-web/pages/slide
-          test "$(find teaching-slides/planet-web/pages -maxdepth 1 -name 'slide-*.jpg' | wc -l)" -eq 21
-      - name: Commit rendered pages
+          cp /tmp/planet-pages/slide-*.jpg teaching-slides/planet-web/pages/
+          printf '{"total":%s,"title":"八大行星英文、神話與構造"}\n' "$count" > teaching-slides/planet-web/manifest.json
+      - name: Commit rendered slides and page count
+        shell: bash
         run: |
+          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add teaching-slides/planet-web/pages
+          git add -A teaching-slides/planet-web/pages teaching-slides/planet-web/manifest.json
           if git diff --cached --quiet; then
             echo 'No changes'
           else
-            git commit -m "Render planets presentation into 21 browser-viewable slides"
+            git commit -m "Render latest planets PPT as browser-only slide deck"
             git fetch origin main
             git rebase origin/main
             git push origin HEAD:main
