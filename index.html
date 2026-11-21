@@ -2410,10 +2410,16 @@ function syncFixedHeadingColor(){
 }
 function render(){if(!accessCan(view))view=accessCan('seats')?'seats':'accessDenied';const mascot=$('fixedPageMascot');if(mascot)classMascotSource(mascot,currentClassMascot(),classDisplay(cl));const existingStats=$('stats');const restingPlace=$('statsRestingPlace');if(existingStats&&restingPlace&&existingStats.parentElement!==restingPlace)restingPlace.appendChild(existingStats);document.querySelector('.compactDashboardMain')?.classList.toggle('dashboardHome',view==='seats');const homeFixedHost=$('homeFixedQuicklinks');if(homeFixedHost){homeFixedHost.replaceChildren();homeFixedHost.hidden=true;homeFixedHost.classList.toggle('generalFixedHeading',view!=='seats');}if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();syncNavOrder();accessNav();cloudRenderQuickClasses();updateClassMascot();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');if(view==='classroom'&&root.querySelector('#movingClassroom')){refreshMovingClassroomCards();return}if(root.querySelector('#movingClassroom'))stopMovingClassroom();root.innerHTML=({seats:renderHomeStudentCards,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,classroom:renderClassroom,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings,access:renderAccess,accessDenied:()=>'<section class="panel"><h2>🔒 此帳戶沒有此功能的使用權限</h2><p>請聯絡系統管理員開放功能。</p></section>'}[view])();if(root)root.scrollTop=0;if(view==='seats'){const fixedHost=$('homeFixedQuicklinks');const homeHeading=root.querySelector('.quicklinksHeader');if(fixedHost&&homeHeading){fixedHost.replaceChildren(homeHeading);fixedHost.hidden=false;}const statsHost=$('quicklinkStatsHost');const stats=$('stats');if(statsHost&&stats){statsHost.appendChild(stats);stats.classList.add('quicklinkStats')}}else{const fixedHost=$('homeFixedQuicklinks');const selector=view==='classroom'?'.movingRoomToolbar':view==='tools'?'.animalToolHead':view==='tabletRules'?'.tabletHero':'.panelHead';const sectionHeading=root.querySelector(selector);if(fixedHost&&sectionHeading){fixedHost.replaceChildren(sectionHeading);fixedHost.hidden=false;}}syncFixedHeadingColor();decorateClassPage();hookView()}
 const labGroupOrder=[2,3,4,0,1];
-const labRoleColumns=['組長','副組長','器材長 1／器材長','器材長 2','習作長','清潔長'];
+// 六人組：領取與歸還由不同器材長負責；五人組不分配歸還器材長。
+const labRoleColumns=['組長','副組長','器材長（領取）','習作長','清潔長','器材長（歸還）'];
 function labRoles(count){
- return count===6?labRoleColumns.map((role,i)=>i===2?'器材長 1':role):
-  [labRoleColumns[0],labRoleColumns[1],'器材長',labRoleColumns[4],labRoleColumns[5]].slice(0,count);
+ return labRoleColumns.slice(0,Math.min(count,labRoleColumns.length));
+}
+// 舊實驗分工紀錄的器材長 1／2 轉為新的職稱，不覆寫既有輪值紀錄。
+function labDisplayRole(role){
+ if(role==='器材長'||role==='器材長 1'||role==='器材長 1／器材長'||role==='器材長(領取)')return '器材長（領取）';
+ if(role==='器材長 2'||role==='器材長(歸還)')return '器材長（歸還）';
+ return role;
 }
 function labAssignments(seats,people,previous){
  const byId=new Map(people.map(s=>[s.id,s]));
@@ -2494,8 +2500,9 @@ function labDutyTable(sheet){
  const columns=['組別',...labRoleColumns];
  return `<table class="labDutyTable"><thead><tr>${columns.map(role=>`<th scope="col">${role}</th>`).join('')}</tr></thead>
  <tbody>${sheet.groups.map(group=>`<tr><th scope="row">第${group.number}組</th>${labRoleColumns.map(role=>{
-  const member=group.members.find(s=>s.role===role||(role===labRoleColumns[2]&&['器材長','器材長 1'].includes(s.role)));
-  return `<td>${member?`<span>${esc(member.no)} 號</span><br>${avatarNamed(student(member.id)||member,member.name)}`:'—'}</td>`;
+  const member=group.members.find(s=>labDisplayRole(s.role)===role);
+  const fivePersonNoReturn=group.members.length===5&&role==='器材長（歸還）';
+  return `<td>${fivePersonNoReturn?'不分配':member?`<span>${esc(member.no)} 號</span><br>${avatarNamed(student(member.id)||member,member.name)}`:'—'}</td>`;
  }).join('')}</tr>`).join('')}</tbody></table>`;
 }
 function printLabDuty(sheet){
