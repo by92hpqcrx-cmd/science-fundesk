@@ -121,8 +121,60 @@ for insert to authenticated
 with check(bucket_id='fundesk-teaching-images'
  and public.fundesk_teaching_images_can_upload(
   name,
-  case when (metadata->>'size') ~ '^[0-9]+$'
-   then (metadata->>'size')::bigint else -1 end,
+  case
+   when (metadata->>'size') ~ '^[0-9]+
+  metadata->>'mimetype'
+ ));
+
+drop policy if exists "fundesk_images_storage_delete" on storage.objects;
+create policy "fundesk_images_storage_delete" on storage.objects
+for delete to authenticated
+using(bucket_id='fundesk-teaching-images'
+ and public.fundesk_teaching_images_allowed()
+ and exists(select 1 from public.fundesk_teaching_images t
+  where t.owner_id=auth.uid() and t.object_path=name));
+
+-- 不允許用 overwrite/upsert 覆蓋檔案，避免繞過真實大小核對。
+revoke all on function public.fundesk_teaching_images_allowed() from public,anon;
+revoke all on function public.fundesk_teaching_images_reserve(text,bigint,text) from public,anon;
+revoke all on function public.fundesk_teaching_images_cancel(uuid) from public,anon;
+revoke all on function public.fundesk_teaching_images_can_upload(text,bigint,text) from public,anon;
+grant execute on function public.fundesk_teaching_images_allowed() to authenticated;
+grant execute on function public.fundesk_teaching_images_reserve(text,bigint,text) to authenticated;
+grant execute on function public.fundesk_teaching_images_cancel(uuid) to authenticated;
+grant execute on function public.fundesk_teaching_images_can_upload(text,bigint,text) to authenticated;
+commit;
+
+-- 檢查 bucket 必須 public=false：
+-- select id,public,file_size_limit from storage.buckets where id='fundesk-teaching-images';
+ then (metadata->>'size')::bigint
+   when (metadata->>'contentLength') ~ '^[0-9]+
+  metadata->>'mimetype'
+ ));
+
+drop policy if exists "fundesk_images_storage_delete" on storage.objects;
+create policy "fundesk_images_storage_delete" on storage.objects
+for delete to authenticated
+using(bucket_id='fundesk-teaching-images'
+ and public.fundesk_teaching_images_allowed()
+ and exists(select 1 from public.fundesk_teaching_images t
+  where t.owner_id=auth.uid() and t.object_path=name));
+
+-- 不允許用 overwrite/upsert 覆蓋檔案，避免繞過真實大小核對。
+revoke all on function public.fundesk_teaching_images_allowed() from public,anon;
+revoke all on function public.fundesk_teaching_images_reserve(text,bigint,text) from public,anon;
+revoke all on function public.fundesk_teaching_images_cancel(uuid) from public,anon;
+revoke all on function public.fundesk_teaching_images_can_upload(text,bigint,text) from public,anon;
+grant execute on function public.fundesk_teaching_images_allowed() to authenticated;
+grant execute on function public.fundesk_teaching_images_reserve(text,bigint,text) to authenticated;
+grant execute on function public.fundesk_teaching_images_cancel(uuid) to authenticated;
+grant execute on function public.fundesk_teaching_images_can_upload(text,bigint,text) to authenticated;
+commit;
+
+-- 檢查 bucket 必須 public=false：
+-- select id,public,file_size_limit from storage.buckets where id='fundesk-teaching-images';
+ then (metadata->>'contentLength')::bigint
+   else -1 end,
   metadata->>'mimetype'
  ));
 
