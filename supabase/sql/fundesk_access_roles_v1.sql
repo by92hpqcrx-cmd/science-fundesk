@@ -2,6 +2,7 @@
 -- 必須由 Supabase SQL Editor 以資料庫管理員執行。
 -- 注意：建表後仍需以最下方的「初始化管理員」SQL 另行指派唯一管理員。
 -- 這個版本不改動 fundesk_teacher_data 的既有 RLS / RPC。
+-- 唯一管理員尚未指派前，所有既有教師維持 legacy 權限；資料不受影響。
 begin;
 
 create table if not exists public.fundesk_access_admin (
@@ -45,6 +46,8 @@ returns jsonb language sql stable security definer
 set search_path=pg_catalog,public as $$
   select case when auth.uid() is null then
     jsonb_build_object('role','guest','features','{}'::jsonb)
+  when not exists (select 1 from public.fundesk_access_admin) then
+    jsonb_build_object('role','legacy','features','{}'::jsonb)
   when public.fundesk_access_is_admin() then
     jsonb_build_object('role','admin','features','{}'::jsonb)
   else
