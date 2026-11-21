@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FunDesk｜免登入演示模式</title>
+<style>
+:root{color-scheme:light;--green:#2b7863;--line:#d8e8df;--ink:#284238}
+*{box-sizing:border-box}body{margin:0;font-family:"Microsoft JhengHei",system-ui,sans-serif;color:var(--ink);background:#f3faf6}
+.top{position:sticky;top:0;z-index:10;background:#fffef9;border-bottom:2px solid var(--line);padding:12px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 2px 14px #153b3010}.top h1{font-size:22px;margin:0;flex:1}.badge{background:#fff2ca;border:1px solid #edd185;padding:6px 12px;border-radius:999px;font-weight:800}.login{border:0;border-radius:12px;background:var(--green);color:white;font-weight:800;padding:11px 16px;text-decoration:none}
+.layout{display:grid;grid-template-columns:252px 1fr;min-height:calc(100vh - 72px)}
+nav{border-right:2px solid #dcebe4;background:#eaf5ef;padding:16px 12px;position:sticky;top:72px;height:calc(100vh - 72px);overflow:auto}
+nav h2{font-size:18px;text-align:center}nav button{display:block;width:100%;text-align:left;border:1px solid transparent;background:transparent;color:#345b4d;padding:12px 14px;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;margin-bottom:4px}
+nav button.active{background:white;border-color:#a6d3be;box-shadow:0 2px 6px #20443313;color:#1a6e52}
+main{padding:24px;max-width:1440px;width:100%;margin:auto}h2{font-size:27px;margin:0 0 10px}.desc{font-size:16px;color:#567466;margin-bottom:20px;line-height:1.7}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 14px #1f4b3a0b}.card strong{display:block;font-size:18px;margin:8px 0}.card small{color:#668576}.emoji{font-size:35px}.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:16px}.pill{display:inline-block;background:#eef8f2;padding:7px 12px;border-radius:999px;font-size:14px}
+.preview{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px}.student{background:#f6fbf8;border:1px solid #cde1d4;border-radius:14px;padding:18px;text-align:center}.student .emoji{font-size:36px}
+.fake{border:1px solid #c8ddd0;background:#f5faf7;padding:12px 15px;border-radius:10px;color:#547365;font-size:16px}.fake.disabled{opacity:.62;cursor:not-allowed;user-select:none}.fake-table{width:100%;border-collapse:collapse}.fake-table th,.fake-table td{border-bottom:1px solid #e6efe9;padding:12px;text-align:left}.fake-table th{background:#eaf4ed}
+.note{background:#fff9e8;border:1px solid #ead9a0;border-radius:14px;padding:14px;margin-bottom:20px;line-height:1.7}
+a{color:#236f59}@media(max-width:800px){.layout{grid-template-columns:1fr}nav{position:static;height:auto;display:flex;gap:5px;overflow:auto;padding:7px;white-space:nowrap;border-right:0;border-bottom:1px solid var(--line)}nav h2{display:none}nav button{width:auto;min-width:max-content;margin:0;font-size:14px}main{padding:15px}.top{padding:12px}.top h1{font-size:18px}}
+</style></head><body>
+<header class="top"><span class="emoji" aria-hidden="true">🐰</span><h1>自然科任 FunDesk</h1><span class="badge">👀 免登入唯讀演示</span><a class="login" href="./index.html">🔐 教師正式登入</a></header>
+<div class="layout"><nav aria-label="演示頁面導覽"><h2>🌿 功能選單</h2><div id="nav"></div></nav><main><div class="note">🔒 這是<strong>獨立的公開演示頁</strong>，僅顯示範例畫面。可切換頁面了解功能，但不能操作、儲存、開啟遊戲或讀取任何教師／學生的真實資料。演示內容不會連線至 Supabase。</div><div id="content"></div></main></div>
+<script>
+(()=>{'use strict';
+const sections=[
+ ['home','🏠','首頁・教學快捷入口','查看常用教學資源與班級概況'],
+ ['seats','🪑','班級座位表','依座號顯示學生名片與座位'],
+ ['points','🌟','課堂表現','加點、扣點和行為紀錄'],
+ ['attendance','📋','出勤紀錄','缺席、遲到及課間離席'],
+ ['lab','🧪','實驗工作分配','實驗分組與組員工作'],
+ ['schedule','📅','我的教學進度','課程進度、上課地點與提醒'],
+ ['contact','📒','班級連絡簿','導師與科任留言、課堂表現展示'],
+ ['classroom','🐾','動態教室','可愛班寵與學生頭像'],
+ ['quiz','🎯','抽籤與答題','課堂抽籤、自然科互動活動'],
+ ['tools','⏱️','課堂小工具','測驗計時器、倒數計時器'],
+ ['images','🖼️','教學圖片','教師私人圖片庫的操作介面'],
+ ['settings','⚙️','資料管理','班級資料管理與帳號設定']
+];
+const shortcuts=[['🪐','八大行星簡報'],['🎮','自然科學王'],['🌌','星空冒險島'],['📖','康軒電子書'],['🎯','Kahoot!'],['🎲','校園大富翁'],['🖼️','教學圖片'],['🔗','自訂連結']];
+const esc=s=>String(s).replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
+const cards=list=>'<div class="grid">'+list.map(([icon,title,detail])=>'<article class="card"><span class="emoji">'+esc(icon)+'</span><strong>'+esc(title)+'</strong><small>'+esc(detail||'演示畫面 · 不可操作')+'</small></article>').join('')+'</div>';
+const panel=(heading,body)=>'<section class="panel"><h3>'+esc(heading)+'</h3>'+body+'</section>';
+const fakeTable=(heads,rows)=>'<div style="overflow:auto"><table class="fake-table"><thead><tr>'+heads.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+const fakeStudents=()=>'<div class="preview">'+['🐻','🐰','🐼','🐱','🐶','🦊','🐸','🐯'].map((v,i)=>'<div class="student"><div class="emoji">'+v+'</div><strong>示範學生 '+(i+1)+'</strong><p class="pill">座號 '+(i+1)+'</p></div>').join('')+'</div>';
+function page(id){
+ if(id==='home')return cards(shortcuts.map(x=>[...x,'僅供觀看']))+panel('📊 班級概況',cards([['👩‍🎓','學生人數','示例：28 人'],['🧩','待補習作','示例：0 件'],['📑','待補考','示例：0 件'],['🍃','缺席人數','示例：0 人']]))+panel('👩‍🎓 學生名片（示範）',fakeStudents());
+ if(id==='seats')return panel('五年示範班・座位表',fakeStudents());
+ if(id==='points')return panel('課堂表現',fakeStudents()+cards([['✨','認真筆記','加點項目'],['👏','優良表現','加點項目'],['📖','未帶課習','扣點項目']]));
+ if(id==='attendance')return panel('出勤管理',fakeTable(['座號','姓名','出勤','備註'],[[1,'示範學生 1','出席','—'],[2,'示範學生 2','出席','—'],[3,'示範學生 3','出席','—']]));
+ if(id==='lab')return panel('五人實驗組示意',fakeTable(['組長','副組長','器材長','習作長','清潔長'],[['示範學生 1','示範學生 2','示範學生 3','示範學生 4','示範學生 5']]));
+ if(id==='schedule')return panel('本週教學安排',fakeTable(['日期','班級','單元','上課地點'],[['星期一','五年示範班','星空與太陽系','自然教室'],['星期三','五年示範班','行星觀測','原班教室']]));
+ if(id==='contact')return panel('班級連絡簿示意',cards([['📕','今日教學紀錄','課程內容與提醒'],['💬','師生／導師留言','只能觀看範例'],['🏅','課堂表現','範例積點紀錄']]));
+ if(id==='classroom')return panel('🐾 班寵與動態教室',fakeStudents()+cards([['🍎','餵食小站'],['🐼','班級寵物'],['🎨','教室背景']]));
+ if(id==='quiz')return cards([['🎲','抽籤答題'],['🪐','自然科學王'],['⭐','星空冒險島'],['🎯','課堂搶答']]);
+ if(id==='tools')return cards([['⏰','倒數計時器'],['🦖','測驗計時器'],['✂️','猜拳小遊戲'],['📝','考試設定']]);
+ if(id==='images')return panel('🖼️ 我的教學圖片',cards([['📁','私人圖片庫','真實圖片不可在演示模式讀取'],['🔍','全螢幕圖片展示'],['☁️','雲端同步','需要教師登入']]));
+ return cards([['🔒','帳號安全'],['📦','資料備份'],['⚙️','班級管理'],['🔗','自訂連結']]);
+}
+const nav=document.getElementById('nav'),out=document.getElementById('content');
+nav.innerHTML=sections.map(([id,icon,title])=>'<button type="button" data-page="'+id+'">'+icon+' '+esc(title)+'</button>').join('');
+function show(id){const s=sections.find(x=>x[0]===id)||sections[0];nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.page===s[0]));out.innerHTML='<h2>'+s[1]+' '+esc(s[2])+'</h2><p class="desc">'+esc(s[3])+'。此頁為唯讀範例，無法操作功能。</p>'+page(s[0]);history.replaceState(null,'','#'+s[0]);window.scrollTo({top:0,behavior:'instant'})}
+nav.addEventListener('click',e=>{const btn=e.target.closest('[data-page]');if(btn)show(btn.dataset.page)});
+show(location.hash.slice(1)||'home');
+})();
+</script></body></html>
