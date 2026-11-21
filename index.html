@@ -1018,6 +1018,8 @@ body.roomFullscreen #content,
 #nav button[data-view="tools"]{--nav-item-bg:#ebf6ff;--nav-item-ink:#2e6088;--nav-item-border:#96b9d9}
 #nav button[data-view="tabletRules"]{--nav-item-bg:#f2efff;--nav-item-ink:#6e50a5;--nav-item-border:#b7a5d9}
 #nav button[data-view="classes"]{--nav-item-bg:#fff1a8;--nav-item-ink:#795400;--nav-item-border:#e2b93a}
+#nav button[data-view="access"]{--nav-item-bg:#f1e7ff;--nav-item-ink:#684197;--nav-item-border:#b39ad9}
+#nav button[data-view="access"][hidden]{display:none!important}
 #nav button[data-view="settings"]{--nav-item-bg:#f2f5f8;--nav-item-ink:#4a6077;--nav-item-border:#a8b5c3}
 .sidebar #nav button[data-view]{
   font-size:clamp(19px,1.42vw,22px)!important;
@@ -4053,7 +4055,7 @@ function hookClassManager(){
  $('manageSeats').onclick=()=>{view='seats';render()};
 }
 
-const ACCESS_FEATURES=[['seats','首頁'],['labDuty','實驗工作分配'],['attendance','出勤紀錄'],['tasks','習作實驗考試'],['schedule','教學進度'],['contact','班級聯絡簿'],['points','課堂表現'],['redemption','積點兌換'],['quiz','抽籤問答'],['students','學生名單'],['classroom','動態教室'],['tools','課堂小工具'],['tabletRules','平板使用守則'],['classes','班級管理'],['settings','資料管理'],['personal','自然科學王'],['sky','星空冒險島'],['socialAdventure','家園探險王'],['zodiac','十二星座故事'],['starLegends','星河傳說'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot'],['monopoly','校園大富翁'],['petMemory','記憶翻牌'],['planetPpt','八大行星簡報'],['backup_export','匯出備份'],['student_delete','刪除學生']];
+const ACCESS_FEATURES=[['seats','首頁'],['labDuty','實驗工作分配'],['attendance','出勤紀錄'],['tasks','習作實驗考試'],['schedule','教學進度'],['contact','班級聯絡簿'],['points','課堂表現'],['redemption','積點兌換'],['quiz','抽籤問答'],['students','學生名單'],['classroom','動態教室'],['tools','課堂小工具'],['tabletRules','平板使用守則'],['classes','班級管理'],['settings','資料管理'],['rps','課間小遊戲'],['personal','自然科學王'],['sky','星空冒險島'],['socialAdventure','家園探險王'],['zodiac','十二星座故事'],['starLegends','星河傳說'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot'],['monopoly','校園大富翁'],['petMemory','記憶翻牌'],['planetPpt','八大行星簡報'],['backup_export','匯出備份'],['student_delete','刪除學生']];
 const ACCESS_TEACHER=new Set(ACCESS_FEATURES.map(x=>x[0]).filter(x=>x!=='student_delete'));
 const ACCESS_RESTRICTED=new Set(['seats','tools','tabletRules','planetPpt']);
 let accessState={role:'legacy',features:{}},accessUsers=[],accessSelected='';
@@ -4072,9 +4074,9 @@ function accessNav(){
 async function accessLoad(){
  try{
   const v=await cloudFetch('/rest/v1/rpc/fundesk_access_features',{method:'POST',body:'{}'});
-  if(!v||!['admin','teacher','restricted','disabled','guest'].includes(v.role))throw Error('role invalid');
+  if(!v||!['admin','teacher','restricted','disabled','guest','legacy'].includes(v.role))throw Error('role invalid');
   accessState={role:v.role,features:v.features&&typeof v.features==='object'?v.features:{}};
- }catch(e){accessState={role:'legacy',features:{}};console.warn('權限資料庫尚未啟用，暫時沿用舊版功能。',e)}
+ }catch(e){const missing=String(e?.message||e).includes('HTTP 404');accessState={role:missing?'legacy':'disabled',features:{}};console.warn('FunDesk 權限驗證失敗：',e)}
  accessNav();if(!accessCan(view))view='seats';
 }
 function renderAccess(){
@@ -4763,6 +4765,8 @@ function cloudRenderQuickClasses(){
 function cloudPayload(code){return code==='shared'?{labTemplate:db.labTemplate,classCodes:[...CLASSES],classMeta:db.classMeta,retiredClassCodes:[...retiredClassCodes],teacherFeedingPassword:String(db.teacherFeedingPassword||'13579')}:db.classes[code]}
 async function cloudGetAll(){return await cloudFetch('/rest/v1/fundesk_teacher_data?select=class_code,payload,revision&order=class_code.asc')}
 async function cloudLoad(){
+ await accessLoad();
+ if(accessState.role==='disabled'||accessState.role==='guest')throw Error('此教師帳戶目前已停用或權限驗證失敗，請聯絡系統管理員。');
  cloudStatus('正在讀取個人雲端紀錄…');
  const rows=await cloudGetAll();
  if(!Array.isArray(rows))throw Error('雲端回傳格式不符');
