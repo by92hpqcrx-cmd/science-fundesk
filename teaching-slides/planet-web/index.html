@@ -16,7 +16,7 @@
 </footer></main>
 <script>
 (()=>{'use strict';
-const TOTAL=21,slide=document.getElementById('slide'),msg=document.getElementById('msg'),count=document.getElementById('count'),bar=document.getElementById('bar'),prev=document.getElementById('prev'),next=document.getElementById('next'),full=document.getElementById('full');
+let TOTAL=21;const slide=document.getElementById('slide'),msg=document.getElementById('msg'),count=document.getElementById('count'),bar=document.getElementById('bar'),prev=document.getElementById('prev'),next=document.getElementById('next'),full=document.getElementById('full');
 let page=1,request=0;
 const pageUrl=n=>'pages/slide-'+String(n).padStart(2,'0')+'.jpg';
 function show(n){
@@ -35,6 +35,18 @@ full.addEventListener('click',async()=>{try{if(document.fullscreenElement)await 
 document.addEventListener('fullscreenchange',()=>full.textContent=document.fullscreenElement?'↙ 退出全螢幕':'⛶ 全螢幕');
 document.addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();show(page+1)}else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();show(page-1)}else if(e.key==='Home'){show(1)}else if(e.key==='End'){show(TOTAL)}});
 let startX=0;document.querySelector('#screen').addEventListener('touchstart',e=>{startX=e.changedTouches[0].screenX},{passive:true});document.querySelector('#screen').addEventListener('touchend',e=>{const d=e.changedTouches[0].screenX-startX;if(Math.abs(d)>45)show(page+(d<0?1:-1))},{passive:true});
-const hash=parseInt(location.hash.replace('#slide=',''),10);show(Number.isFinite(hash)?hash:1);
+const hash=parseInt(location.hash.replace('#slide=',''),10);
+async function loadDeck(){
+ try{
+  const response=await fetch('./manifest.json',{cache:'no-store'});
+  if(response.ok){
+   const meta=await response.json();
+   if(Number.isInteger(meta.total)&&meta.total>=1&&meta.total<=80)TOTAL=meta.total;
+   if(typeof meta.title==='string')document.querySelector('.title').textContent='🪐 '+meta.title;
+  }
+ }catch(e){console.warn('投影片清單尚未部署，沿用原有頁數',e)}
+ show(Number.isFinite(hash)?hash:1);
+}
+loadDeck();
 })();
 </script></body></html>
