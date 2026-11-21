@@ -1745,11 +1745,77 @@ function bindQuickOrder(){
  });
 }
 
+
+/* 教師自訂快捷入口：登入帳號 + 瀏覽器分開保存，不含學生資料。 */
+const CUSTOM_QUICK_PREFIX='fundesk_custom_quick_v1:';
+const customQuickStorageKey=()=>CUSTOM_QUICK_PREFIX+String(cloudSession?.user?.id||'guest');
+function customQuickAllowed(){return !!cloudSession?.user?.id && (accessState.role==='admin'||accessState.role==='teacher')}
+function getCustomQuickLinks(){
+ if(!customQuickAllowed())return [];
+ try{
+  const data=JSON.parse(localStorage.getItem(customQuickStorageKey())||'[]');
+  if(!Array.isArray(data))return [];
+  return data.filter(x=>x&&/^custom_[a-z0-9_-]{6,60}$/.test(x.id)
+    && typeof x.title==='string' && x.title.length<=36
+    && typeof x.icon==='string' && x.icon.length<=8
+    && typeof x.url==='string' && safeLink(x.url)).slice(0,30);
+ }catch{return []}
+}
+function saveCustomQuickLinks(items){
+ if(!customQuickAllowed())throw Error('只有登入的正式教師可以設定個人連結');
+ localStorage.setItem(customQuickStorageKey(),JSON.stringify(items));
+}
+function openCustomQuickSettings(editId=''){
+ if(!customQuickAllowed()){alert('請先登入正式教師帳號');return}
+ const list=getCustomQuickLinks(),selected=list.find(x=>x.id===editId);
+ const presetIcons=['🔗','🌍','📚','🧪','🪐','🖼️','🎮','📝','🎬','⭐','💻','🎨'];
+ $('modalContent').innerHTML=`<h2>🔗 自訂教學快捷入口</h2>
+ <p class="hint">每位教師可以建立最多 30 個捷徑；本版本儲存於目前瀏覽器，換裝置不會自動同步。</p>
+ <form id="customQuickForm">
+ <label class="linkField"><strong>連結名稱</strong><input name="title" required maxlength="36" placeholder="例如：我的自然教學資源" value="${esc(selected?.title||'')}"></label>
+ <label class="linkField"><strong>圖示（可輸入 Emoji）</strong><input name="icon" maxlength="8" placeholder="🔗" value="${esc(selected?.icon||'🔗')}"></label>
+ <div style="display:flex;flex-wrap:wrap;gap:5px;margin:7px 0 14px">${presetIcons.map(icon=>`<button type="button" class="btn outline small" data-custom-icon="${icon}" aria-label="選取 ${icon}">${icon}</button>`).join('')}</div>
+ <label class="linkField"><strong>網址</strong><input type="url" name="url" required placeholder="https://..." value="${esc(selected?.url||'')}"></label>
+ <div class="actions"><button class="btn" type="submit">${selected?'儲存修改':'＋ 新增捷徑'}</button><button class="btn outline" type="button" id="closeCustomQuick">完成</button></div>
+ </form>
+ <hr style="margin:18px 0;border:0;border-top:1px solid #dbe2ec">
+ <h3>我的自訂連結（${list.length}/30）</h3>
+ <div style="display:grid;gap:8px">${list.length?list.map(item=>`
+ <div style="display:flex;align-items:center;gap:9px;padding:9px;border:1px solid #d8e2ef;border-radius:10px;flex-wrap:wrap">
+ <span style="font-size:25px">${esc(item.icon)}</span>
+ <strong style="flex:1;overflow-wrap:anywhere">${esc(item.title)}</strong>
+ <button type="button" class="btn outline small" data-custom-edit="${esc(item.id)}">編輯</button>
+ <button type="button" class="btn outline small" data-custom-delete="${esc(item.id)}">刪除</button>
+ </div>`).join(''):'<p class="hint">尚未新增自訂連結。</p>'}</div>`;
+ $('modal').classList.remove('hidden');
+ $('closeCustomQuick').onclick=()=>{$('modal').classList.add('hidden');render()};
+ $('modalContent').querySelectorAll('[data-custom-icon]').forEach(button=>button.onclick=()=>{$('customQuickForm').elements.icon.value=button.dataset.customIcon});
+ $('modalContent').querySelectorAll('[data-custom-edit]').forEach(button=>button.onclick=()=>openCustomQuickSettings(button.dataset.customEdit));
+ $('modalContent').querySelectorAll('[data-custom-delete]').forEach(button=>button.onclick=()=>{
+  const id=button.dataset.customDelete,item=list.find(x=>x.id===id);
+  if(!item||!confirm('確定刪除「'+item.title+'」捷徑？'))return;
+  try{saveCustomQuickLinks(list.filter(x=>x.id!==id));openCustomQuickSettings()}catch(err){alert('刪除失敗：'+err.message)}
+ });
+ $('customQuickForm').onsubmit=e=>{
+  e.preventDefault();const fd=new FormData(e.target),title=String(fd.get('title')||'').trim(),icon=String(fd.get('icon')||'🔗').trim()||'🔗',url=String(fd.get('url')||'').trim();
+  if(!title||title.length>36||icon.length>8||!safeLink(url)){alert('請輸入有效名稱、圖示及 http(s) 網址。');return}
+  const existing=getCustomQuickLinks();
+  if(!selected&&existing.length>=30){alert('自訂連結最多 30 個');return}
+  const id=selected?.id||'custom_'+crypto.randomUUID().replaceAll('-','').slice(0,16);
+  const value={id,title,icon,url};
+  const next=selected?existing.map(x=>x.id===id?value:x):[...existing,value];
+  try{saveCustomQuickLinks(next);openCustomQuickSettings()}catch(err){alert('儲存失敗：'+err.message)}
+ };
+}
+
 function renderQuickLinks(){
  const cfg=[['personal','🎮','自然科學王・四大模式'],['sky','🌌','星空冒險島'],['socialAdventure','🏝️','家園探險王・社會冒險'],['zodiac','✨','星空故事館・十二星座篇'],['starLegends','🌠','星空故事館・星河傳說'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版'],['petMemory','🃏','記憶翻牌遊戲・三大主題'],['planetPpt','🪐','八大行星英文與神話'],['teachingImages','🖼️','教學圖片・私人雲端']];
  cfg.unshift(['rps','🎲','課間小遊戲']);
+ for(const item of getCustomQuickLinks())cfg.push([item.id,item.icon,item.title]);
  const sortedCfg=sortedQuickEntries(cfg);
- return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps'&&!accessCan('rps'))return `<button type="button" class="quickLink missing" disabled><span class="quickIcon">🔒</span><strong>課間小遊戲</strong><small>管理員尚未開放</small></button>`;if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">🎲</span><strong>課間小遊戲</strong><small>先選遊戲，再進入遊戲畫面</small></button>`;const link=safeLink(quickLinks[id]);if(!accessCan(id))return `<button type="button" class="quickLink missing" disabled><span class="quickIcon">🔒</span><strong>${title}</strong><small>管理員尚未開放</small></button>`;return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='personal'?'data-fundesk-king="1"':id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':''} target="${id==='teachingImages'?'_self':'_blank'}" ${id==='petMemory'||id==='personal'||id==='teachingImages'?'':'rel="noopener noreferrer"'}><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':id==='planetPpt'?'▶ 線上播放投影片 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
+ return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="addCustomQuick" type="button">＋ 自訂連結</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps'&&!accessCan('rps'))return `<button type="button" class="quickLink missing" disabled><span class="quickIcon">🔒</span><strong>課間小遊戲</strong><small>管理員尚未開放</small></button>`;if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">🎲</span><strong>課間小遊戲</strong><small>先選遊戲，再進入遊戲畫面</small></button>`;
+ if(id.startsWith('custom_')){const item=getCustomQuickLinks().find(x=>x.id===id);if(!item)return '';return `<a class="quickLink" data-quick-id="${esc(id)}" href="${esc(item.url)}" target="_blank" rel="noopener noreferrer"><span class="quickIcon">${esc(item.icon)}</span><strong>${esc(item.title)}</strong><small>自訂連結 ↗</small></a>`}
+ const link=safeLink(quickLinks[id]);if(!accessCan(id))return `<button type="button" class="quickLink missing" disabled><span class="quickIcon">🔒</span><strong>${title}</strong><small>管理員尚未開放</small></button>`;return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='personal'?'data-fundesk-king="1"':id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':''} target="${id==='teachingImages'?'_self':'_blank'}" ${id==='petMemory'||id==='personal'||id==='teachingImages'?'':'rel="noopener noreferrer"'}><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':id==='planetPpt'?'▶ 線上播放投影片 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
 }
 /* FunDesk 授權教師開啟校園大富翁時，才透過同源訊息傳遞最少量的玩家候選名單。
    學生名單不放在 URL，也不寫入公開檔案或 localStorage。 */
@@ -4132,7 +4198,7 @@ function accessBind(){
 }
 
 function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>🔐 動態教室密碼</h2><p class="hint">用於老師餵食，以及學生名片解鎖更換頭像。初始密碼為 13579，建議立即修改。</p><div class="formgrid"><label>目前密碼<input id="feedOldPassword" type="password" autocomplete="off"></label><label>新密碼<input id="feedNewPassword" type="password" autocomplete="new-password" placeholder="至少 5 位數字"></label><label>確認新密碼<input id="feedNewPasswordConfirm" type="password" autocomplete="new-password"></label></div><div class="actions"><button class="btn" type="button" id="feedPasswordSave">修改動態教室密碼</button></div></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
-function hookView(){if(view==='access'){accessBind();return}if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();bindQuickOrder();const editLinksButton=$('editQuickLinks');if(editLinksButton)editLinksButton.onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings);document.querySelectorAll('[data-fundesk-monopoly]').forEach(x=>x.addEventListener('click',openFunDeskMonopoly));document.querySelectorAll('[data-fundesk-king]').forEach(x=>x.addEventListener('click',openFunDeskKing));document.querySelectorAll('[data-fundesk-memory]').forEach(x=>x.addEventListener('click',openFunDeskMemory));document.querySelectorAll('a.quickLink').forEach(a=>{if(a.getAttribute('href')?.includes('/memory-game/index.html'))a.addEventListener('click',()=>{try{const url=new URL(a.href);if(url.origin!==location.origin||url.pathname!=='/science-fundesk/memory-game/index.html')return;const pet=db.classes[cl]?.classPetType;if(pet&&ROOM_PETS.some(p=>p.id===pet))url.searchParams.set('pet',pet);else url.searchParams.delete('pet');a.href=url.href}catch(e){}})})}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{if(!accessCan(b.dataset.goto))return alert('🔒 此功能未開放');view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='points'){
+function hookView(){if(view==='access'){accessBind();return}if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();bindQuickOrder();const customButton=$('addCustomQuick');if(customButton){customButton.hidden=!customQuickAllowed();customButton.onclick=()=>openCustomQuickSettings()};const editLinksButton=$('editQuickLinks');if(editLinksButton)editLinksButton.onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings);document.querySelectorAll('[data-fundesk-monopoly]').forEach(x=>x.addEventListener('click',openFunDeskMonopoly));document.querySelectorAll('[data-fundesk-king]').forEach(x=>x.addEventListener('click',openFunDeskKing));document.querySelectorAll('[data-fundesk-memory]').forEach(x=>x.addEventListener('click',openFunDeskMemory));document.querySelectorAll('a.quickLink').forEach(a=>{if(a.getAttribute('href')?.includes('/memory-game/index.html'))a.addEventListener('click',()=>{try{const url=new URL(a.href);if(url.origin!==location.origin||url.pathname!=='/science-fundesk/memory-game/index.html')return;const pet=db.classes[cl]?.classPetType;if(pet&&ROOM_PETS.some(p=>p.id===pet))url.searchParams.set('pet',pet);else url.searchParams.delete('pet');a.href=url.href}catch(e){}})})}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{if(!accessCan(b.dataset.goto))return alert('🔒 此功能未開放');view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='points'){
  const toggleLast=$('toggleSeatLastRow');
  if(toggleLast)toggleLast.onclick=()=>{
   const key='fundesk_hide_last_seat_row_'+cl;
