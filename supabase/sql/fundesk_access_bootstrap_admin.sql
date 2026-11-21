@@ -11,11 +11,11 @@ begin
   if v_email='your_current_fundesk_login_email' or v_email='' then
     raise exception '請先將 v_email 換成你在 FunDesk 的教師登入 Email';
   end if;
-  select count(*), min(id) into v_count, v_uid
-  from auth.users where lower(email)=v_email;
+  select count(*) into v_count from auth.users where lower(email)=v_email;
   if v_count<>1 then
     raise exception '找不到唯一的 Supabase 教師帳戶：%',v_email;
   end if;
+  select id into v_uid from auth.users where lower(email)=v_email;
   if exists(select 1 from public.fundesk_access_admin) then
     raise exception '管理員已存在，為避免誤轉移權限，已中止。';
   end if;
