@@ -41,5 +41,7 @@ jobs:
             echo 'No changes'
           else
             git commit -m "Render planets presentation into 21 browser-viewable slides"
-            git push
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
           fi
