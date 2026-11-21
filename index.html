@@ -1649,7 +1649,7 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
  <div class="sidebarDateActions" aria-label="紀錄日期及資料備份"><div class="dashboardDateActions"><label for="sessionDate">紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" type="button" class="btn outline">↓ 備份</button></div></div>
  <button type="button" id="cloudLogout" class="sidebarCloudLogout">🚪 登出雲端</button>
  <div class="mini">115學年度 · 第一學期<br>課程：神祕的天空／燃燒與生鏽</div>
- <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作實驗考試 </button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="redemption">🎁　積點兌換</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="classroom">🏫　動態教室</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　班級管理</button><button data-view="settings">⚙　資料管理</button></nav>
+ <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作實驗考試 </button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="redemption">🎁　積點兌換</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="classroom">🏫　動態教室</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　班級管理</button><button data-view="settings">⚙　資料管理</button><button data-view="access" hidden>🔐　帳戶與權限管理</button></nav>
  <div class="sidebarFoot">教師登入後存取雲端學生紀錄<br><strong>使用公用電腦後請登出</strong><br></div>
  
  </div>
@@ -1746,7 +1746,7 @@ function renderQuickLinks(){
  const cfg=[['personal','🎮','自然科學王・四大模式'],['sky','🌌','星空冒險島'],['socialAdventure','🏝️','家園探險王・社會冒險'],['zodiac','✨','星空故事館・十二星座篇'],['starLegends','🌠','星空故事館・星河傳說'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版'],['petMemory','🃏','記憶翻牌遊戲・三大主題'],['planetPpt','🪐','八大行星英文與神話']];
  cfg.unshift(['rps','🎲','課間小遊戲']);
  const sortedCfg=sortedQuickEntries(cfg);
- return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">🎲</span><strong>課間小遊戲</strong><small>先選遊戲，再進入遊戲畫面</small></button>`;const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='personal'?'data-fundesk-king="1"':id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':''} target="_blank" ${id==='petMemory'||id==='personal'?'':'rel="noopener noreferrer"'}><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':id==='planetPpt'?'▶ 線上播放投影片 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
+ return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">🎲</span><strong>課間小遊戲</strong><small>先選遊戲，再進入遊戲畫面</small></button>`;const link=safeLink(quickLinks[id]);if(!accessCan(id))return `<button type="button" class="quickLink missing" disabled><span class="quickIcon">🔒</span><strong>${title}</strong><small>管理員尚未開放</small></button>`;return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='personal'?'data-fundesk-king="1"':id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':''} target="_blank" ${id==='petMemory'||id==='personal'?'':'rel="noopener noreferrer"'}><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':id==='planetPpt'?'▶ 線上播放投影片 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
 }
 /* FunDesk 授權教師開啟校園大富翁時，才透過同源訊息傳遞最少量的玩家候選名單。
    學生名單不放在 URL，也不寫入公開檔案或 localStorage。 */
@@ -2120,7 +2120,7 @@ function decorateClassPage(){
 const classOptions=()=>activeCodes().map(c=>`<option value="${esc(c)}">${esc(classDisplay(c))}</option>`).join('');
 const syncClassOptions=()=>{const sel=$('classSelect');sel.innerHTML=classOptions();if(activeCodes().includes(cl))sel.value=cl};
 const time={1:'08:50–09:30',2:'09:40–10:20',3:'10:35–11:15',4:'11:25–12:05',5:'13:20–14:00',6:'14:10–14:50',7:'15:00–15:40'};
-const titles={seats:'首頁',rps:'課間小遊戲',labDuty:'實驗工作分配',attention:'待追蹤清單',attendance:'出勤紀錄',tasks:'習作實驗考試',schedule:'我的教學進度',contact:'班級聯絡簿',points:'課堂表現',redemption:'積點兌換',correction:'習作訂正',board:'作業播放表',quiz:'抽籤問答',students:'學生名單',classroom:'動態教室',tools:'課堂小工具',tabletRules:'平板使用守則',classes:'班級管理',settings:'資料管理'};
+const titles={seats:'首頁',rps:'課間小遊戲',labDuty:'實驗工作分配',attention:'待追蹤清單',attendance:'出勤紀錄',tasks:'習作實驗考試',schedule:'我的教學進度',contact:'班級聯絡簿',points:'課堂表現',redemption:'積點兌換',correction:'習作訂正',board:'作業播放表',quiz:'抽籤問答',students:'學生名單',classroom:'動態教室',tools:'課堂小工具',tabletRules:'平板使用守則',classes:'班級管理',settings:'資料管理',access:'帳戶與權限管理'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>{let parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());let v=Object.fromEntries(parts.map(x=>[x.type,x.value]));return `${v.year}-${v.month}-${v.day}`};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -2406,7 +2406,7 @@ function syncFixedHeadingColor(){
   if(content){const contentToken=target.replace('--fixed-title-','--page-theme-');if(value)content.style.setProperty(contentToken,value);else content.style.removeProperty(contentToken);}
  }
 }
-function render(){const mascot=$('fixedPageMascot');if(mascot)classMascotSource(mascot,currentClassMascot(),classDisplay(cl));const existingStats=$('stats');const restingPlace=$('statsRestingPlace');if(existingStats&&restingPlace&&existingStats.parentElement!==restingPlace)restingPlace.appendChild(existingStats);document.querySelector('.compactDashboardMain')?.classList.toggle('dashboardHome',view==='seats');const homeFixedHost=$('homeFixedQuicklinks');if(homeFixedHost){homeFixedHost.replaceChildren();homeFixedHost.hidden=true;homeFixedHost.classList.toggle('generalFixedHeading',view!=='seats');}if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();syncNavOrder();cloudRenderQuickClasses();updateClassMascot();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');if(view==='classroom'&&root.querySelector('#movingClassroom')){refreshMovingClassroomCards();return}if(root.querySelector('#movingClassroom'))stopMovingClassroom();root.innerHTML=({seats:renderHomeStudentCards,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,classroom:renderClassroom,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings}[view])();if(root)root.scrollTop=0;if(view==='seats'){const fixedHost=$('homeFixedQuicklinks');const homeHeading=root.querySelector('.quicklinksHeader');if(fixedHost&&homeHeading){fixedHost.replaceChildren(homeHeading);fixedHost.hidden=false;}const statsHost=$('quicklinkStatsHost');const stats=$('stats');if(statsHost&&stats){statsHost.appendChild(stats);stats.classList.add('quicklinkStats')}}else{const fixedHost=$('homeFixedQuicklinks');const selector=view==='classroom'?'.movingRoomToolbar':view==='tools'?'.animalToolHead':view==='tabletRules'?'.tabletHero':'.panelHead';const sectionHeading=root.querySelector(selector);if(fixedHost&&sectionHeading){fixedHost.replaceChildren(sectionHeading);fixedHost.hidden=false;}}syncFixedHeadingColor();decorateClassPage();hookView()}
+function render(){if(!accessCan(view))view='seats';const mascot=$('fixedPageMascot');if(mascot)classMascotSource(mascot,currentClassMascot(),classDisplay(cl));const existingStats=$('stats');const restingPlace=$('statsRestingPlace');if(existingStats&&restingPlace&&existingStats.parentElement!==restingPlace)restingPlace.appendChild(existingStats);document.querySelector('.compactDashboardMain')?.classList.toggle('dashboardHome',view==='seats');const homeFixedHost=$('homeFixedQuicklinks');if(homeFixedHost){homeFixedHost.replaceChildren();homeFixedHost.hidden=true;homeFixedHost.classList.toggle('generalFixedHeading',view!=='seats');}if(view!=='tools'&&workClockInterval){clearInterval(workClockInterval);workClockInterval=null} syncClassOptions();syncNavOrder();accessNav();cloudRenderQuickClasses();updateClassMascot();$('pageTitle').textContent=titles[view];$('pageSub').textContent=view==='rps'?'選一位學生與老師猜拳，學生自選、老師隨機出拳':view==='seats'?'點選學生座位，即可記錄出勤、習作、缺考與加扣點':view==='tabletRules'?'國小學生平板領取、操作、安全、歸還完整守則':view==='schedule'?'老師可自行新增與調整教學進度；依教師帳號獨立同步雲端':'所有紀錄依目前所選班級獨立保存';document.querySelectorAll('#nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));statCards();let root=$('content');if(view==='classroom'&&root.querySelector('#movingClassroom')){refreshMovingClassroomCards();return}if(root.querySelector('#movingClassroom'))stopMovingClassroom();root.innerHTML=({seats:renderHomeStudentCards,rps:renderRps,labDuty:renderLabDuty,attention:renderAttention,attendance:renderAttendance,tasks:renderTasks,schedule:renderSchedule,contact:renderContact,points:renderPoints,redemption:renderRedemption,correction:renderCorrection,board:renderBoard,quiz:renderQuiz,students:renderStudents,classroom:renderClassroom,tools:renderTools,tabletRules:renderTabletRules,classes:renderClassManager,settings:renderSettings,access:renderAccess}[view])();if(root)root.scrollTop=0;if(view==='seats'){const fixedHost=$('homeFixedQuicklinks');const homeHeading=root.querySelector('.quicklinksHeader');if(fixedHost&&homeHeading){fixedHost.replaceChildren(homeHeading);fixedHost.hidden=false;}const statsHost=$('quicklinkStatsHost');const stats=$('stats');if(statsHost&&stats){statsHost.appendChild(stats);stats.classList.add('quicklinkStats')}}else{const fixedHost=$('homeFixedQuicklinks');const selector=view==='classroom'?'.movingRoomToolbar':view==='tools'?'.animalToolHead':view==='tabletRules'?'.tabletHero':'.panelHead';const sectionHeading=root.querySelector(selector);if(fixedHost&&sectionHeading){fixedHost.replaceChildren(sectionHeading);fixedHost.hidden=false;}}syncFixedHeadingColor();decorateClassPage();hookView()}
 const labGroupOrder=[2,3,4,0,1];
 const labRoleColumns=['組長','副組長','器材長 1／器材長','器材長 2','習作長','清潔長'];
 function labRoles(count){
@@ -4052,8 +4052,75 @@ function hookClassManager(){
  $('manageStudents').onclick=()=>{view='students';render()};
  $('manageSeats').onclick=()=>{view='seats';render()};
 }
+
+const ACCESS_FEATURES=[['seats','首頁'],['labDuty','實驗工作分配'],['attendance','出勤紀錄'],['tasks','習作實驗考試'],['schedule','教學進度'],['contact','班級聯絡簿'],['points','課堂表現'],['redemption','積點兌換'],['quiz','抽籤問答'],['students','學生名單'],['classroom','動態教室'],['tools','課堂小工具'],['tabletRules','平板使用守則'],['classes','班級管理'],['settings','資料管理'],['personal','自然科學王'],['sky','星空冒險島'],['socialAdventure','家園探險王'],['zodiac','十二星座故事'],['starLegends','星河傳說'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot'],['monopoly','校園大富翁'],['petMemory','記憶翻牌'],['planetPpt','八大行星簡報'],['backup_export','匯出備份'],['student_delete','刪除學生']];
+const ACCESS_TEACHER=new Set(ACCESS_FEATURES.map(x=>x[0]).filter(x=>x!=='student_delete'));
+const ACCESS_RESTRICTED=new Set(['seats','tools','tabletRules','planetPpt']);
+let accessState={role:'legacy',features:{}},accessUsers=[],accessSelected='';
+function accessCan(key){
+ if(['admin','legacy'].includes(accessState.role))return true;
+ if(['disabled','guest'].includes(accessState.role))return false;
+ if(typeof accessState.features[key]==='boolean')return accessState.features[key];
+ return (accessState.role==='teacher'?ACCESS_TEACHER:ACCESS_RESTRICTED).has(key);
+}
+function accessNav(){
+ document.querySelectorAll('#nav button[data-view]').forEach(b=>{
+  if(b.dataset.view==='access'){b.hidden=accessState.role!=='admin';b.disabled=b.hidden;return}
+  const ok=accessCan(b.dataset.view);b.disabled=!ok;b.title=ok?'':'🔒 管理員尚未開放';
+ });
+}
+async function accessLoad(){
+ try{
+  const v=await cloudFetch('/rest/v1/rpc/fundesk_access_features',{method:'POST',body:'{}'});
+  if(!v||!['admin','teacher','restricted','disabled','guest'].includes(v.role))throw Error('role invalid');
+  accessState={role:v.role,features:v.features&&typeof v.features==='object'?v.features:{}};
+ }catch(e){accessState={role:'legacy',features:{}};console.warn('權限資料庫尚未啟用，暫時沿用舊版功能。',e)}
+ accessNav();if(!accessCan(view))view='seats';
+}
+function renderAccess(){
+ if(accessState.role!=='admin')return '<section class="panel"><h2>🔒 僅管理員能進入</h2></section>';
+ const user=accessUsers.find(x=>x.user_id===accessSelected),role=user?.role||'restricted';
+ const opts=accessUsers.map(x=>'<option value="'+esc(x.user_id)+'" '+(x.user_id===accessSelected?'selected':'')+'>'+esc(x.email||x.user_id)+'（'+esc(x.role)+'）</option>').join('');
+ const defaults=role==='teacher'?ACCESS_TEACHER:ACCESS_RESTRICTED,overrides=user?.feature_overrides||{};
+ const features=ACCESS_FEATURES.map(([key,label])=>'<label style="display:flex;align-items:center;gap:10px;padding:8px;border:1px solid #d6e0eb;border-radius:9px"><input type="checkbox" data-access-key="'+esc(key)+'" '+((typeof overrides[key]==='boolean'?overrides[key]:defaults.has(key))?'checked':'')+' '+(role==='admin'?'disabled':'')+'><span>'+esc(label)+'</span></label>').join('');
+ return '<section class="panel"><div class="panelHead"><h2>🔐 帳戶與權限管理</h2></div><p>只有管理員可以調整其他教師的功能。新教師預設受限。</p><div class="actions"><button class="btn outline" id="accessReload">重新整理教師清單</button></div>'
+ +(accessUsers.length?'<label>選擇教師<select id="accessUser">'+opts+'</select></label>':'<p>尚無教師清單</p>')
+ +(user?'<label>帳戶類型<select id="accessRole" '+(role==='admin'?'disabled':'')+'><option value="teacher" '+(role==='teacher'?'selected':'')+'>一般教師</option><option value="restricted" '+(role==='restricted'?'selected':'')+'>受限教師</option><option value="disabled" '+(role==='disabled'?'selected':'')+'>停用帳戶</option></select></label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:8px;margin:14px 0">'+features+'</div>'
+ +(role==='admin'?'<p>唯一管理員帳戶不可在此修改。</p>':'<div class="actions"><button class="btn" id="accessSave">儲存權限</button></div>'):'')
+ +'<p class="hint">權限保存在 Supabase。獨立遊戲網站及資料庫的各別操作，仍需各自的伺服器授權保護。</p></section>';
+}
+async function accessReload(){
+ if(accessState.role!=='admin')return;
+ try{
+  const data=await cloudFetch('/rest/v1/rpc/fundesk_access_list_users',{method:'POST',body:'{}'});
+  if(!Array.isArray(data))throw Error('unexpected response');
+  accessUsers=data;
+  if(!data.some(x=>x.user_id===accessSelected))accessSelected=data.find(x=>x.role!=='admin')?.user_id||data[0]?.user_id||'';
+  if(view==='access')render();
+ }catch(e){alert('讀取教師清單失敗：'+cloudErr(e))}
+}
+function accessBind(){
+ const reload=$('accessReload');if(reload)reload.onclick=()=>void accessReload();
+ const select=$('accessUser');if(select)select.onchange=()=>{accessSelected=select.value;render()};
+ const save=$('accessSave');if(save)save.onclick=async()=>{
+  const u=accessUsers.find(x=>x.user_id===accessSelected),role=$('accessRole')?.value;
+  if(!u||u.role==='admin'||!['teacher','restricted','disabled'].includes(role))return;
+  const defaults=role==='teacher'?ACCESS_TEACHER:ACCESS_RESTRICTED,overrides={};
+  document.querySelectorAll('[data-access-key]').forEach(input=>{
+   const key=input.dataset.accessKey;
+   if(input.checked!==defaults.has(key))overrides[key]=input.checked;
+  });
+  if(!confirm('確定儲存 '+(u.email||u.user_id)+' 的權限？'))return;
+  save.disabled=true;
+  try{
+   await cloudFetch('/rest/v1/rpc/fundesk_access_set_user',{method:'POST',body:JSON.stringify({p_user_id:u.user_id,p_role:role,p_overrides:overrides})});
+   await accessReload();alert('權限已儲存，下次登入後生效。');
+  }catch(e){alert('儲存失敗：'+cloudErr(e))}finally{save.disabled=false}
+ };
+}
+
 function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>🔐 動態教室密碼</h2><p class="hint">用於老師餵食，以及學生名片解鎖更換頭像。初始密碼為 13579，建議立即修改。</p><div class="formgrid"><label>目前密碼<input id="feedOldPassword" type="password" autocomplete="off"></label><label>新密碼<input id="feedNewPassword" type="password" autocomplete="new-password" placeholder="至少 5 位數字"></label><label>確認新密碼<input id="feedNewPasswordConfirm" type="password" autocomplete="new-password"></label></div><div class="actions"><button class="btn" type="button" id="feedPasswordSave">修改動態教室密碼</button></div></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
-function hookView(){if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();bindQuickOrder();const editLinksButton=$('editQuickLinks');if(editLinksButton)editLinksButton.onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings);document.querySelectorAll('[data-fundesk-monopoly]').forEach(x=>x.addEventListener('click',openFunDeskMonopoly));document.querySelectorAll('[data-fundesk-king]').forEach(x=>x.addEventListener('click',openFunDeskKing));document.querySelectorAll('[data-fundesk-memory]').forEach(x=>x.addEventListener('click',openFunDeskMemory));document.querySelectorAll('a.quickLink').forEach(a=>{if(a.getAttribute('href')?.includes('/memory-game/index.html'))a.addEventListener('click',()=>{try{const url=new URL(a.href);if(url.origin!==location.origin||url.pathname!=='/science-fundesk/memory-game/index.html')return;const pet=db.classes[cl]?.classPetType;if(pet&&ROOM_PETS.some(p=>p.id===pet))url.searchParams.set('pet',pet);else url.searchParams.delete('pet');a.href=url.href}catch(e){}})})}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='points'){
+function hookView(){if(view==='access'){accessBind();return}if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();bindQuickOrder();const editLinksButton=$('editQuickLinks');if(editLinksButton)editLinksButton.onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings);document.querySelectorAll('[data-fundesk-monopoly]').forEach(x=>x.addEventListener('click',openFunDeskMonopoly));document.querySelectorAll('[data-fundesk-king]').forEach(x=>x.addEventListener('click',openFunDeskKing));document.querySelectorAll('[data-fundesk-memory]').forEach(x=>x.addEventListener('click',openFunDeskMemory));document.querySelectorAll('a.quickLink').forEach(a=>{if(a.getAttribute('href')?.includes('/memory-game/index.html'))a.addEventListener('click',()=>{try{const url=new URL(a.href);if(url.origin!==location.origin||url.pathname!=='/science-fundesk/memory-game/index.html')return;const pet=db.classes[cl]?.classPetType;if(pet&&ROOM_PETS.some(p=>p.id===pet))url.searchParams.set('pet',pet);else url.searchParams.delete('pet');a.href=url.href}catch(e){}})})}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{if(!accessCan(b.dataset.goto))return alert('🔒 此功能未開放');view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='points'){
  const toggleLast=$('toggleSeatLastRow');
  if(toggleLast)toggleLast.onclick=()=>{
   const key='fundesk_hide_last_seat_row_'+cl;
@@ -4225,7 +4292,7 @@ $('jsonImport').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let 
   if(Array.isArray(o.labTemplate)&&o.labTemplate.length===5)db.labTemplate=o.labTemplate;
   if(!activeCodes().length)db.classMeta[CLASSES[0]].active=true;
   if(!activeCodes().includes(cl))cl=activeCodes()[0];save();render();alert('已套用備份；請確認右上角顯示「已同步」')}catch(err){alert('無法還原：'+err.message)}e.target.value=''};
-syncClassOptions();$('classSelect').onchange=e=>changeClass(e.target.value);$('classPetMainSelect').onchange=e=>{const id=e.target.value;if(id&&!ROOM_PETS.some(p=>p.id===id))return;if(!db.classes[cl]||!cloudReady)return;db.classes[cl].classPetType=id;save();render();};$('sessionDate').value=today();$('sessionDate').onchange=()=>render();$('backupTop').onclick=backup;document.querySelectorAll('#nav button[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>{ $('modal').classList.add('hidden');restoreClassroomSelection() });
+syncClassOptions();$('classSelect').onchange=e=>changeClass(e.target.value);$('classPetMainSelect').onchange=e=>{const id=e.target.value;if(id&&!ROOM_PETS.some(p=>p.id===id))return;if(!db.classes[cl]||!cloudReady)return;db.classes[cl].classPetType=id;save();render();};$('sessionDate').value=today();$('sessionDate').onchange=()=>render();$('backupTop').onclick=backup;document.querySelectorAll('#nav button[data-view]').forEach(b=>b.onclick=()=>{if(!accessCan(b.dataset.view))return;view=b.dataset.view;render();if(view==='access')void accessReload()});document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>{ $('modal').classList.add('hidden');restoreClassroomSelection() });
 
 
 // 班級聯絡簿（獨立公開資料表；絕不把教師班級記錄直接公開）
@@ -4718,7 +4785,7 @@ async function cloudLoad(){
  cloudSnapshots[row.class_code]=JSON.stringify(row.payload);cloudRevisions[row.class_code]=Number(row.revision||0);
  }
  db=fresh;if(!activeCodes().length){db.classMeta[CLASSES[0]].active=true}if(!activeCodes().includes(cl))cl=activeCodes()[0];if(!db.labTemplate)db.labTemplate=DEFAULT_LAB_TEMPLATE.map(g=>[...g]);
- cloudBlocked=false;cloudReady=true;cloudUnlock();
+ cloudBlocked=false;cloudReady=true;await accessLoad();cloudUnlock();
 }
 function cloudInitWizard(){
  cloudReady=false;document.body.classList.add('cloud-locked');
@@ -4750,7 +4817,7 @@ async function cloudInitialize(useLocal){
  cloudRenderQuickClasses();
  const currentSelect=$('classSelect');
  if(currentSelect)syncClassOptions();
- cloudUnlock();
+ await accessLoad();cloudUnlock();
 }
 function cloudUnlock(){
  $('cloudGate').hidden=true;document.body.classList.remove('cloud-locked');
