@@ -1667,7 +1667,7 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
 const KEY='science_fundesk_v1';
 // 連結不包含學生資料，預設網址可由老師在主頁修改。
 const LINK_KEY='science_fundesk_links_v1';
-const LINK_DEFAULTS={personal:'https://by92hpqcrx-cmd.github.io/nature-science-game/king.html',sky:'https://by92hpqcrx-cmd.github.io/sky-adventure/arena.html',socialAdventure:'https://by92hpqcrx-cmd.github.io/science-fundesk/home-adventure/index.html',quizace:'https://quizace.knsh.com.tw/teacher/quizList',learnmode:'https://www.learnmode.net/home/',kangxuan:'https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=na&grade=all&item=ebook&bookcase=mybookcase',kahoot:'https://kahoot.com/',monopoly:'https://by92hpqcrx-cmd.github.io/dachen-monopoly/campus-challenge.html',petMemory:'https://by92hpqcrx-cmd.github.io/science-fundesk/memory-game/index.html',zodiac:'https://zodiac-story-atlas.corkylapwing2.chatgpt.site/',starLegends:'https://star-legends-atlas.corkylapwing2.chatgpt.site/'};
+const LINK_DEFAULTS={personal:'https://by92hpqcrx-cmd.github.io/nature-science-game/king.html',sky:'https://by92hpqcrx-cmd.github.io/sky-adventure/arena.html',socialAdventure:'https://by92hpqcrx-cmd.github.io/science-fundesk/home-adventure/index.html',quizace:'https://quizace.knsh.com.tw/teacher/quizList',learnmode:'https://www.learnmode.net/home/',kangxuan:'https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=na&grade=all&item=ebook&bookcase=mybookcase',kahoot:'https://kahoot.com/',monopoly:'https://by92hpqcrx-cmd.github.io/dachen-monopoly/campus-challenge.html',petMemory:'https://by92hpqcrx-cmd.github.io/science-fundesk/memory-game/index.html',zodiac:'https://zodiac-story-atlas.corkylapwing2.chatgpt.site/',starLegends:'https://star-legends-atlas.corkylapwing2.chatgpt.site/',planetPpt:'https://by92hpqcrx-cmd.github.io/science-fundesk/teaching-slides/%E5%85%AB%E5%A4%A7%E8%A1%8C%E6%98%9F%E8%8B%B1%E6%96%87_%E7%A5%9E%E8%A9%B1%E8%A3%9C%E5%85%85_FunDesk%E6%8C%87%E5%AE%9A%E6%B7%A1%E7%B4%AB%E5%A4%AA%E7%A9%BA%E8%83%8C%E6%99%AF_21%E9%A0%81.pptx'};
 let quickLinks={...LINK_DEFAULTS};
 const LINK_REVISION='4';
 try{
@@ -1741,11 +1741,30 @@ function bindQuickOrder(){
   el.focus();persist();
  });
 }
+
+/* 簡報入口先檢查 GitHub Pages 目標是否已存在，避免顯示失效下載。 */
+document.addEventListener('click',async event=>{
+ const link=event.target.closest('a[data-quick-id="planetPpt"]');
+ if(!link)return;
+ event.preventDefault();
+ const href=link.href;
+ const preview=window.open('about:blank','_blank');
+ try{
+  const response=await fetch(href,{method:'HEAD',cache:'no-store'});
+  if(!response.ok)throw Error('簡報尚未上傳到 GitHub teaching-slides 資料夾（HTTP '+response.status+'）。');
+  if(preview)preview.location.href=href;
+  else window.location.href=href;
+ }catch(err){
+  if(preview)preview.close();
+  alert('八大行星英文與神話簡報還不能下載：'+String(err?.message||err)+'\\n請先將 PPT 上傳到 GitHub 的 teaching-slides 資料夾。');
+ }
+},true);
+
 function renderQuickLinks(){
- const cfg=[['personal','🎮','自然科學王・四大模式'],['sky','🌌','星空冒險島'],['socialAdventure','🏝️','家園探險王・社會冒險'],['zodiac','✨','星空故事館・十二星座篇'],['starLegends','🌠','星空故事館・星河傳說'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版'],['petMemory','🃏','記憶翻牌遊戲・三大主題']];
+ const cfg=[['personal','🎮','自然科學王・四大模式'],['sky','🌌','星空冒險島'],['socialAdventure','🏝️','家園探險王・社會冒險'],['zodiac','✨','星空故事館・十二星座篇'],['starLegends','🌠','星空故事館・星河傳說'],['learnmode','📚','學習吧'],['kangxuan','📖','康軒電子書'],['quizace','📝','出題高手'],['kahoot','🎯','Kahoot! 互動測驗'],['monopoly','🎲','校園大富翁・單機版'],['petMemory','🃏','記憶翻牌遊戲・三大主題'],['planetPpt','🪐','八大行星英文與神話']];
  cfg.unshift(['rps','🎲','課間小遊戲']);
  const sortedCfg=sortedQuickEntries(cfg);
- return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">🎲</span><strong>課間小遊戲</strong><small>先選遊戲，再進入遊戲畫面</small></button>`;const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='personal'?'data-fundesk-king="1"':id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':''} target="_blank" ${id==='petMemory'||id==='personal'?'':'rel="noopener noreferrer"'}><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
+ return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">🎲</span><strong>課間小遊戲</strong><small>先選遊戲，再進入遊戲畫面</small></button>`;const link=safeLink(quickLinks[id]);return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='personal'?'data-fundesk-king="1"':id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':''} target="_blank" ${id==='petMemory'||id==='personal'?'':'rel="noopener noreferrer"'}><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':id==='planetPpt'?'下載教學簡報 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
 }
 /* FunDesk 授權教師開啟校園大富翁時，才透過同源訊息傳遞最少量的玩家候選名單。
    學生名單不放在 URL，也不寫入公開檔案或 localStorage。 */
@@ -2019,7 +2038,7 @@ function openFunDeskMonopoly(event){
  const expire=setTimeout(()=>window.removeEventListener('message',receive),45000);
 }
 function openLinkSettings(){
- const cfg=[['personal','自然科學王・三大模式'],['sky','星空冒險島'],['socialAdventure','家園探險王・社會冒險'],['zodiac','星空故事館・十二星座篇'],['starLegends','星空故事館・星河傳說'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot! 互動測驗'],['monopoly','校園大富翁・單機版'],['petMemory','記憶翻牌遊戲・三大主題']];
+ const cfg=[['personal','自然科學王・三大模式'],['sky','星空冒險島'],['socialAdventure','家園探險王・社會冒險'],['zodiac','星空故事館・十二星座篇'],['starLegends','星空故事館・星河傳說'],['learnmode','學習吧'],['kangxuan','康軒電子書'],['quizace','出題高手'],['kahoot','Kahoot! 互動測驗'],['monopoly','校園大富翁・單機版'],['petMemory','記憶翻牌遊戲・三大主題'],['planetPpt','八大行星英文與神話']];
  $('modalContent').innerHTML=`<h2>教學快捷入口設定</h2><p class="hint">網址只儲存在目前瀏覽器；必須是 http:// 或 https:// 網址。</p><form id="quickLinkForm">${cfg.map(([id,title])=>`<label class="linkField"><strong>${title}</strong><input type="url" name="${id}" value="${esc(quickLinks[id])}" placeholder="https://..."></label>`).join('')}<div class="actions"><button class="btn" type="submit">儲存連結</button><button class="btn outline" type="button" id="cancelQuickLinks">取消</button></div></form>`;
  $('modal').classList.remove('hidden');$('cancelQuickLinks').onclick=()=>$('modal').classList.add('hidden');
  $('quickLinkForm').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);for(const k of Object.keys(LINK_DEFAULTS)){const v=String(fd.get(k)||'').trim();if(v&&!safeLink(v)){alert('網址格式有誤：'+k);return}quickLinks[k]=v}try{localStorage.setItem(LINK_KEY,JSON.stringify({...quickLinks,revision:LINK_REVISION}))}catch{}$('modal').classList.add('hidden');render()};
