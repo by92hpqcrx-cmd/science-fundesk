@@ -1691,6 +1691,7 @@ const quickOrderKey=()=>QUICK_ORDER_KEY+String(cloudSession?.user?.id||cloudSess
 function sortedQuickEntries(entries){
  let stored=[];try{stored=JSON.parse(localStorage.getItem(quickOrderKey()))}catch{}
  if(!Array.isArray(stored))stored=[];
+ if(customQuickCloud.ready && customQuickCloud.uid===cloudSession?.user?.id)stored=customQuickCloud.order;
  const rank=new Map(stored.map((k,i)=>[k,i]));
  return [...entries].sort((a,b)=>(rank.get(a[0])??999)-(rank.get(b[0])??999));
 }
@@ -1698,13 +1699,20 @@ function bindQuickOrder(){
  const root=document.querySelector('.quicklinkGrid'),toggle=$('quickSortToggle');
  if(!root||!toggle)return;
  let edit=false,drag=null;
- const persist=()=>{try{localStorage.setItem(quickOrderKey(),JSON.stringify([...root.querySelectorAll('[data-quick-id]')].map(x=>x.dataset.quickId)))}catch(e){console.warn('快捷入口排序未能儲存',e)}};
+ const persist=async()=>{
+  if(!customQuickCloud.ready)return alert('自訂捷徑雲端尚未設定，無法儲存排序。');
+  const order=[...root.querySelectorAll('[data-quick-id]')].map(x=>x.dataset.quickId);
+  if(JSON.stringify(order)===JSON.stringify(customQuickCloud.order))return;
+  try{await saveCustomQuickLinks(getCustomQuickLinks(),order)}
+  catch(err){alert('排序同步失敗：'+err.message);render()}
+ };
  const cards=()=>[...root.querySelectorAll('[data-quick-id]')];
  toggle.onclick=()=>{
+  if(!customQuickCloud.ready){alert('捷徑雲端尚未啟用，請先執行 SQL');return}
   edit=!edit;root.classList.toggle('quickSorting',edit);
   toggle.textContent=edit?'✅ 完成排序':'↕ 拖曳排序';
   toggle.setAttribute('aria-pressed',String(edit));
-  if(!edit)persist();
+  if(!edit)void persist();
  };
  root.addEventListener('click',e=>{if(edit||Date.now()<root._suppressQuickClickUntil){e.preventDefault();e.stopPropagation()}},true);
  root.addEventListener('pointerdown',e=>{
@@ -1728,7 +1736,7 @@ function bindQuickOrder(){
   if(!drag||drag.id!==e.pointerId)return;
   drag.tile.classList.remove('quickDragging');drag=null;
   root._suppressQuickClickUntil=Date.now()+350;
-  persist();
+  if(!edit)void persist();
   try{root.releasePointerCapture(e.pointerId)}catch(_){}
  };
  root.addEventListener('pointerup',end);root.addEventListener('pointercancel',end);
@@ -1741,7 +1749,7 @@ function bindQuickOrder(){
   const targetIndex=Math.max(0,Math.min(all.length-1,i+step));
   if(i===targetIndex)return;
   root.insertBefore(el,targetIndex>i?all[targetIndex].nextSibling:all[targetIndex]);
-  el.focus();persist();
+  el.focus();
  });
 }
 
@@ -1750,27 +1758,82 @@ function bindQuickOrder(){
 const CUSTOM_QUICK_PREFIX='fundesk_custom_quick_v1:';
 const customQuickStorageKey=()=>CUSTOM_QUICK_PREFIX+String(cloudSession?.user?.id||'guest');
 function customQuickAllowed(){return !!cloudSession?.user?.id && (accessState.role==='admin'||accessState.role==='teacher')}
-function getCustomQuickLinks(){
- if(!customQuickAllowed())return [];
- try{
-  const data=JSON.parse(localStorage.getItem(customQuickStorageKey())||'[]');
-  if(!Array.isArray(data))return [];
-  return data.filter(x=>x&&/^custom_[a-z0-9_-]{6,60}$/.test(x.id)
+const customQuickCloud={uid:null,ready:false,links:[],order:[],revision:0,error:''};
+let customQuickSaving=false;
+function cleanCustomQuick(items){
+ if(!Array.isArray(items))return [];
+ return items.filter(x=>x&&/^custom_[a-z0-9_-]{6,60}$/.test(x.id)
     && typeof x.title==='string' && x.title.length<=36
     && typeof x.icon==='string' && x.icon.length<=8
-    && typeof x.url==='string' && safeLink(x.url)).slice(0,30);
- }catch{return []}
+    && typeof x.url==='string' && x.url.length<=2048 && safeLink(x.url)).slice(0,30);
 }
-function saveCustomQuickLinks(items){
- if(!customQuickAllowed())throw Error('只有登入的正式教師可以設定個人連結');
- localStorage.setItem(customQuickStorageKey(),JSON.stringify(items));
+function localCustomQuick(){
+ try{return cleanCustomQuick(JSON.parse(localStorage.getItem(customQuickStorageKey())||'[]'))}
+ catch{return []}
+}
+function getCustomQuickLinks(){
+ if(!customQuickAllowed())return [];
+ if(customQuickCloud.ready&&customQuickCloud.uid===cloudSession.user.id)return customQuickCloud.links;
+ return localCustomQuick();
+}
+function customQuickSyncNotice(){
+ const el=$('customQuickSyncStatus'),btn=$('addCustomQuick');
+ if(el)el.textContent=customQuickCloud.ready?'☁️ 已連接個人雲端':'⚠️ 尚未連接捷徑雲端';
+ if(btn){btn.disabled=!customQuickCloud.ready||customQuickSaving;btn.title=customQuickCloud.ready?'':(customQuickCloud.error||'請先由管理員執行自訂連結 SQL')}
+}
+async function customQuickLoadCloud(){
+ if(!customQuickAllowed())return;
+ customQuickCloud.ready=false;customQuickCloud.uid=cloudSession.user.id;customQuickCloud.error='';
+ try{
+  const data=await cloudFetch('/rest/v1/rpc/fundesk_teacher_quicklinks_get',{method:'POST',body:'{}'});
+  if(!data||!Array.isArray(data.links)||!Array.isArray(data.display_order))throw Error('雲端連結資料格式不符');
+  let links=cleanCustomQuick(data.links),order=data.display_order.filter(x=>typeof x==='string'&&x.length<=90).slice(0,80);
+  let revision=Number(data.revision||0);
+  // 只在雲端尚未有資料時，自動匯入這個瀏覽器舊版自訂捷徑。
+  if(revision===0){
+   const local=localCustomQuick();
+   let localOrder=[];try{localOrder=JSON.parse(localStorage.getItem(quickOrderKey())||'[]')}catch{}
+   if(!Array.isArray(localOrder))localOrder=[];
+   localOrder=localOrder.filter(x=>typeof x==='string'&&x.length<=90).slice(0,80);
+   if(local.length||localOrder.length){
+    const newRevision=await cloudFetch('/rest/v1/rpc/fundesk_teacher_quicklinks_save',{
+     method:'POST',body:JSON.stringify({p_links:local,p_display_order:localOrder,p_expected_revision:0})});
+    links=local;order=localOrder;revision=Number(newRevision);
+   }
+  }
+  if(customQuickCloud.uid!==cloudSession.user.id)return;
+  Object.assign(customQuickCloud,{ready:true,links,order,revision,error:''});
+  localStorage.setItem(customQuickStorageKey(),JSON.stringify(links));
+  localStorage.setItem(quickOrderKey(),JSON.stringify(order));
+ }catch(err){
+  customQuickCloud.error=String(err.message||err);
+  console.warn('自訂捷徑雲端同步未啟用：',err);
+ }
+ customQuickSyncNotice();
+}
+async function saveCustomQuickLinks(items,newOrder=customQuickCloud.order){
+ if(!customQuickAllowed()||!customQuickCloud.ready)throw Error('捷徑雲端尚未連線，請先完成 Supabase SQL 設定');
+ if(customQuickSaving)throw Error('正在同步中，請稍後');
+ customQuickSaving=true;customQuickSyncNotice();
+ try{
+  const safeItems=cleanCustomQuick(items);
+  const order=Array.isArray(newOrder)?newOrder.filter(x=>typeof x==='string'&&x.length<=90).slice(0,80):[];
+  const revision=await cloudFetch('/rest/v1/rpc/fundesk_teacher_quicklinks_save',{
+   method:'POST',body:JSON.stringify({
+    p_links:safeItems,p_display_order:order,p_expected_revision:customQuickCloud.revision
+   })});
+  Object.assign(customQuickCloud,{links:safeItems,order,revision:Number(revision),error:''});
+  localStorage.setItem(customQuickStorageKey(),JSON.stringify(safeItems));
+  localStorage.setItem(quickOrderKey(),JSON.stringify(order));
+ }finally{customQuickSaving=false;customQuickSyncNotice()}
 }
 function openCustomQuickSettings(editId=''){
  if(!customQuickAllowed()){alert('請先登入正式教師帳號');return}
+ if(!customQuickCloud.ready){alert('自訂連結雲端尚未啟用：'+(customQuickCloud.error||'請執行 Supabase SQL'));return}
  const list=getCustomQuickLinks(),selected=list.find(x=>x.id===editId);
  const presetIcons=['🔗','🌍','📚','🧪','🪐','🖼️','🎮','📝','🎬','⭐','💻','🎨'];
  $('modalContent').innerHTML=`<h2>🔗 自訂教學快捷入口</h2>
- <p class="hint">每位教師可以建立最多 30 個捷徑；本版本儲存於目前瀏覽器，換裝置不會自動同步。</p>
+ <p class="hint">每位教師最多 30 個捷徑。儲存後同步至私人 Supabase 雲端，其他裝置登入即可讀取。</p>
  <form id="customQuickForm">
  <label class="linkField"><strong>連結名稱</strong><input name="title" required maxlength="36" placeholder="例如：我的自然教學資源" value="${esc(selected?.title||'')}"></label>
  <label class="linkField"><strong>圖示（可輸入 Emoji）</strong><input name="icon" maxlength="8" placeholder="🔗" value="${esc(selected?.icon||'🔗')}"></label>
@@ -1791,12 +1854,12 @@ function openCustomQuickSettings(editId=''){
  $('closeCustomQuick').onclick=()=>{$('modal').classList.add('hidden');render()};
  $('modalContent').querySelectorAll('[data-custom-icon]').forEach(button=>button.onclick=()=>{$('customQuickForm').elements.icon.value=button.dataset.customIcon});
  $('modalContent').querySelectorAll('[data-custom-edit]').forEach(button=>button.onclick=()=>openCustomQuickSettings(button.dataset.customEdit));
- $('modalContent').querySelectorAll('[data-custom-delete]').forEach(button=>button.onclick=()=>{
+ $('modalContent').querySelectorAll('[data-custom-delete]').forEach(button=>button.onclick=async()=>{
   const id=button.dataset.customDelete,item=list.find(x=>x.id===id);
   if(!item||!confirm('確定刪除「'+item.title+'」捷徑？'))return;
-  try{saveCustomQuickLinks(list.filter(x=>x.id!==id));openCustomQuickSettings()}catch(err){alert('刪除失敗：'+err.message)}
+  try{button.disabled=true;await saveCustomQuickLinks(list.filter(x=>x.id!==id));openCustomQuickSettings();render()}catch(err){button.disabled=false;alert('刪除失敗：'+err.message)}
  });
- $('customQuickForm').onsubmit=e=>{
+ $('customQuickForm').onsubmit=async e=>{
   e.preventDefault();const fd=new FormData(e.target),title=String(fd.get('title')||'').trim(),icon=String(fd.get('icon')||'🔗').trim()||'🔗',url=String(fd.get('url')||'').trim();
   if(!title||title.length>36||icon.length>8||!safeLink(url)){alert('請輸入有效名稱、圖示及 http(s) 網址。');return}
   const existing=getCustomQuickLinks();
@@ -1804,7 +1867,8 @@ function openCustomQuickSettings(editId=''){
   const id=selected?.id||'custom_'+crypto.randomUUID().replaceAll('-','').slice(0,16);
   const value={id,title,icon,url};
   const next=selected?existing.map(x=>x.id===id?value:x):[...existing,value];
-  try{saveCustomQuickLinks(next);openCustomQuickSettings()}catch(err){alert('儲存失敗：'+err.message)}
+  const submit=e.target.querySelector('[type="submit"]');submit.disabled=true;
+  try{await saveCustomQuickLinks(next);openCustomQuickSettings();render()}catch(err){submit.disabled=false;alert('儲存失敗：'+err.message)}
  };
 }
 
@@ -1813,7 +1877,7 @@ function renderQuickLinks(){
  cfg.unshift(['rps','🎲','課間小遊戲']);
  for(const item of getCustomQuickLinks())cfg.push([item.id,item.icon,item.title]);
  const sortedCfg=sortedQuickEntries(cfg);
- return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><button class="btn small outline" id="addCustomQuick" type="button">＋ 自訂連結</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps'&&!accessCan('rps'))return `<button type="button" class="quickLink missing" disabled><span class="quickIcon">🔒</span><strong>課間小遊戲</strong><small>管理員尚未開放</small></button>`;if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">🎲</span><strong>課間小遊戲</strong><small>先選遊戲，再進入遊戲畫面</small></button>`;
+ return `<section class="panel quicklinks"><div class="panelHead quicklinksHeader"><h2>教學快捷入口</h2><div id="quicklinkStatsHost" class="quicklinkStatsHost" aria-label="班級即時統計"></div><button class="btn small outline" id="quickSortToggle" type="button" aria-pressed="false">↕ 拖曳排序</button><span id="customQuickSyncStatus" style="font-size:12px">☁️ 連線中</span><button class="btn small outline" id="addCustomQuick" type="button">＋ 自訂連結</button><button class="btn small outline" id="editQuickLinks">⚙ 設定連結</button></div><div class="quickLinksWithStats"><div class="quicklinkGrid">${sortedCfg.map(([id,icon,title])=>{if(id==='rps'&&!accessCan('rps'))return `<button type="button" class="quickLink missing" disabled><span class="quickIcon">🔒</span><strong>課間小遊戲</strong><small>管理員尚未開放</small></button>`;if(id==='rps')return `<button type="button" class="quickLink" data-quick-id="rps" data-goto="rps" tabindex="0"><span class="quickIcon">🎲</span><strong>課間小遊戲</strong><small>先選遊戲，再進入遊戲畫面</small></button>`;
  if(id.startsWith('custom_')){const item=getCustomQuickLinks().find(x=>x.id===id);if(!item)return '';return `<a class="quickLink" data-quick-id="${esc(id)}" href="${esc(item.url)}" target="_blank" rel="noopener noreferrer"><span class="quickIcon">${esc(item.icon)}</span><strong>${esc(item.title)}</strong><small>自訂連結 ↗</small></a>`}
  const link=safeLink(quickLinks[id]);if(!accessCan(id))return `<button type="button" class="quickLink missing" disabled><span class="quickIcon">🔒</span><strong>${title}</strong><small>管理員尚未開放</small></button>`;return link?`<a class="quickLink" data-quick-id="${id}" href="${esc(link)}" ${id==='personal'?'data-fundesk-king="1"':id==='monopoly'?'data-fundesk-monopoly="1"':id==='petMemory'?'data-fundesk-memory="1"':''} target="${id==='teachingImages'?'_self':'_blank'}" ${id==='petMemory'||id==='personal'||id==='teachingImages'?'':'rel="noopener noreferrer"'}><span class="quickIcon">${icon}</span><strong>${title}</strong><small>${id==='monopoly'?'選班級與學生 ↗':id==='planetPpt'?'▶ 線上播放投影片 ↗':'開啟網站 ↗'}</small></a>`:`<button type="button" class="quickLink missing" data-quick-id="${id}" data-edit-links="1"><span class="quickIcon">${icon}</span><strong>${title}</strong><small>尚未設定網址 · 點此設定</small></button>`}).join('')}</div></div></section>`;
 }
@@ -4198,7 +4262,7 @@ function accessBind(){
 }
 
 function renderSettings(){let count=CLASSES.reduce((a,c)=>a+db.classes[c].students.length,0);return `<section class="panel"><div class="panelHead"><h2>資料備份與匯入</h2><span class="pill warn">教師雲端同步模式</span></div><div class="notice">已啟用教師登入及 Supabase 雲端同步。每個班級分開保存，共用實驗座位模板另存；離開教室前請確認右上角顯示「已同步」，並於公用電腦登出。舊瀏覽器資料不會自動上傳。</div><div class="actions"><button class="btn" id="exportJson">下載所有班級備份 JSON</button><button class="btn outline" id="importJson">從備份還原 JSON</button><button class="btn outline" data-csv="pending">匯出目前班級待追蹤 CSV</button></div><p class="hint">目前 ${activeCodes().length} 班，合計 ${count} 筆學生名單（含示範資料）；請留意學校個資安全規範、教師帳號保護及資料備份。</p></section><section class="panel"><h2>🔐 動態教室密碼</h2><p class="hint">用於老師餵食，以及學生名片解鎖更換頭像。初始密碼為 13579，建議立即修改。</p><div class="formgrid"><label>目前密碼<input id="feedOldPassword" type="password" autocomplete="off"></label><label>新密碼<input id="feedNewPassword" type="password" autocomplete="new-password" placeholder="至少 5 位數字"></label><label>確認新密碼<input id="feedNewPasswordConfirm" type="password" autocomplete="new-password"></label></div><div class="actions"><button class="btn" type="button" id="feedPasswordSave">修改動態教室密碼</button></div></section><section class="panel"><h2>資料維護</h2><p class="hint">刪除示範資料或重新設定前，務必先下載 JSON 備份。</p><div class="actions"><button class="btn danger" id="resetClass">重設 ${classDisplay(cl)}全部資料</button></div></section>`}
-function hookView(){if(view==='access'){accessBind();return}if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();bindQuickOrder();const customButton=$('addCustomQuick');if(customButton){customButton.hidden=!customQuickAllowed();customButton.onclick=()=>openCustomQuickSettings()};const editLinksButton=$('editQuickLinks');if(editLinksButton)editLinksButton.onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings);document.querySelectorAll('[data-fundesk-monopoly]').forEach(x=>x.addEventListener('click',openFunDeskMonopoly));document.querySelectorAll('[data-fundesk-king]').forEach(x=>x.addEventListener('click',openFunDeskKing));document.querySelectorAll('[data-fundesk-memory]').forEach(x=>x.addEventListener('click',openFunDeskMemory));document.querySelectorAll('a.quickLink').forEach(a=>{if(a.getAttribute('href')?.includes('/memory-game/index.html'))a.addEventListener('click',()=>{try{const url=new URL(a.href);if(url.origin!==location.origin||url.pathname!=='/science-fundesk/memory-game/index.html')return;const pet=db.classes[cl]?.classPetType;if(pet&&ROOM_PETS.some(p=>p.id===pet))url.searchParams.set('pet',pet);else url.searchParams.delete('pet');a.href=url.href}catch(e){}})})}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{if(!accessCan(b.dataset.goto))return alert('🔒 此功能未開放');view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='points'){
+function hookView(){if(view==='access'){accessBind();return}if(view==='classroom'){startMovingClassroom();return}if(view==='redemption')bindRedemption();if(view==='rps')bindRps();if(view==='labDuty'){bindLabDuty();return}if(view==='contact'){contactBind();return}if(view==='seats'){bindLabDuty();bindQuickOrder();const customButton=$('addCustomQuick');if(customButton){customButton.hidden=!customQuickAllowed();customButton.onclick=()=>openCustomQuickSettings();customQuickSyncNotice()};const editLinksButton=$('editQuickLinks');if(editLinksButton)editLinksButton.onclick=openLinkSettings;document.querySelectorAll('[data-edit-links]').forEach(x=>x.onclick=openLinkSettings);document.querySelectorAll('[data-fundesk-monopoly]').forEach(x=>x.addEventListener('click',openFunDeskMonopoly));document.querySelectorAll('[data-fundesk-king]').forEach(x=>x.addEventListener('click',openFunDeskKing));document.querySelectorAll('[data-fundesk-memory]').forEach(x=>x.addEventListener('click',openFunDeskMemory));document.querySelectorAll('a.quickLink').forEach(a=>{if(a.getAttribute('href')?.includes('/memory-game/index.html'))a.addEventListener('click',()=>{try{const url=new URL(a.href);if(url.origin!==location.origin||url.pathname!=='/science-fundesk/memory-game/index.html')return;const pet=db.classes[cl]?.classPetType;if(pet&&ROOM_PETS.some(p=>p.id===pet))url.searchParams.set('pet',pet);else url.searchParams.delete('pet');a.href=url.href}catch(e){}})})}document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{if(!accessCan(b.dataset.goto))return alert('🔒 此功能未開放');view=b.dataset.goto;render()});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudent(b.dataset.open));document.querySelectorAll('[data-csv]').forEach(b=>b.onclick=()=>exportCsv(b.dataset.csv));if(view==='points'){
  const toggleLast=$('toggleSeatLastRow');
  if(toggleLast)toggleLast.onclick=()=>{
   const key='fundesk_hide_last_seat_row_'+cl;
@@ -4865,7 +4929,7 @@ async function cloudLoad(){
  cloudSnapshots[row.class_code]=JSON.stringify(row.payload);cloudRevisions[row.class_code]=Number(row.revision||0);
  }
  db=fresh;if(!activeCodes().length){db.classMeta[CLASSES[0]].active=true}if(!activeCodes().includes(cl))cl=activeCodes()[0];if(!db.labTemplate)db.labTemplate=DEFAULT_LAB_TEMPLATE.map(g=>[...g]);
- cloudBlocked=false;cloudReady=true;await accessLoad();cloudUnlock();
+ cloudBlocked=false;cloudReady=true;await accessLoad();await customQuickLoadCloud();cloudUnlock();
 }
 function cloudInitWizard(){
  cloudReady=false;document.body.classList.add('cloud-locked');
@@ -4897,7 +4961,7 @@ async function cloudInitialize(useLocal){
  cloudRenderQuickClasses();
  const currentSelect=$('classSelect');
  if(currentSelect)syncClassOptions();
- await accessLoad();cloudUnlock();
+ await accessLoad();await customQuickLoadCloud();cloudUnlock();
 }
 function cloudUnlock(){
  $('cloudGate').hidden=true;document.body.classList.remove('cloud-locked');
