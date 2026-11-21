@@ -23,6 +23,11 @@ dialog::backdrop{background:#05101cdd}
 .viewerBar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
 #viewport{width:min(95vw,1450px);height:min(79vh,900px);overflow:auto;display:grid;place-items:center}
 #big{max-width:92%;max-height:92%;width:auto;height:auto;transform:scale(var(--z,1));transform-origin:center}
+#lightbox:fullscreen{width:100vw;height:100vh;max-width:none;max-height:none;margin:0;border-radius:0;background:#071423;padding:14px;display:flex;flex-direction:column;gap:8px}
+#lightbox:fullscreen #viewport{flex:1;width:100%;height:calc(100vh - 85px);max-height:none}
+#lightbox:fullscreen #big{max-width:96%;max-height:96%}
+#lightbox:fullscreen .viewerBar{flex-shrink:0}
+#viewfull[aria-pressed="true"]{background:#297d56;color:white}
 [hidden]{display:none!important}@media(max-width:500px){#gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.pic{height:140px}.actions button{flex:1}}
 </style></head><body><main>
 <header><div><h1>🖼️ 教學圖片</h1><div class="small">FunDesk · 教師專屬雲端圖片庫 · 每人 20 MB</div></div><a class="btn secondary" href="./index.html">← 返回 FunDesk</a></header>
@@ -34,7 +39,7 @@ dialog::backdrop{background:#05101cdd}
 <div class="usage"><strong id="quota">0.00 / 20.00 MB</strong><div class="meter" role="progressbar" aria-label="容量使用量" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="meter"><div id="fill"></div></div><span class="small" id="account"></span></div></div>
 <p id="status" aria-live="polite"></p><div id="gallery"></div>
 <p class="small">圖片只存放在 Supabase 私有 Storage；跨裝置登入同一教師帳號後同步。圖片不會公開給學生或其他教師。</p></section>
-<dialog id="lightbox"><div class="viewerBar"><strong id="viewname"></strong><button class="secondary" id="minus">－</button><span id="zoomtext">100%</span><button class="secondary" id="plus">＋</button><button class="secondary" id="close">關閉</button></div><div id="viewport"><img id="big" alt=""></div></dialog>
+<dialog id="lightbox"><div class="viewerBar"><strong id="viewname"></strong><button class="secondary" id="minus">－</button><span id="zoomtext">100%</span><button class="secondary" id="plus">＋</button><button class="secondary" id="viewfull" aria-pressed="false">⛶ 圖片全螢幕</button><button class="secondary" id="close">關閉</button></div><div id="viewport"><img id="big" alt=""></div></dialog>
 <p id="bootstatus" class="note">正在檢查教師登入狀態…</p>
 </main><script>
 "use strict";
@@ -128,7 +133,21 @@ async function download(item){try{
  }catch(e){status(e.message,true)}}
 async function view(item){try{$("viewname").textContent=item.filename;$("big").src=await signed(item.object_path);zoom=1;applyZoom();$("lightbox").showModal()}catch(e){status(e.message,true)}}
 function applyZoom(){$("big").style.setProperty("--z",zoom);$("zoomtext").textContent=Math.round(zoom*100)+"%"}
-$("plus").onclick=()=>{zoom=Math.min(5,zoom+.25);applyZoom()};$("minus").onclick=()=>{zoom=Math.max(.5,zoom-.25);applyZoom()};$("close").onclick=()=>$("lightbox").close();
+$("plus").onclick=()=>{zoom=Math.min(5,zoom+.25);applyZoom()};$("minus").onclick=()=>{zoom=Math.max(.5,zoom-.25);applyZoom()};async function imageFullscreen(){
+ try{
+  if(document.fullscreenElement===$("lightbox"))await document.exitFullscreen();
+  else if($("lightbox").requestFullscreen)await $("lightbox").requestFullscreen();
+  else status("這個瀏覽器不支援圖片全螢幕，請使用 Edge 或 Chrome。",true);
+ }catch(e){status("無法進入圖片全螢幕："+e.message,true)}
+}
+$("viewfull").onclick=imageFullscreen;
+document.addEventListener("fullscreenchange",()=>{
+ const on=document.fullscreenElement===$("lightbox");
+ $("viewfull").setAttribute("aria-pressed",String(on));
+ $("viewfull").textContent=on?"↙ 離開全螢幕":"⛶ 圖片全螢幕";
+});
+$("close").onclick=async()=>{if(document.fullscreenElement===$("lightbox"))await document.exitFullscreen();$("lightbox").close()};
+$("lightbox").addEventListener("close",()=>{if(document.fullscreenElement===$("lightbox"))void document.exitFullscreen()});
 $("search").oninput=()=>void render();$("reload").onclick=async()=>{try{await load();status("已同步最新圖片")}catch(e){status(e.message,true)}};
 $("fullscreen").onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){status(e.message,true)}};
 $("upload").onchange=async e=>{
