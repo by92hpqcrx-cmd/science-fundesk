@@ -79,7 +79,7 @@ async function load(){
  await render()
 }
 function clearURLs(){for(const u of previews)URL.revokeObjectURL(u);previews=[]}
-async function signed(path){const d=await fetchApi("/storage/v1/object/sign/"+BUCKET+"/"+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({expiresIn:3600})});const s=d.signedURL||d.signedUrl;if(!s)throw Error("無法取得圖片預覽");return new URL(s,URL_BASE+"/storage/v1/").href}
+async function signed(path){const d=await fetchApi("/storage/v1/object/sign/"+BUCKET+"/"+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({expiresIn:3600})});const s=d.signedURL||d.signedUrl;if(!s)throw Error("無法取得圖片預覽");return s.startsWith("/object/")?URL_BASE+"/storage/v1"+s:new URL(s,URL_BASE).href}
 async function render(){
  clearURLs();const area=$("gallery");area.replaceChildren();
  const search=$("search").value.toLocaleLowerCase(),shown=images.filter(i=>i.filename.toLocaleLowerCase().includes(search));
