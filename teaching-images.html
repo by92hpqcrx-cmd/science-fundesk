@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FunDesk｜教學圖片</title>
+<style>
+:root{font-family:"Noto Sans TC",system-ui,sans-serif;color:#17314a;background:#f0f8ff}
+*{box-sizing:border-box}body{margin:0}.wrap{max-width:1280px;margin:auto;padding:20px}header{background:linear-gradient(110deg,#d9f2ff,#f4f7de);padding:22px;border-radius:20px;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+h1{font-size:clamp(26px,3vw,39px);margin:0}p{margin:8px 0}.muted{color:#547083}.toolbar{background:white;border-radius:16px;margin:18px 0;padding:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 2px 8px #0b3a5411}
+button,.btn{font:inherit;padding:12px 18px;border:0;border-radius:12px;background:#176b9d;color:white;cursor:pointer;display:inline-block;text-decoration:none;font-weight:700}
+button:focus-visible,.btn:focus-visible{outline:3px solid orange;outline-offset:2px}button.secondary,.btn.secondary{background:#e1edf5;color:#18435c}button.danger{background:#af3d4d}button:disabled{opacity:.5;cursor:not-allowed}
+input[type="search"]{padding:13px;border:1px solid #bed5df;border-radius:12px;font-size:17px;flex:1;min-width:190px}
+.progress{height:13px;border-radius:8px;background:#d8e5ea;overflow:hidden;min-width:180px;flex:1}.bar{height:100%;background:#35a58d;width:0%;transition:width .2s}.quota{font-size:16px;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}.tile{background:white;border:1px solid #dbe8ee;border-radius:16px;overflow:hidden;box-shadow:0 2px 9px #093e5a18}
+.thumb{height:175px;display:grid;place-items:center;background:#eaf5fb}.thumb img{width:100%;height:100%;object-fit:contain}.meta{padding:12px}.name{font-weight:700;overflow-wrap:anywhere;min-height:42px}.tile-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.tile-actions button{font-size:14px;padding:9px 10px}
+.empty{text-align:center;padding:55px;background:white;border-radius:18px;color:#617e8b}
+dialog{border:0;border-radius:16px;box-shadow:0 10px 80px #051626a8;background:#102638;color:white;max-width:96vw;max-height:96vh;padding:15px}
+dialog::backdrop{background:#061524d9}.viewer{display:flex;flex-direction:column;align-items:center;gap:12px}
+.viewer img{max-width:90vw;max-height:72vh;object-fit:contain;transform-origin:center;transform:scale(var(--zoom,1))}
+.viewer .viewport{overflow:auto;max-width:92vw;max-height:73vh}.viewer .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+.notice{background:#fff9e3;border-left:5px solid #e0a83d;padding:10px 14px;border-radius:8px;margin:12px 0}#status{min-height:24px}#status.error{color:#a82632}
+@media(min-width:900px){.wrap{padding:28px}}@media(max-width:500px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.tile-actions button{flex:1}.thumb{height:130px}}
+</style>
+</head>
+<body><main class="wrap">
+<header><div><h1>🖼️ 教學圖片</h1><p>FunDesk 教師圖片庫 · 總容量 20 MB</p></div><a class="btn secondary" href="./index.html">← 返回 FunDesk</a></header>
+<p class="notice"><strong>儲存位置說明：</strong>目前為此瀏覽器的本機圖片庫，並非 Supabase 雲端同步。換電腦或清除網站資料後，圖片可能無法取回；共用教室電腦請勿放入私人或敏感照片。</p>
+<section class="toolbar">
+<label class="btn" for="files">＋ 上傳圖片</label><input id="files" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden>
+<input id="search" type="search" placeholder="搜尋圖片名稱" aria-label="搜尋圖片名稱">
+<div class="progress" role="progressbar" aria-label="容量使用率" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="bar" id="bar"></div></div>
+<span class="quota" id="quota">0 / 20 MB</span>
+<button class="secondary" id="fs">⛶ 全螢幕</button>
+</section>
+<p id="status" aria-live="polite"></p><section class="grid" id="gallery"></section>
+</main>
+<dialog id="lightbox"><div class="viewer"><div class="controls"><strong id="viewname"></strong><button class="secondary" id="smaller">－</button><span id="zoomlabel">100%</span><button class="secondary" id="larger">＋</button><button class="secondary" id="closeview">關閉 ✕</button></div><div class="viewport" id="viewport"><img id="big" alt=""></div></div></dialog>
+<script>
+"use strict";
+const LIMIT=20*1024*1024, DB="fundesk-teaching-images-v1", STORE="images";
+const $=id=>document.getElementById(id);
+let db,objects=[],urls=[],currentUrl=null,zoom=1;
+function say(message,error=false){$("status").textContent=message;$("status").className=error?"error":""}
+function request(req){return new Promise((resolve,reject)=>{req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+async function init(){db=await new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE,{keyPath:"id"});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});await refresh()}
+async function all(){return request(db.transaction(STORE,"readonly").objectStore(STORE).getAll())}
+async function put(item){return request(db.transaction(STORE,"readwrite").objectStore(STORE).put(item))}
+async function remove(id){return request(db.transaction(STORE,"readwrite").objectStore(STORE).delete(id))}
+function bytes(n){return (n/1024/1024).toFixed(2)+" MB"}
+function freeUrls(){for(const u of urls)URL.revokeObjectURL(u);urls=[]}
+async function refresh(){
+objects=(await all()).sort((a,b)=>b.created-a.created);
+const used=objects.reduce((n,o)=>n+o.size,0),percent=Math.min(100,100*used/LIMIT);
+$("quota").textContent=bytes(used)+" / 20 MB";$("bar").style.width=percent+"%";document.querySelector(".progress").setAttribute("aria-valuenow",String(Math.round(percent)));
+render()
+}
+function render(){
+freeUrls();const host=$("gallery");host.replaceChildren();
+const q=$("search").value.toLocaleLowerCase();const items=objects.filter(o=>o.name.toLocaleLowerCase().includes(q));
+if(!items.length){const empty=document.createElement("div");empty.className="empty";empty.textContent=objects.length?"沒有符合搜尋條件的圖片。":"尚未上傳圖片，點選「上傳圖片」開始建立圖片庫。";host.append(empty);return}
+for(const o of items){
+const url=URL.createObjectURL(o.blob);urls.push(url);
+const card=document.createElement("article");card.className="tile";
+const thumb=document.createElement("div");thumb.className="thumb";
+const img=document.createElement("img");img.loading="lazy";img.src=url;img.alt=o.name;thumb.append(img);
+const meta=document.createElement("div");meta.className="meta";
+const name=document.createElement("div");name.className="name";name.textContent=o.name;
+const details=document.createElement("div");details.className="muted";details.textContent=bytes(o.size);
+const actions=document.createElement("div");actions.className="tile-actions";
+const view=document.createElement("button");view.textContent="放大";view.addEventListener("click",()=>show(o));
+const download=document.createElement("button");download.textContent="下載";download.className="secondary";download.addEventListener("click",()=>save(o));
+const del=document.createElement("button");del.className="danger";del.textContent="刪除";del.addEventListener("click",async()=>{if(!confirm("確定要刪除「"+o.name+"」？"))return;await remove(o.id);await refresh();say("已刪除圖片。")});
+actions.append(view,download,del);meta.append(name,details,actions);card.append(thumb,meta);host.append(card)
+}}
+function save(o){const url=URL.createObjectURL(o.blob),a=document.createElement("a");a.href=url;a.download=o.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function show(o){if(currentUrl)URL.revokeObjectURL(currentUrl);currentUrl=URL.createObjectURL(o.blob);$("big").src=currentUrl;$("big").alt=o.name;$("viewname").textContent=o.name;zoom=1;applyZoom();$("lightbox").showModal()}
+function applyZoom(){$("big").style.setProperty("--zoom",zoom);$("zoomlabel").textContent=Math.round(zoom*100)+"%"}
+$("closeview").onclick=()=>$("lightbox").close();$("lightbox").onclose=()=>{if(currentUrl)URL.revokeObjectURL(currentUrl);currentUrl=null;$("big").removeAttribute("src")};
+$("larger").onclick=()=>{zoom=Math.min(5,zoom+.25);applyZoom()};$("smaller").onclick=()=>{zoom=Math.max(.5,zoom-.25);applyZoom()};
+$("search").oninput=render;
+$("fs").onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){say("無法切換全螢幕："+e.message,true)}};
+$("files").addEventListener("change",async event=>{
+const chosen=[...event.target.files];event.target.value="";if(!chosen.length)return;
+const supported=new Set(["image/jpeg","image/png","image/webp","image/gif"]);
+let used=(await all()).reduce((n,o)=>n+o.size,0),saved=0,failed=[];
+for(const file of chosen){
+if(!supported.has(file.type)){failed.push(file.name+"：不支援的格式");continue}
+if(file.size>LIMIT-used){failed.push(file.name+"：超過剩餘容量");continue}
+try{const item={id:crypto.randomUUID(),name:file.name,size:file.size,blob:file,created:Date.now()+saved};await put(item);used+=file.size;saved++}catch(e){failed.push(file.name+"：儲存失敗（可能是瀏覽器磁碟配額限制）")}}
+await refresh();say("成功上傳 "+saved+" 張。"+(failed.length?" 未上傳："+failed.join("；"):""),failed.length>0)
+});
+init().catch(e=>say("圖片庫無法開啟，請檢查瀏覽器是否允許網站儲存資料："+e.message,true));
+</script></body></html>
