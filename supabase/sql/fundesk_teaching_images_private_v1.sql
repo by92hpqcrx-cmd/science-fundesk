@@ -118,13 +118,19 @@ using(bucket_id='fundesk-teaching-images'
 drop policy if exists "fundesk_images_storage_upload" on storage.objects;
 create policy "fundesk_images_storage_upload" on storage.objects
 for insert to authenticated
-with check(bucket_id='fundesk-teaching-images'
+with check (
+ bucket_id = 'fundesk-teaching-images'
+ and public.fundesk_teaching_images_allowed()
  and public.fundesk_teaching_images_can_upload(
-  name,
-  case
-   when (metadata->>'size') ~ '^[0-9]+
-  metadata->>'mimetype'
- ));
+   name,
+   case
+     when (metadata->>'size') ~ '^[0-9]+$' then (metadata->>'size')::bigint
+     when (metadata->>'contentLength') ~ '^[0-9]+$' then (metadata->>'contentLength')::bigint
+     else -1
+   end,
+   metadata->>'mimetype'
+ )
+);
 
 drop policy if exists "fundesk_images_storage_delete" on storage.objects;
 create policy "fundesk_images_storage_delete" on storage.objects
