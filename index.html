@@ -1020,7 +1020,6 @@ body.roomFullscreen #content,
 #nav button[data-view="classes"]{--nav-item-bg:#fff1a8;--nav-item-ink:#795400;--nav-item-border:#e2b93a}
 #nav button[data-view="access"]{--nav-item-bg:#f1e7ff;--nav-item-ink:#684197;--nav-item-border:#b39ad9}
 #nav button[data-view="access"][hidden]{display:none!important}
-#nav button#navTeachingImages{--nav-item-bg:#e6f8ff;--nav-item-ink:#16618e;--nav-item-border:#8bcae2;font-size:clamp(19px,1.42vw,22px)!important;font-weight:900!important;line-height:1.35!important;color:var(--nav-item-ink)!important;background:var(--nav-item-bg)!important;border:2px solid var(--nav-item-border)!important;border-radius:12px!important;padding:12px 9px!important;min-height:56px!important;white-space:normal!important;text-align:left!important}#nav button#navTeachingImages:disabled{opacity:.5;cursor:not-allowed}
 #nav button[data-view="settings"]{--nav-item-bg:#f2f5f8;--nav-item-ink:#4a6077;--nav-item-border:#a8b5c3}
 .sidebar #nav button[data-view]{
   font-size:clamp(19px,1.42vw,22px)!important;
@@ -1652,7 +1651,7 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
  <div class="sidebarDateActions" aria-label="紀錄日期及資料備份"><div class="dashboardDateActions"><label for="sessionDate">紀錄日期 <input type="date" id="sessionDate"></label><button id="backupTop" type="button" class="btn outline">↓ 備份</button></div></div>
  <button type="button" id="cloudLogout" class="sidebarCloudLogout">🚪 登出雲端</button>
  <div class="mini">115學年度 · 第一學期<br>課程：神祕的天空／燃燒與生鏽</div>
- <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作實驗考試 </button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="redemption">🎁　積點兌換</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="classroom">🏫　動態教室</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　班級管理</button><button type="button" id="navTeachingImages" onclick="location.href='./teaching-images.html'">🖼️　教學圖片</button><button data-view="settings">⚙　資料管理</button><button data-view="access" hidden>🔐　帳戶與權限管理</button></nav>
+ <nav id="nav"><button data-view="seats" class="active">▦　首頁</button><button data-view="labDuty">▤　實驗工作分配</button><button data-view="attendance">◷　出勤紀錄</button><button data-view="tasks">☑　習作實驗考試 </button><button data-view="schedule">▣　我的教學進度</button><button data-view="contact">📒　班級聯絡簿</button><button data-view="points">★　課堂表現</button><button data-view="redemption">🎁　積點兌換</button><button data-view="quiz">🎯　抽籤問答</button><button data-view="students">♙　學生名單</button><button data-view="classroom">🏫　動態教室</button><button data-view="tools">◴　課堂小工具</button><button data-view="tabletRules">📱　平板使用守則</button><button data-view="classes">🏫　班級管理</button><button data-view="settings">⚙　資料管理</button><button data-view="access" hidden>🔐　帳戶與權限管理</button></nav>
  <div class="sidebarFoot">教師登入後存取雲端學生紀錄<br><strong>使用公用電腦後請登出</strong><br></div>
  
  </div>
@@ -4205,7 +4204,6 @@ function accessCan(key){
  return (accessState.role==='teacher'?ACCESS_TEACHER:ACCESS_RESTRICTED).has(key);
 }
 function accessNav(){
- const galleryButton=document.getElementById('navTeachingImages');if(galleryButton){const ok=accessCan('teachingImages');galleryButton.disabled=!ok;galleryButton.title=ok?'':'🔒 此功能僅限正式教師';}
  document.querySelectorAll('#nav button[data-view]').forEach(b=>{
   if(b.dataset.view==='access'){b.hidden=accessState.role!=='admin';b.disabled=b.hidden;const wrap=b.closest('.navMoveRow');if(wrap)wrap.hidden=b.hidden;return}
   const ok=accessCan(b.dataset.view);b.disabled=!ok;b.title=ok?'':'🔒 管理員尚未開放';b.classList.toggle('accessRestricted',!ok);
