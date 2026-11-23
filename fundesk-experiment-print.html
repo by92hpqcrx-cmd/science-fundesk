@@ -45,19 +45,19 @@ html,body{background:white}
 .print-page{display:flex;flex-direction:column;justify-content:space-between;gap:3mm;height:279mm;margin:0;padding:0;background:white;border:0;border-radius:0;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
 .print-page:last-child{break-after:auto;page-break-after:auto}
 .print-page:has(> .sheet:only-child){justify-content:flex-start}
-.sheet{flex:0 0 auto;width:100%;height:137mm;max-height:137mm;box-shadow:none;border:1px solid #7e9984;border-radius:2mm;padding:2.5mm;margin:0;break-after:auto;page-break-after:auto;break-inside:avoid;page-break-inside:avoid}
-.sheet h2{font-size:17px;min-height:11mm;color:#1e4c35;background:#fff;border:1px solid #315b3d;border-radius:1.5mm;padding:1mm 3mm;margin-bottom:2mm;print-color-adjust:exact}
-.sheet h2 span{font-size:17px}
-.sheet .meta{font-size:12px;grid-template-columns:1fr 1fr;gap:1mm;margin-bottom:2mm}.sheet .meta div:last-child{grid-column:1/-1}
+.sheet{flex:1 1 auto;width:100%;height:100%;max-height:none;box-shadow:none;border:1px solid #7e9984;border-radius:2mm;padding:2.5mm;margin:0;break-after:auto;page-break-after:auto;break-inside:avoid;page-break-inside:avoid}
+.sheet h2{font-size:23px;min-height:17mm;color:#1e4c35;background:#fff;border:1px solid #315b3d;border-radius:1.5mm;padding:1mm 3mm;margin-bottom:2mm;print-color-adjust:exact}
+.sheet h2 span{font-size:22px}
+.sheet .meta{font-size:17px;grid-template-columns:1fr 1fr;gap:2mm;margin-bottom:6mm}.sheet .meta div:last-child{grid-column:1/-1}
 .sheet .meta div{padding:1mm 1mm;border-bottom:1px solid #8cb69b}
-.sheet .group{font-size:16px;padding:1.5mm 2mm;margin-bottom:2mm;border-left-width:3px}
-.work th,.work td{border:1px solid #39513e;padding:1.5mm .8mm}
-.work .rowhead{width:17mm;font-size:11px}
-.work th{font-size:11px}
-.work td.detail{height:34mm;font-size:11px;line-height:1.45}
-.work td.person{height:12mm;font-size:14px}
-.work td.seat{height:9mm;font-size:13px}
-.note{min-height:17mm;font-size:13px;border-width:1px;margin-top:3mm;padding:2mm 3mm}
+.sheet .group{font-size:22px;padding:3mm 4mm;margin-bottom:6mm;border-left-width:3px}
+.work th,.work td{border:1px solid #39513e;padding:3mm 1.5mm}
+.work .rowhead{width:19mm;font-size:15px}
+.work th{font-size:15px}
+.work td.detail{height:52mm;font-size:14px;line-height:1.5}
+.work td.person{height:21mm;font-size:19px}
+.work td.seat{height:17mm;font-size:18px}
+.note{min-height:32mm;font-size:18px;border-width:1px;margin-top:8mm;padding:4mm 5mm}
 }
 @media(max-width:760px){.top{margin:8px}.sheet{min-width:730px}.sheet h2{font-size:20px}#pages{overflow-x:auto}.meta{font-size:14px}}
 </style>
@@ -67,7 +67,7 @@ html,body{background:white}
 <div class="board"><div><h1>🔬 實驗工作分配表</h1><small id="subtitle">FunDesk · 小小科學家合作任務</small></div><div class="pet" aria-hidden="true">🐾🐼</div></div>
 <div class="actions">
 <label for="groupSelect">預覽組別</label>
-<select id="groupSelect" disabled><option value="all">全部組別（每頁兩組）</option></select>
+<select id="groupSelect" disabled><option value="all">全部組別（每組一張 A4）</option></select>
 <button id="prev" class="secondary" disabled>◀ 上一組</button>
 <button id="next" class="secondary" disabled>下一組 ▶</button>
 <button id="print" disabled>🖨️ 列印</button>
@@ -101,7 +101,7 @@ function setData(payload,meta={}){
    seat:m.seat??m.no??'',name:m.name??'',role:normalizeRole(m.role)
   }))
  })),meta};
- const picker=$('groupSelect');picker.innerHTML='<option value="all">全部組別（每頁兩組）</option>'+sheetData.groups.map((g,i)=>'<option value="'+i+'">第 '+esc(g.number)+' 組</option>').join('');
+ const picker=$('groupSelect');picker.innerHTML='<option value="all">全部組別（每組一張 A4）</option>'+sheetData.groups.map((g,i)=>'<option value="'+i+'">第 '+esc(g.number)+' 組</option>').join('');
  picker.value='all';
  picker.disabled=false;$('prev').disabled=false;$('next').disabled=false;$('print').disabled=false;
  $('subtitle').textContent=[meta.className,meta.experiment,meta.date].filter(Boolean).join(' · ');
@@ -127,9 +127,9 @@ function render(){
  const selected=$('groupSelect').value;
  const active=selected==='all'?sheetData.groups:sheetData.groups.filter((g,i)=>String(i)===selected);
  const pages=[];
- for(let i=0;i<active.length;i+=2)pages.push('<div class="print-page">'+active.slice(i,i+2).map(section).join('')+'</div>');
+ for(const group of active)pages.push('<div class="print-page">'+section(group)+'</div>');
  $('pages').innerHTML=pages.join('');
- $('status').textContent=selected==='all'?'全部 '+sheetData.groups.length+' 組，A4 直式每頁兩組（共 '+pages.length+' 頁）':'第 '+active[0]?.number+' 組，單獨列印一頁';
+ $('status').textContent=selected==='all'?'全部 '+sheetData.groups.length+' 組，A4 直式每組一頁（共 '+pages.length+' 頁）':'第 '+active[0]?.number+' 組，單獨列印一頁';
 }
 $('groupSelect').onchange=render;
 function move(delta){const sel=$('groupSelect'),n=sheetData?.groups.length||0;if(!n)return;const current=sel.value==='all'?(delta>0?-1:0):Number(sel.value);sel.value=String(Math.max(0,Math.min(n-1,current+delta)));render()}
