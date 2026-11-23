@@ -99,13 +99,21 @@ function notebookTeachingWeek(date){
  d.setDate(d.getDate()-(d.getDay()+6)%7);
  return Math.round((d-new Date('2026-11-16T12:00:00'))/604800000)+12;
 }
-function currentNotebookPlace(lastEntry){
- const saved=contactExtractPlace(lastEntry?.reminders);
- if(!saved)return '';
- const entryWeek=notebookTeachingWeek(lastEntry?.entry_date);
- const thisWeek=notebookTeachingWeek(new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Taipei'}));
- if(entryWeek===null||thisWeek===null)return saved;
- return Math.abs(thisWeek-entryWeek)%2===0?saved:(saved==='自然教室'?'原班教室':'自然教室');
+function currentNotebookPlace(entries){
+ const todayTW=new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Taipei'});
+ const thisWeek=notebookTeachingWeek(todayTW);
+ // Older notebooks may have no location tag in their most recent entry.
+ const recorded=(Array.isArray(entries)?entries:[]).find(e=>contactExtractPlace(e?.reminders));
+ if(recorded){
+  const saved=contactExtractPlace(recorded.reminders);
+  const entryWeek=notebookTeachingWeek(recorded.entry_date);
+  if(thisWeek===null||entryWeek===null)return saved;
+  return Math.abs(thisWeek-entryWeek)%2===0?saved:(saved==='自然教室'?'原班教室':'自然教室');
+ }
+ // Older publications have no location metadata. Use the standard teacher
+ // alternating schedule instead of leaving the header blank.
+ if(thisWeek===null)return '';
+ return Math.abs(thisWeek)%2===1?'自然教室':'原班教室';
 }
 function contactStripMeta(text){return String(text||'').replace(/\[FunDesk班名START\][\s\S]*?\[FunDesk班名END\]/g,'').replace(/\[FunDesk上課地點START\][\s\S]*?\[FunDesk上課地點END\]/g,'').trim()}
 
@@ -246,7 +254,7 @@ async function load(){if(busy)return;busy=true;showPoints=false;updatePointsTogg
  if(!data){el('classroomFullscreenLink').hidden=true;el('replyPanel').hidden=true;el('latest').innerHTML='<div class="notice">查無聯絡簿，請確認網址是否正確。</div>';el('history').innerHTML='';el('status').textContent='無效連結';return}
  const classroomLink=el('classroomFullscreenLink');if(classroomLink){const code=String(data.class_code||'');if(/^[A-Za-z0-9_-]{1,40}$/.test(code)){const url=new URL('./student-classroom.html',location.href);url.searchParams.set('t',token);classroomLink.href=url.href;classroomLink.hidden=false}else classroomLink.hidden=true}
  const displayName=data.class_code==='c_mwc0lni8_le3us8'?'五年一班':(/^50[1-7]$/.test(String(data.class_code||''))?'五年'+['','一','二','三','四','五','六','七'][Number(data.class_code)-500]+'班':String(data.class_code||'班級'));const entries=Array.isArray(data.entries)?data.entries:[];const publishedName=entries.map(e=>extractClassLabel(e.reminders)).find(Boolean);el('classTitle').textContent='📒 '+(publishedName||(/^(?:c_[a-z0-9_]+)$/.test(displayName)?'班級':displayName))+'聯絡簿';
- const latestEntry=entries[0],place=currentNotebookPlace(latestEntry);
+ const latestEntry=entries[0],place=currentNotebookPlace(entries);
  el('headerDate').textContent='日期：'+(latestEntry?.entry_date||new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Taipei'}));
  el('headerPlace').textContent='本周上課地點：'+(place||'尚未設定');
  if(hasThread)refreshThread();
