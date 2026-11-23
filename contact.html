@@ -91,6 +91,22 @@ const CONTACT_POINT_START='[FunDesk積點START]',CONTACT_POINT_END='[FunDesk積�
  const CONTACT_CLASS_START='[FunDesk班名START]',CONTACT_CLASS_END='[FunDesk班名END]';
 const CONTACT_PLACE_START='[FunDesk上課地點START]',CONTACT_PLACE_END='[FunDesk上課地點END]';
 function contactExtractPlace(text){const v=String(text||''),a=v.indexOf(CONTACT_PLACE_START),b=v.indexOf(CONTACT_PLACE_END,a+CONTACT_PLACE_START.length);const place=a>=0&&b>=0?v.slice(a+CONTACT_PLACE_START.length,b).trim():'';return ['自然教室','原班教室'].includes(place)?place:''}
+// Published entries store the classroom at publication time. When the week changes,
+// advance its alternating schedule without changing the historical entry itself.
+function notebookTeachingWeek(date){
+ const d=/^\d{4}-\d{2}-\d{2}$/.test(String(date||''))?new Date(date+'T12:00:00'):null;
+ if(!d||Number.isNaN(d.getTime()))return null;
+ d.setDate(d.getDate()-(d.getDay()+6)%7);
+ return Math.round((d-new Date('2026-11-16T12:00:00'))/604800000)+12;
+}
+function currentNotebookPlace(lastEntry){
+ const saved=contactExtractPlace(lastEntry?.reminders);
+ if(!saved)return '';
+ const entryWeek=notebookTeachingWeek(lastEntry?.entry_date);
+ const thisWeek=notebookTeachingWeek(new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Taipei'}));
+ if(entryWeek===null||thisWeek===null)return saved;
+ return Math.abs(thisWeek-entryWeek)%2===0?saved:(saved==='自然教室'?'原班教室':'自然教室');
+}
 function contactStripMeta(text){return String(text||'').replace(/\[FunDesk班名START\][\s\S]*?\[FunDesk班名END\]/g,'').replace(/\[FunDesk上課地點START\][\s\S]*?\[FunDesk上課地點END\]/g,'').trim()}
 
  function extractClassLabel(text){const v=String(text||''),a=v.indexOf(CONTACT_CLASS_START),b=v.indexOf(CONTACT_CLASS_END,a+CONTACT_CLASS_START.length);return a<0||b<0?'':v.slice(a+CONTACT_CLASS_START.length,b).trim().slice(0,35)}
@@ -230,9 +246,9 @@ async function load(){if(busy)return;busy=true;showPoints=false;updatePointsTogg
  if(!data){el('classroomFullscreenLink').hidden=true;el('replyPanel').hidden=true;el('latest').innerHTML='<div class="notice">查無聯絡簿，請確認網址是否正確。</div>';el('history').innerHTML='';el('status').textContent='無效連結';return}
  const classroomLink=el('classroomFullscreenLink');if(classroomLink){const code=String(data.class_code||'');if(/^[A-Za-z0-9_-]{1,40}$/.test(code)){const url=new URL('./student-classroom.html',location.href);url.searchParams.set('t',token);classroomLink.href=url.href;classroomLink.hidden=false}else classroomLink.hidden=true}
  const displayName=data.class_code==='c_mwc0lni8_le3us8'?'五年一班':(/^50[1-7]$/.test(String(data.class_code||''))?'五年'+['','一','二','三','四','五','六','七'][Number(data.class_code)-500]+'班':String(data.class_code||'班級'));const entries=Array.isArray(data.entries)?data.entries:[];const publishedName=entries.map(e=>extractClassLabel(e.reminders)).find(Boolean);el('classTitle').textContent='📒 '+(publishedName||(/^(?:c_[a-z0-9_]+)$/.test(displayName)?'班級':displayName))+'聯絡簿';
- const latestEntry=entries[0],place=contactExtractPlace(latestEntry?.reminders);
+ const latestEntry=entries[0],place=currentNotebookPlace(latestEntry);
  el('headerDate').textContent='日期：'+(latestEntry?.entry_date||new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Taipei'}));
- el('headerPlace').textContent='本周上課地點:'+(place||'原班教室');
+ el('headerPlace').textContent='本周上課地點：'+(place||'尚未設定');
  if(hasThread)refreshThread();
  el('latest').innerHTML=entries.length?article(entries[0],false):'<div class="notice">老師尚未發布聯絡簿，請稍後再查看。</div>';
  el('history').innerHTML=entries.slice(1).map(e=>`<details><summary>${esc(e.entry_date)}　查看內容</summary>${article(e)}</details>`).join('')||'<p class="empty">目前沒有較早的聯絡簿。</p>';hasPublishedPoints=entries.some(e=>splitPoints(e.reminders).published);updatePointsToggle();
