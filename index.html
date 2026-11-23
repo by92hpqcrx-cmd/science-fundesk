@@ -1626,6 +1626,25 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
 .pointSeatsLayout .labGroupSeats .pointSeatWrapper>.seat{min-height:70px;height:auto}
 .pointSeatsLayout .seatRotated180 .pointSeatWrapper{min-width:0}
 @media(max-width:750px){.pointSeatsLayout .pointSeatActionPanel{padding:3px}.pointSeatsLayout .pointSeatButtons button{font-size:12px;padding:6px 1px}}
+</style><style id="fundeskLabDutyBoard20261123">
+#labDutyPanel.labDutyBoardPanel{background:#f4fbf4;border:2px solid #c5dfcf;border-radius:20px;overflow:hidden;padding:14px 17px 20px;box-shadow:0 8px 26px rgba(29,79,55,.1)}
+#labDutyPanel .labDutyBoardHeader{background:linear-gradient(130deg,#194b3d,#276a53 72%,#34765f);border:8px solid #c6945f;border-radius:17px;color:#f9fff4;padding:15px 20px;display:flex;gap:15px;align-items:center;flex-wrap:wrap;box-shadow:inset 0 0 0 2px #ffffff2b,0 4px 12px #163c2a24}
+#labDutyPanel .labBoardEmblem{font-size:38px;background:#ffffff19;padding:10px;border-radius:18px}
+#labDutyPanel .labBoardHeading{flex:1 1 330px}
+#labDutyPanel .labBoardHeading small{font-weight:800;letter-spacing:2px;color:#d9f3c8}
+#labDutyPanel .labBoardHeading h2{margin:4px 0 6px;font-size:clamp(20px,2.1vw,29px);color:#fff!important}
+#labDutyPanel .labBoardHeading span{color:#d8f2df;font-size:14px}
+#labDutyPanel .labBoardPet{display:flex;align-items:center;gap:8px;background:#f0f9e9;color:#255643;padding:7px 12px;border-radius:16px;font-weight:800;font-size:13px}
+#labDutyPanel .labBoardPetImage{width:47px;height:47px;object-fit:contain}
+#labDutyPanel .labDutyCard{background:#fffef8;border:1.5px solid #b6d5c3;border-left:7px solid #6aa98a;border-radius:13px;padding:12px 15px;box-shadow:0 3px 9px #214f3420}
+#labDutyPanel .labDutyCard summary{font-size:17px;color:#245340;line-height:1.5}
+#labDutyPanel .labDutyCard[open]{border-left-color:#e0ad4d}
+#labDutyPanel .labDutyTable th{background:#e3f3e6;color:#285641}
+#labDutyPanel .labDutyPrintActions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;border-top:1px dashed #c5dbca;padding-top:13px;margin-top:10px}
+#labDutyPanel .labPrintSingleBtn{background:#245d47;color:#fff;border:1px solid #245d47;border-radius:11px;font-weight:800;padding:10px 14px}
+#labDutyPanel .labPrintSingleBtn:hover{background:#174832}
+#labDutyPanel .labPrintHint{color:#648270;font-size:12px}
+@media(max-width:720px){#labDutyPanel .labDutyBoardHeader{padding:10px;border-width:5px}#labDutyPanel .labBoardPet{margin-left:auto}#labDutyPanel .labDutyPrintActions button{flex:1 1 180px}}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
@@ -2608,14 +2627,14 @@ function labDutyCards(sheets,activeDate){
  return sheets.map(sheet=>`<details class="labDutyCard" ${sheet===active?'open':''}>
  <summary>${esc(sheet.date)} ${esc(sheet.periods?.join('、')||'')}　${esc(sheet.topic)}</summary>
  <div class="tablewrap">${labDutyTable(sheet)}</div>
- <div class="actions"><button type="button" class="btn small outline" data-print-lab="${esc(sheet.id)}">列印這項實驗（A4）</button></div></details>`).join('');
+ <div class="actions labDutyPrintActions"><button type="button" class="btn small outline" data-print-lab="${esc(sheet.id)}">🖨️ 列印這項實驗（A4）</button><button type="button" class="btn small labPrintSingleBtn" data-print-lab-groups="${esc(sheet.id)}">🐾 列印各組單張（A4）</button><span class="labPrintHint">每組一頁・保留已分配職務</span></div></details>`).join('');
 }
 function renderLabDuty(atHome=false){
  const {lessons,template}=labScheduleSource(),seats=layoutMap('lab'),people=students();
  const saved=labSheets(),sheets=plannedLabSheets(lessons,saved,seats,people);
  const assigned=new Set(seats.filter(Boolean)),unassigned=people.filter(s=>!assigned.has(s.id));
  const date=$('sessionDate').value;
- return `<section class="panel" id="labDutyPanel"><div class="panelHead"><h2>${atHome?'實驗工作分配':esc(classDisplay(cl))+'｜實驗工作分配'}</h2></div>
+ return `<section class="panel labDutyBoardPanel" id="labDutyPanel"><div class="panelHead labDutyBoardHeader"><div class="labBoardEmblem" aria-hidden="true">🔬</div><div class="labBoardHeading"><small>FUNDESK · 小小科學家實驗室</small><h2>${atHome?'實驗工作分配':esc(classDisplay(cl))+'｜實驗工作分配'}</h2><span>🧪 一起合作、輪流負責、愛護器材</span></div><div class="labBoardPet" aria-label="FunDesk 班寵裝飾"><img class="labBoardPetImage" src="${esc($('classMascotImage')?.getAttribute('src')||'./fundesk-app-icon.svg')}" alt="FunDesk 班寵"><span>🐾 班寵陪你做實驗</span></div></div>
  <p class="hint">依${template?'內建班級課表':'本班教學進度'}與實驗座位自動排表，同一天同項實驗合併為一張。</p>
  ${unassigned.length?`<p class="notice">尚未安排實驗座位：${unassigned.map(s=>esc(s.no)+'號').join('、')}。</p>`:''}
  ${!assigned.size&&sheets.length?'<p class="notice">請先匯入學生名單並確認實驗分組，表格才會顯示分工。</p>':''}
@@ -2634,6 +2653,21 @@ function labDutyTable(sheet){
   const fivePersonNoReturn=group.members.length===5&&role==='器材長（歸還）';
   return `<td>${fivePersonNoReturn?'不分配':member?`<span>${esc(member.no)} 號</span><br>${avatarNamed(student(member.id)||member,member.name)}`:'—'}</td>`;
  }).join('')}</tr>`).join('')}</tbody></table>`;
+}
+// Use the exact stored experiment roles rather than seating order.
+function printLabDutyGroups(sheet){
+ const page=window.open('fundesk-experiment-print.html','_blank');
+ if(!page){const status=$('labDutyStatus');if(status)status.textContent='請允許 FunDesk 開啟列印新分頁。';return}
+ const roleMap={'器材長（領取）':'器材長A','器材長（歸還）':'器材長B'};
+ const payload={groups:(sheet.groups||[]).map(g=>({number:g.number,members:(g.members||[]).map(m=>{
+  const r=labDisplayRole(m.role);
+  return {seat:m.no,name:m.name,role:roleMap[r]||r};
+ })}))};
+ const meta={className:classDisplay(cl),date:sheet.date,experiment:sheet.topic};
+ let loaded=false;
+ const send=()=>{if(loaded)return;loaded=true;page.postMessage({type:'FUNDESK_EXPERIMENT_GROUPS',payload,meta},location.origin)};
+ page.addEventListener('load',send,{once:true});
+ try{if(page.document.readyState==='complete')send()}catch{}
 }
 function printLabDuty(sheet){
  const page=window.open('','_blank','width=1100,height=760');
@@ -2689,6 +2723,9 @@ function bindLabDuty(){
  };
  document.querySelectorAll('[data-print-lab]').forEach(button=>button.onclick=()=>{
   const sheet=sheets.find(s=>s.id===button.dataset.printLab);if(sheet)printLabDuty(sheet);
+ });
+ document.querySelectorAll('[data-print-lab-groups]').forEach(button=>button.onclick=()=>{
+  const sheet=sheets.find(s=>s.id===button.dataset.printLabGroups);if(sheet)printLabDutyGroups(sheet);
  });
 }
 
