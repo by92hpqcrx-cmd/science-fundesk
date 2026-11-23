@@ -2667,7 +2667,6 @@ function printLabDutyGroups(sheet){
  let loaded=false;
  const send=()=>{if(loaded)return;loaded=true;page.postMessage({type:'FUNDESK_EXPERIMENT_GROUPS',payload,meta},location.origin)};
  page.addEventListener('load',send,{once:true});
- try{if(page.document.readyState==='complete')send()}catch{}
 }
 function printLabDuty(sheet){
  const page=window.open('','_blank','width=1100,height=760');
