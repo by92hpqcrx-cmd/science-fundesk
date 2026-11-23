@@ -40,27 +40,27 @@ body{margin:0}
 .work td.seat{height:43px;font-size:19px}
 .note{border:2px dashed #476e51;border-radius:8px;margin-top:17px;padding:11px 15px;min-height:90px;font-size:18px;font-weight:700}
 .empty{background:#fff;border-radius:15px;padding:45px 28px;text-align:center;color:#55745d;font-size:19px;line-height:1.8}
-@page{size:A4 portrait;margin:8mm}
+@page{size:A4 landscape;margin:8mm}
 @media print{
 html,body{background:white}
 .top,.empty{display:none!important}
 #pages{width:100%;max-width:none;margin:0;padding:0;overflow:visible}
-.print-page{display:flex;flex-direction:column;justify-content:space-between;gap:3mm;height:279mm;margin:0;padding:0;background:white;border:0;border-radius:0;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
+.print-page{display:flex;flex-direction:column;justify-content:space-between;gap:3mm;height:192mm;margin:0;padding:0;background:white;border:0;border-radius:0;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
 .print-page:last-child{break-after:auto;page-break-after:auto}
 .print-page:has(> .sheet:only-child){justify-content:flex-start}
 .sheet{flex:1 1 auto;width:100%;height:100%;max-height:none;box-shadow:none;border:1px solid #7e9984;border-radius:2mm;padding:2.5mm;margin:0;break-after:auto;page-break-after:auto;break-inside:avoid;page-break-inside:avoid}
 .sheet h2{font-size:23px;min-height:17mm;color:#1e4c35;background:#fff;border:1px solid #315b3d;border-radius:1.5mm;padding:1mm 3mm;margin-bottom:2mm;print-color-adjust:exact}
 .sheet h2 span{font-size:22px}
-.sheet .meta{font-size:17px;grid-template-columns:1fr 1fr;gap:2mm;margin-bottom:6mm}.sheet .meta div:last-child{grid-column:1/-1}
+.sheet .meta{font-size:17px;grid-template-columns:1fr 1fr 2fr;gap:3mm;margin-bottom:5mm}.sheet .meta div:last-child{grid-column:auto}
 .sheet .meta div{padding:1mm 1mm;border-bottom:1px solid #8cb69b}
 .sheet .group{font-size:22px;padding:3mm 4mm;margin-bottom:6mm;border-left-width:3px}
 .work th,.work td{border:1px solid #39513e;padding:3mm 1.5mm}
 .work .rowhead{width:19mm;font-size:15px}
 .work th{font-size:15px}
-.work td.detail{height:52mm;font-size:14px;line-height:1.5}
-.work td.person{height:21mm;font-size:19px}
-.work td.seat{height:17mm;font-size:18px}
-.note{min-height:32mm;font-size:18px;border-width:1px;margin-top:8mm;padding:4mm 5mm}
+.work td.detail{height:36mm;font-size:15px;line-height:1.5}
+.work td.person{height:16mm;font-size:20px}
+.work td.seat{height:12mm;font-size:19px}
+.note{min-height:22mm;font-size:18px;border-width:1px;margin-top:6mm;padding:3mm 5mm}
 }
 @media(max-width:760px){.top{margin:8px}.sheet{min-width:730px}.sheet h2{font-size:20px}#pages{overflow-x:auto}.meta{font-size:14px}}
 </style>
