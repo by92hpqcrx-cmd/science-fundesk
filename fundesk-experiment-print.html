@@ -37,26 +37,26 @@ body{margin:0}
 .work td.seat{height:43px;font-size:19px}
 .note{border:2px dashed #476e51;border-radius:8px;margin-top:17px;padding:11px 15px;min-height:90px;font-size:18px;font-weight:700}
 .empty{background:#fff;border-radius:15px;padding:45px 28px;text-align:center;color:#55745d;font-size:19px;line-height:1.8}
-@page{size:A4 landscape;margin:9mm}
+@page{size:A4 portrait;margin:8mm}
 @media print{
 html,body{background:white}
 .top,.empty{display:none!important}
 #pages{width:100%;max-width:none;margin:0;padding:0;overflow:visible}
-.print-page{display:flex;flex-direction:column;justify-content:space-between;gap:3mm;height:192mm;margin:0;padding:0;background:white;border:0;border-radius:0;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
+.print-page{display:flex;flex-direction:column;justify-content:space-between;gap:3mm;height:279mm;margin:0;padding:0;background:white;border:0;border-radius:0;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
 .print-page:last-child{break-after:auto;page-break-after:auto}
-.sheet{flex:0 0 auto;width:100%;height:auto;max-height:94mm;box-shadow:none;border:1px solid #7e9984;border-radius:2mm;padding:2.5mm;margin:0;break-after:auto;page-break-after:auto;break-inside:avoid;page-break-inside:avoid}
-.sheet h2{font-size:16px;min-height:9mm;color:#1e4c35;background:#fff;border:1px solid #315b3d;border-radius:1.5mm;padding:1mm 3mm;margin-bottom:2mm;print-color-adjust:exact}
+.sheet{flex:0 0 auto;width:100%;height:auto;max-height:137mm;box-shadow:none;border:1px solid #7e9984;border-radius:2mm;padding:2.5mm;margin:0;break-after:auto;page-break-after:auto;break-inside:avoid;page-break-inside:avoid}
+.sheet h2{font-size:17px;min-height:11mm;color:#1e4c35;background:#fff;border:1px solid #315b3d;border-radius:1.5mm;padding:1mm 3mm;margin-bottom:2mm;print-color-adjust:exact}
 .sheet h2 span{font-size:17px}
-.sheet .meta{font-size:12px;gap:1mm;margin-bottom:2mm}
+.sheet .meta{font-size:12px;grid-template-columns:1fr 1fr;gap:1mm;margin-bottom:2mm}.sheet .meta div:last-child{grid-column:1/-1}
 .sheet .meta div{padding:1mm 1mm;border-bottom:1px solid #8cb69b}
-.sheet .group{font-size:15px;padding:1mm 2mm;margin-bottom:2mm;border-left-width:3px}
-.work th,.work td{border:1px solid #39513e;padding:1mm 1mm}
-.work .rowhead{width:18mm;font-size:11px}
-.work th{font-size:12px}
-.work td.detail{height:18mm;font-size:11px;line-height:1.3}
-.work td.person{height:10mm;font-size:14px}
-.work td.seat{height:8mm;font-size:13px}
-.note{min-height:11mm;font-size:12px;border-width:1px;margin-top:2mm;padding:1.5mm 3mm}
+.sheet .group{font-size:16px;padding:1.5mm 2mm;margin-bottom:2mm;border-left-width:3px}
+.work th,.work td{border:1px solid #39513e;padding:1.5mm .8mm}
+.work .rowhead{width:17mm;font-size:11px}
+.work th{font-size:11px}
+.work td.detail{height:34mm;font-size:11px;line-height:1.45}
+.work td.person{height:12mm;font-size:14px}
+.work td.seat{height:9mm;font-size:13px}
+.note{min-height:17mm;font-size:13px;border-width:1px;margin-top:3mm;padding:2mm 3mm}
 }
 @media(max-width:760px){.top{margin:8px}.sheet{min-width:730px}.sheet h2{font-size:20px}#pages{overflow-x:auto}.meta{font-size:14px}}
 </style>
@@ -128,7 +128,7 @@ function render(){
  const pages=[];
  for(let i=0;i<active.length;i+=2)pages.push('<div class="print-page">'+active.slice(i,i+2).map(section).join('')+'</div>');
  $('pages').innerHTML=pages.join('');
- $('status').textContent=selected==='all'?'全部 '+sheetData.groups.length+' 組，A4 每頁兩組（共 '+pages.length+' 頁）':'第 '+active[0]?.number+' 組，單獨列印一頁';
+ $('status').textContent=selected==='all'?'全部 '+sheetData.groups.length+' 組，A4 直式每頁兩組（共 '+pages.length+' 頁）':'第 '+active[0]?.number+' 組，單獨列印一頁';
 }
 $('groupSelect').onchange=render;
 function move(delta){const sel=$('groupSelect'),n=sheetData?.groups.length||0;if(!n)return;const current=sel.value==='all'?(delta>0?-1:0):Number(sel.value);sel.value=String(Math.max(0,Math.min(n-1,current+delta)));render()}
