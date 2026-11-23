@@ -2656,16 +2656,22 @@ function labDutyTable(sheet){
 }
 // Use the exact stored experiment roles rather than seating order.
 function printLabDutyGroups(sheet){
- const page=window.open('fundesk-experiment-print.html','_blank');
+ const page=window.open('fundesk-experiment-print.html?v=20261123-simple','_blank');
  if(!page){const status=$('labDutyStatus');if(status)status.textContent='請允許 FunDesk 開啟列印新分頁。';return}
  const roleMap={'器材長（領取）':'器材長A','器材長（歸還）':'器材長B'};
  const payload={groups:(sheet.groups||[]).map(g=>({number:g.number,members:(g.members||[]).map(m=>{
-  const r=labDisplayRole(m.role);
-  return {seat:m.no,name:m.name,role:roleMap[r]||r};
+  const role=labDisplayRole(m.role);
+  return {seat:m.no,name:m.name,role:roleMap[role]||role};
  })}))};
  const meta={className:classDisplay(cl),date:sheet.date,experiment:sheet.topic};
- let loaded=false;
- const send=()=>{if(loaded)return;loaded=true;page.postMessage({type:'FUNDESK_EXPERIMENT_GROUPS',payload,meta},location.origin)};
+ const send=()=>{if(!page.closed)page.postMessage({type:'FUNDESK_EXPERIMENT_GROUPS',payload,meta},location.origin)};
+ const onReady=event=>{
+  if(event.origin!==location.origin||event.source!==page||event.data?.type!=='FUNDESK_EXPERIMENT_PRINT_READY')return;
+  window.removeEventListener('message',onReady);
+  send();
+ };
+ window.addEventListener('message',onReady);
+ // Normal load event is a fallback if a browser does not deliver the ready message.
  page.addEventListener('load',send,{once:true});
 }
 function printLabDuty(sheet){
