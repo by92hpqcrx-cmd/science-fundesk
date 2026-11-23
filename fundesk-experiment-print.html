@@ -44,7 +44,8 @@ html,body{background:white}
 #pages{width:100%;max-width:none;margin:0;padding:0;overflow:visible}
 .print-page{display:flex;flex-direction:column;justify-content:space-between;gap:3mm;height:279mm;margin:0;padding:0;background:white;border:0;border-radius:0;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
 .print-page:last-child{break-after:auto;page-break-after:auto}
-.sheet{flex:0 0 auto;width:100%;height:auto;max-height:137mm;box-shadow:none;border:1px solid #7e9984;border-radius:2mm;padding:2.5mm;margin:0;break-after:auto;page-break-after:auto;break-inside:avoid;page-break-inside:avoid}
+.print-page:has(> .sheet:only-child){justify-content:flex-start}
+.sheet{flex:0 0 auto;width:100%;height:137mm;max-height:137mm;box-shadow:none;border:1px solid #7e9984;border-radius:2mm;padding:2.5mm;margin:0;break-after:auto;page-break-after:auto;break-inside:avoid;page-break-inside:avoid}
 .sheet h2{font-size:17px;min-height:11mm;color:#1e4c35;background:#fff;border:1px solid #315b3d;border-radius:1.5mm;padding:1mm 3mm;margin-bottom:2mm;print-color-adjust:exact}
 .sheet h2 span{font-size:17px}
 .sheet .meta{font-size:12px;grid-template-columns:1fr 1fr;gap:1mm;margin-bottom:2mm}.sheet .meta div:last-child{grid-column:1/-1}
