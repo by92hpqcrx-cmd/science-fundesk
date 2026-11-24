@@ -85,27 +85,21 @@ const KEY='sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L';
 const pageUrl=new URL(location.href);
 const token=pageUrl.searchParams.get('t')||'';
 const el=id=>document.getElementById(id);
-let notebookManifestName='',notebookManifestUrl='',notebookInstallPrompt=null;
-const notebookStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
-function setupNotebookManifest(name){
- if(!/^[0-9a-f]{64}$/.test(token))return;
- const label=name+'聯絡簿';
- document.title=label+'｜FunDesk';
- if(notebookManifestName===label)return;
- notebookManifestName=label;
- const start=new URL('./contact.html',location.href);start.searchParams.set('t',token);
- const scope=new URL('./contact.html',location.href);
- const icon=new URL('./contact-pwa-icon.svg',location.href).href;
- const manifest={id:start.href,name:'FunDesk '+label,short_name:label,start_url:start.href,scope:scope.href,display:'standalone',background_color:'#eef8ff',theme_color:'#eef8ff',icons:[{src:icon,sizes:'192x192 512x512 any',type:'image/svg+xml',purpose:'any'}]};
- let link=document.querySelector('link[rel="manifest"]');if(!link){link=document.createElement('link');link.rel='manifest';document.head.appendChild(link)}
- const old=notebookManifestUrl;notebookManifestUrl=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}));link.href=notebookManifestUrl;if(old)URL.revokeObjectURL(old);
- el('installNotebook').hidden=notebookStandalone();
+let notebookSlot='';
+function setupNotebookManifest(name,code){
+ document.title=name+'聯絡簿｜FunDesk';
+ const nums=['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四'];
+ const match=String(name).match(/^五年(十一|十二|十三|十四|十|[一二三四五六七八九]|\d{1,2})班$/);
+ const num=match?(Number(match[1])||nums.indexOf(match[1])+1):0;
+ notebookSlot=/^50[1-9]$|^51[0-4]$/.test(String(code))?String(code):num>=1&&num<=14?String(500+num):'custom';
+ el('installNotebook').hidden=window.top!==window.self;
 }
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();notebookInstallPrompt=e;if(notebookManifestName&&!notebookStandalone())el('installNotebook').hidden=false});
-window.addEventListener('appinstalled',()=>{notebookInstallPrompt=null;el('installNotebook').hidden=true});
-el('installNotebook').onclick=async()=>{
- if(notebookInstallPrompt){const prompt=notebookInstallPrompt;notebookInstallPrompt=null;try{await prompt.prompt();await prompt.userChoice;return}catch(e){}}
- alert('請在一般 Microsoft Edge 視窗開啟本班完整聯絡簿網址，點右上角 ⋯ → 應用程式 → 將此網站安裝為應用程式。若已在 FD 獨立視窗中，請先將網址複製到一般 Edge 視窗。');
+el('installNotebook').onclick=()=>{
+ if(!notebookSlot||!(/^[0-9a-f]{64}$/.test(token)))return;
+ if(!confirm('將本班聯絡簿連結儲存在這台教室電腦，以便從桌面開啟？持有此電腦瀏覽器資料的人可能讀取已發布的聯絡簿。'))return;
+ const url=new URL('./notebook-app/'+notebookSlot+'/index.html',location.href);
+ url.hash=token;
+ window.open(url.href,'_blank','noopener,noreferrer');
 };
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const stamp=t=>t?new Date(t).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false}):'';
@@ -276,7 +270,7 @@ async function load(){if(busy)return;busy=true;showPoints=false;updatePointsTogg
  if(!response.ok)throw Error('讀取失敗（HTTP '+response.status+'）');const data=await response.json();
  if(!data){el('installNotebook').hidden=true;el('classroomFullscreenLink').hidden=true;el('replyPanel').hidden=true;el('latest').innerHTML='<div class="notice">查無聯絡簿，請確認網址是否正確。</div>';el('history').innerHTML='';el('status').textContent='無效連結';return}
  const classroomLink=el('classroomFullscreenLink');if(classroomLink){const code=String(data.class_code||'');if(/^[A-Za-z0-9_-]{1,40}$/.test(code)){const url=new URL('./student-classroom.html',location.href);url.searchParams.set('t',token);classroomLink.href=url.href;classroomLink.hidden=false}else classroomLink.hidden=true}
- const displayName=data.class_code==='c_mwc0lni8_le3us8'?'五年一班':(/^50[1-7]$/.test(String(data.class_code||''))?'五年'+['','一','二','三','四','五','六','七'][Number(data.class_code)-500]+'班':String(data.class_code||'班級'));const entries=Array.isArray(data.entries)?data.entries:[];const publishedName=entries.map(e=>extractClassLabel(e.reminders)).find(Boolean);const notebookClassName=publishedName||(/^(?:c_[a-z0-9_]+)$/.test(displayName)?'班級':displayName);el('classTitle').textContent='📒 '+notebookClassName+'聯絡簿';setupNotebookManifest(notebookClassName);
+ const displayName=data.class_code==='c_mwc0lni8_le3us8'?'五年一班':(/^50[1-7]$/.test(String(data.class_code||''))?'五年'+['','一','二','三','四','五','六','七'][Number(data.class_code)-500]+'班':String(data.class_code||'班級'));const entries=Array.isArray(data.entries)?data.entries:[];const publishedName=entries.map(e=>extractClassLabel(e.reminders)).find(Boolean);const notebookClassName=publishedName||(/^(?:c_[a-z0-9_]+)$/.test(displayName)?'班級':displayName);el('classTitle').textContent='📒 '+notebookClassName+'聯絡簿';setupNotebookManifest(notebookClassName,data.class_code);
  const latestEntry=entries[0],place=currentNotebookPlace(entries);
  el('headerDate').textContent='日期：'+(latestEntry?.entry_date||new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Taipei'}));
  el('headerPlace').textContent='本周上課地點：'+(place||'尚未設定');

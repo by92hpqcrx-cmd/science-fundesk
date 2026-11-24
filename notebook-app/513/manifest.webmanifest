@@ -1,0 +1,18 @@
+{
+  "id": "./index.html",
+  "start_url": "./index.html",
+  "scope": "./",
+  "name": "FunDesk 五年十三班聯絡簿",
+  "short_name": "五年十三班聯絡簿",
+  "display": "standalone",
+  "background_color": "#eef8ff",
+  "theme_color": "#eef8ff",
+  "icons": [
+    {
+      "src": "../../contact-pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
