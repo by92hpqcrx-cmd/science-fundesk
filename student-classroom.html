@@ -252,17 +252,17 @@ function openStudent(id){
  openModal(p.no+" 號 · "+p.name,'<section><h3>🎟️ 我的餵食券</h3><p>剩餘 <strong>'+tickets(id)+'</strong> 張</p><button class="btn primary" id="useTicket" '+(tickets(id)<1?"disabled":"")+'>🎟️ 使用一張餵食券</button><p class="hint">餵食成功才扣券，每張可餵一次。</p></section><section><button class="btn" id="unlockAvatar">🔒 更換頭像（動態教室密碼）</button><div id="avatarChoices" hidden class="options"></div></section>'+personalHistory("student",id));
  $("useTicket").onclick=()=>{if(tickets(id)<1)return;actor={type:"student",sid:String(id),name:p.name};foodId=null;choice=null;showFeedConfirm();renderFoods();closeModal();setStatus("🎟️ 已選 "+p.name+" 的餵食券，請選食物及餵食對象。")};
  $("unlockAvatar").onclick=async()=>{const area=$("avatarChoices");if(!area.hidden){area.hidden=true;return}
- const key=prompt("請輸入動態教室密碼");if(key===null)return;
+ const key=await askFeedPassword("🔐 更換頭像");if(key===null)return;
  try{await rpc("fundesk_student_room_action",{p_token:token,p_action:"check_password",p_passcode:key});}catch(e){alert("密碼驗證失敗："+e.message);return}
  area.hidden=false;area.innerHTML=STUDENT_AVATARS.map(x=>'<button type="button" data-avatar="'+esc(x[0])+'"><img src="'+esc(avatarPath(x[0]))+'" alt=""><small>'+esc(x[1])+'</small></button>').join("")+'<button id="clearAvatar" class="btn">不使用頭像</button>';
  area.querySelectorAll("[data-avatar]").forEach(b=>b.onclick=async()=>{if(await action("avatar",{p_feeder:String(id),p_avatar:b.dataset.avatar,p_passcode:key})){closeModal();setStatus("已更新學生頭像")}});
  $("clearAvatar").onclick=async()=>{if(await action("avatar",{p_feeder:String(id),p_avatar:null,p_passcode:key})){closeModal();setStatus("已清除學生頭像")}};
  };
 }
-function askFeedPassword(){
+function askFeedPassword(title="🔐 老師餵食"){
  return new Promise(resolve=>{
   const dialog=document.createElement("dialog");dialog.className="feedPasswordDialog";
-  dialog.innerHTML='<form><h2>🔐 老師餵食</h2><label>動態教室密碼<input type="password" inputmode="numeric" autocomplete="off" required autofocus></label><div class="feedPasswordActions"><button type="button" class="btn" data-cancel>取消</button><button type="submit" class="btn primary">確認</button></div></form>';
+  dialog.innerHTML='<form><h2>'+esc(title)+'</h2><label>動態教室密碼<input type="password" inputmode="numeric" autocomplete="off" required autofocus></label><div class="feedPasswordActions"><button type="button" class="btn" data-cancel>取消</button><button type="submit" class="btn primary">確認</button></div></form>';
   $("app").appendChild(dialog);
   let value=null;
   dialog.querySelector("form").onsubmit=e=>{e.preventDefault();value=dialog.querySelector("input").value;dialog.close()};
