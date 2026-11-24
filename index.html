@@ -2053,9 +2053,9 @@ function openFunDeskKing(event){
   (async()=>{
    const d=e.data,id=String(d.gameId||''),mode=String(d.mode||''),subject=String(d.subject||''),count=Number(d.questionCount),players=d.players;
    if(!cloudReady||!cloudSession||cloudBlocked)throw Error('FunDesk 雲端未連線');
-   if(!/^[a-zA-Z0-9_-]{8,100}$/.test(id)||!['score','competition','tablet'].includes(mode)||
+   if(!/^[a-zA-Z0-9_-]{8,100}$/.test(id)||!['score','competition','tablet','exam'].includes(mode)||
     !['science','math'].includes(subject)||!Number.isInteger(count)||count<1||count>300||
-    !Array.isArray(players)||players.length<(mode==='competition'?2:1)||players.length>(mode==='competition'?4:mode==='tablet'?40:1))
+    !Array.isArray(players)||players.length<(mode==='competition'?2:1)||players.length>(mode==='competition'?4:['tablet','exam'].includes(mode)?40:1))
     throw Error('遊戲資料格式不正確');
    const seen=new Set(),ranks=new Set();
    for(const p of players){
@@ -2088,7 +2088,7 @@ function openFunDeskKing(event){
     if(!Array.isArray(s.scienceKingResults))s.scienceKingResults=[];
     const activityCodes=Array.isArray(d.activityCodes)?[...new Set(d.activityCodes.filter(x=>typeof x==='string'&&/^\d{1,2}-\d{1,2}$/.test(x)))].slice(0,30):[];
     const unitCodes=[...new Set(activityCodes.map(x=>String(Number(x.split('-')[0]))))];
-    const item={gameId:id,mode,subject,score:p.score,correct:p.correct,questionCount:count,place:p.place,playedAt,activityCodes,unitCodes};
+    const item={gameId:id,mode,subject,score:p.score,correct:p.correct,questionCount:count,place:p.place,playedAt,activityCodes,unitCodes,...(mode==='exam'?{examTitle:String(d.examTitle||'個人試卷').slice(0,100)}:{})};
     s.scienceKingResults.push(item);changes.push({list:s.scienceKingResults,item});
    }
    if(mode==='competition'){
@@ -5265,7 +5265,7 @@ function assessmentGames(s,a,allowLegacy=false){const f=assessmentFilter(a);retu
  if(!units.length)return allowLegacy&&f.legacy===true;
  return f.unit==='all'||(units.length===1&&units[0]===f.unit);
  }).sort((x,y)=>String(y.playedAt).localeCompare(String(x.playedAt)))}
-function assessmentGameOptions(s,p){const games=assessmentGames(s,assessmentCurrent(),true);return '<option value="">選擇本次測驗紀錄</option>'+games.map(x=>'<option value="'+esc(x.gameId)+'" '+(p.gameId===x.gameId?'selected':'')+'>'+esc(new Date(x.playedAt).toLocaleString('zh-TW',{timeZone:'Asia/Taipei'})+'｜'+(x.unitCodes?.length?'單元'+x.unitCodes.join('+'):'未分類')+'｜'+(x.activityCodes?.length?x.activityCodes.join('、')+'｜':'')+({score:'個人',competition:'競賽',tablet:'平板'}[x.mode]||x.mode)+'｜'+x.correct+'/'+x.questionCount)+'</option>').join('')}
+function assessmentGameOptions(s,p){const games=assessmentGames(s,assessmentCurrent(),true);return '<option value="">選擇本次測驗紀錄</option>'+games.map(x=>'<option value="'+esc(x.gameId)+'" '+(p.gameId===x.gameId?'selected':'')+'>'+esc(new Date(x.playedAt).toLocaleString('zh-TW',{timeZone:'Asia/Taipei'})+'｜'+(x.unitCodes?.length?'單元'+x.unitCodes.join('+'):'未分類')+'｜'+(x.activityCodes?.length?x.activityCodes.join('、')+'｜':'')+({score:'個人',competition:'競賽',tablet:'平板',exam:'個人試卷'}[x.mode]||x.mode)+(x.examTitle?'｜'+x.examTitle:'')+'｜'+x.correct+'/'+x.questionCount)+'</option>').join('')}
 function assessmentFilterControls(a){const f=assessmentFilter(a);return '<div class="row assessmentActions" style="flex-wrap:wrap"><label>單元 <select id="assessFilterUnit">'+[['1','第一單元'],['2','第二單元'],['3','第三單元'],['4','第四單元'],['all','全部單元']].map(([v,l])=>'<option value="'+v+'" '+(f.unit===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label><label>起日 <input type="date" id="assessFilterFrom" value="'+esc(f.from)+'"></label><label>迄日 <input type="date" id="assessFilterTo" value="'+esc(f.to)+'"></label><label>採計 <select id="assessFilterMethod">'+[['manual','手動選擇'],['best','最高分'],['latest','最近一次'],['average','平均分']].map(([v,l])=>'<option value="'+v+'" '+(f.method===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label><label><input type="checkbox" id="assessFilterLegacy" '+(f.legacy?'checked':'')+'> 顯示未分類舊紀錄（僅手動）</label><button class="btn outline" id="assessFilterSave">套用篩選</button><button class="btn" id="assessAutoGame">全班一鍵帶入</button></div><p class="hint">自動採計僅使用符合單元與日期的已分類紀錄；跨單元遊戲不計入指定單元。空白日期代表不限日期。</p>'}
 
 let assessmentTab='group',assessmentPersonMode='auto';
