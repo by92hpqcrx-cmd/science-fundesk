@@ -12,7 +12,5 @@
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
-  ],
-  "id": "./index.html",
-  "scope": "./index.html"
+  ]
 }
