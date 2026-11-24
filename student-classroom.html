@@ -34,6 +34,7 @@
 .walker.pet{width:calc(var(--walker-w,82px) * 2)}
 .walker.pet img,.walker.pet .fallback{width:calc(var(--walker-img,66px) * 2);height:calc(var(--walker-img,66px) * 2)}
 .walker.pet .meter{width:min(100%,160px)}
+.feedPasswordDialog{border:1px solid #a7cbb4;border-radius:18px;padding:22px;width:min(360px,90vw);color:#274337;background:white}.feedPasswordDialog::backdrop{background:#203b3699}.feedPasswordDialog input{display:block;width:100%;padding:10px;font-size:24px;border:1px solid #a7cbb4;border-radius:9px;-webkit-text-security:disc}.feedPasswordActions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.feedTargetConfirm{position:absolute;z-index:800;display:flex;flex-direction:column;gap:4px;padding:5px;background:#fff8df;border:2px solid #e9a444;border-radius:12px;box-shadow:0 3px 10px #0003;white-space:nowrap}.feedTargetConfirm .btn{font-size:14px;padding:7px 9px}.walker.chosen{z-index:700}
 /* 餵食只放大圖片，不放大姓名。 */
 .walker.student img,.walker.student .fallback,.walker.teacher img,.walker.teacher .fallback,.walker.pet img,.walker.pet .fallback{transform:scale(var(--feed-growth,1));transition:transform 1s linear;transform-origin:center bottom}
 .walker .name{position:relative;z-index:20;overflow:visible}.history{display:flex;flex-direction:column;min-width:0;overflow:hidden}.history h2{font-size:16px;margin:3px 1px 8px}.scroll{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#8dbca2 #eff8ef}.entry{background:#f3fbf5;border:1px solid #cfe5d7;border-radius:10px;padding:9px;margin:0 0 7px;font-size:12px;line-height:1.55}.entry b{color:#21633f}.entry small{color:#698775}.hint{font-size:12px;color:#667c70}.petChoice{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.petChoice label{font-size:13px;font-weight:900}.loginCurtain{position:fixed;inset:0;background:#e7f3eaf5;z-index:900;display:grid;place-items:center;padding:20px}.loginBox{width:min(410px,100%);background:white;padding:22px;border-radius:20px;box-shadow:0 12px 40px #233b3240}.loginBox h2{margin:4px 0 8px}.loginBox input{width:100%;border:1px solid #b8d5bf;border-radius:10px;padding:12px;margin:6px 0 12px}.modalBack{position:fixed;inset:0;background:#203b3699;z-index:1000;display:grid;place-items:center;padding:15px}.modal{width:min(600px,100%);max-height:90dvh;overflow:auto;background:white;border-radius:20px;padding:18px;box-shadow:0 15px 50px #1f47365c}.modalHead{display:flex;gap:14px;align-items:center;justify-content:space-between}.modal h2{margin:4px 0}.modal section{border:1px solid #cde2d2;background:#f5fbf6;border-radius:12px;padding:12px;margin:12px 0}.modal .options{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px;max-height:34vh;overflow:auto}.options button{min-width:0;display:flex;flex-direction:column;gap:3px;border:1px solid #d3e4d3;border-radius:8px;background:#fff;padding:5px}.options img{height:64px;width:100%;object-fit:contain}.options small{font-size:11px;color:#345b42}.modal .btn{margin:3px}.foot{color:#608572;font-size:11px;text-align:right}#sync.error{color:#ae4444}.modal[hidden],.modalBack[hidden]{display:none}.empty{padding:20px;text-align:center;color:#6d8976}
@@ -205,7 +206,7 @@ function renderWalkers(){
   const bar=document.createElement("div");bar.className="meter";bar.innerHTML='<span><i style="width:'+prog+'%"></i></span>'+prog+'/100';w.el.insertBefore(bar,w.el.firstChild);movers.push(w);
  }
  movers.forEach((m,i)=>{root.appendChild(m.el);const bounds=moveBounds(m.el);m.x=(i%cols)/Math.max(1,cols-1)*bounds.x;m.y=Math.floor(i/cols)/Math.max(1,rows-1)*bounds.y;m.el.style.transform="translate("+Math.round(m.x)+"px,"+Math.round(m.y)+"px)"});
- refreshFeedingGrowth();last=0;frame=requestAnimationFrame(tick);
+ refreshFeedingGrowth();showFeedConfirm();last=0;frame=requestAnimationFrame(tick);
 }
 let lastGrowthUpdate=0;
 function tick(t){
@@ -219,7 +220,7 @@ function tick(t){
    m.el.style.transform="translate3d("+Math.round(m.x)+"px,"+Math.round(m.y)+"px,0)";
   }
  }
- frame=requestAnimationFrame(tick);
+ positionFeedConfirm();frame=requestAnimationFrame(tick);
 }
 function personalHistory(type,id){
  const entries=st().roomFeedingLog||[];
@@ -242,14 +243,14 @@ function openSpecialCard(type){
 function openModal(title,body){$("modalTitle").textContent=title;$("modalContent").innerHTML=body;$("modal").hidden=false}
 function closeModal(){$("modal").hidden=true}
 function onPerson(type,id){
- if(foodId&&actor){choice={type,id};document.querySelectorAll(".walker").forEach(m=>m.classList.toggle("chosen",m.dataset.type===type&&m.dataset.id===String(id)));feed();return}
+ if(busy)return; if(foodId&&actor){choice={type,id};showFeedConfirm();return}
  if(type==="teacher"||type==="pet"){openSpecialCard(type);return}
  openStudent(id);
 }
 function openStudent(id){
  const p=st().students.find(x=>String(x.id)===String(id));if(!p)return;
  openModal(p.no+" 號 · "+p.name,'<section><h3>🎟️ 我的餵食券</h3><p>剩餘 <strong>'+tickets(id)+'</strong> 張</p><button class="btn primary" id="useTicket" '+(tickets(id)<1?"disabled":"")+'>🎟️ 使用一張餵食券</button><p class="hint">餵食成功才扣券，每張可餵一次。</p></section><section><button class="btn" id="unlockAvatar">🔒 更換頭像（動態教室密碼）</button><div id="avatarChoices" hidden class="options"></div></section>'+personalHistory("student",id));
- $("useTicket").onclick=()=>{if(tickets(id)<1)return;actor={type:"student",sid:String(id),name:p.name};foodId=null;renderFoods();closeModal();setStatus("🎟️ 已選 "+p.name+" 的餵食券，請選食物及餵食對象。")};
+ $("useTicket").onclick=()=>{if(tickets(id)<1)return;actor={type:"student",sid:String(id),name:p.name};foodId=null;choice=null;showFeedConfirm();renderFoods();closeModal();setStatus("🎟️ 已選 "+p.name+" 的餵食券，請選食物及餵食對象。")};
  $("unlockAvatar").onclick=async()=>{const area=$("avatarChoices");if(!area.hidden){area.hidden=true;return}
  const key=prompt("請輸入動態教室密碼");if(key===null)return;
  try{await rpc("fundesk_student_room_action",{p_token:token,p_action:"check_password",p_passcode:key});}catch(e){alert("密碼驗證失敗："+e.message);return}
@@ -258,23 +259,52 @@ function openStudent(id){
  $("clearAvatar").onclick=async()=>{if(await action("avatar",{p_feeder:String(id),p_avatar:null,p_passcode:key})){closeModal();setStatus("已清除學生頭像")}};
  };
 }
+function askFeedPassword(){
+ return new Promise(resolve=>{
+  const dialog=document.createElement("dialog");dialog.className="feedPasswordDialog";
+  dialog.innerHTML='<form><h2>🔐 老師餵食</h2><label>動態教室密碼<input type="password" inputmode="numeric" autocomplete="off" required autofocus></label><div class="feedPasswordActions"><button type="button" class="btn" data-cancel>取消</button><button type="submit" class="btn primary">確認</button></div></form>';
+  $("app").appendChild(dialog);
+  let value=null;
+  dialog.querySelector("form").onsubmit=e=>{e.preventDefault();value=dialog.querySelector("input").value;dialog.close()};
+  dialog.querySelector("[data-cancel]").onclick=()=>dialog.close();
+  dialog.addEventListener("close",()=>{dialog.remove();resolve(value)},{once:true});
+  dialog.showModal();dialog.querySelector("input").focus();
+ });
+}
 async function activateTeacher(){
- const key=prompt("請輸入動態教室密碼（老師餵食）");if(key===null)return;
+ const key=await askFeedPassword();if(key===null)return;
  try{await rpc("fundesk_student_room_action",{p_token:token,p_action:"check_password",p_passcode:key});}catch(e){setStatus("動態教室密碼錯誤");return}
- actor={type:"teacher",sid:"__teacher__",name:"老師",passcode:key};foodId=null;renderFoods();setStatus("👩‍🏫 已選老師餵食，請選食物與餵食對象；成功時驗證密碼。");
+ actor={type:"teacher",sid:"__teacher__",name:"老師",passcode:key};foodId=null;choice=null;showFeedConfirm();renderFoods();setStatus("👩‍🏫 已選老師餵食，請選食物與餵食對象；成功時驗證密碼。");
+}
+function showFeedConfirm(){
+ const stage=$("stage");let box=$("feedTargetConfirm");
+ if(!box){box=document.createElement("div");box.id="feedTargetConfirm";box.className="feedTargetConfirm";box.hidden=true;box.innerHTML='<button type="button" class="btn primary" data-feed-ok>✓ 確認餵食</button><button type="button" class="btn" data-feed-cancel>取消</button>';stage.appendChild(box);
+ box.querySelector("[data-feed-ok]").onclick=()=>feed();
+ box.querySelector("[data-feed-cancel]").onclick=()=>{if(busy)return;choice=null;showFeedConfirm()}}
+ const target=choice&&movers.find(m=>m.type===choice.type&&String(m.id)===String(choice.id));
+ movers.forEach(m=>m.el.classList.toggle("chosen",m===target));
+ box.hidden=!target||!actor||!foodId;positionFeedConfirm();
+}
+function positionFeedConfirm(){
+ const box=$("feedTargetConfirm");if(!box||box.hidden)return;
+ const target=choice&&movers.find(m=>m.type===choice.type&&String(m.id)===String(choice.id));if(!target){box.hidden=true;return}
+ const stage=$("stage"),w=box.offsetWidth,h=box.offsetHeight;
+ let x=target.x+target.el.offsetWidth+5;if(x+w>stage.clientWidth-5)x=target.x-w-5;
+ box.style.left=Math.max(3,Math.min(x,stage.clientWidth-w-5))+"px";
+ box.style.top=Math.max(3,Math.min(target.y+target.el.offsetHeight/2-h/2,stage.clientHeight-h-5))+"px";
 }
 function renderFoods(){
  $("foodShelf").innerHTML='<div class="foodShelfTitle">🍽️ 餵食小站</div>'+ROOM_FOODS.map(x=>'<button type="button" class="food '+(foodId===x.id?"sel":"")+'" data-food="'+x.id+'"><span class="emoji">'+x.emoji+'</span>'+esc(x.name)+'</button>').join("");
- $("foodShelf").querySelectorAll("[data-food]").forEach(b=>b.onclick=()=>{if(!actor){setStatus("請先點學生使用餵食券，或點老師輸入密碼。");return}foodId=b.dataset.food;renderFoods();setStatus("已選 "+ROOM_FOODS.find(f=>f.id===foodId).name+"，請點選想餵的對象。")});
+ $("foodShelf").querySelectorAll("[data-food]").forEach(b=>b.onclick=()=>{if(!actor){setStatus("請先點學生使用餵食券，或點老師輸入密碼。");return}foodId=b.dataset.food;choice=null;showFeedConfirm();renderFoods();setStatus("已選 "+ROOM_FOODS.find(f=>f.id===foodId).name+"，請點選想餵的對象。")});
 }
 async function feed(){
  if(!actor||!foodId||!choice){setStatus("請先選餵食者與食物。");return}
  const a=actor,t=choice,food=ROOM_FOODS.find(x=>x.id===foodId);if(!food)return;
  if(a.type==="teacher"&&t.type==="teacher"){setStatus("老師不可餵自己");return}
  if(t.type==="pet"&&String(t.id)!==String(st().classPetType)){setStatus("此班寵僅供預覽。要餵食，請老師先在主程式選擇相同班寵。");return}
- if(!confirm(a.name+" 使用 "+food.name+" 餵 "+(t.type==="teacher"?"老師":t.type==="pet"?(getPet()||{}).name:(st().students.find(x=>String(x.id)===String(t.id))||{}).name)+"，確定嗎？"))return;
+ if(busy)return;
  const done=await action("feed",{p_feeder:a.sid,p_target_type:t.type,p_target_id:String(t.id),p_food:food.id,p_passcode:a.type==="teacher"?a.passcode:null});
- if(done){actor=null;foodId=null;choice=null;renderFoods();setStatus("🍽️ 餵食成功，已同步餵食紀錄與餵食券。")}
+ if(done){actor=null;foodId=null;choice=null;showFeedConfirm();renderFoods();setStatus("🍽️ 餵食成功，已同步餵食紀錄與餵食券。")}
 }
 $("modalClose").onclick=closeModal;$("modal").onclick=e=>{if(e.target===$("modal"))closeModal()};
 $("reload").onclick=async()=>{if(busy)return;try{await load();setStatus("已同步最新資料")}catch(e){setSync("⚠️ 同步失敗",true);alert(e.message)}};
