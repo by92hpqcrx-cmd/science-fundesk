@@ -2308,7 +2308,7 @@ function attendanceControl(sid,date,status){
  const entry=attendanceEntry(sid,date,status);
  return `<div class="row" data-attendance-editor="${status}">
  <label><input type="checkbox" data-att-status ${entry?'checked':''}> ${status}</label>
- <label data-att-reason-wrap ${entry?'':'hidden'}>原因 <input data-att-reason maxlength="300" value="${esc(entry?.reason||'')}" placeholder="填寫原因（選填）"></label>
+ <label data-att-reason-wrap ${entry?'':'hidden'}>原因 ${status==='缺席'?'<select data-att-reason aria-label="缺席原因"><option value="">請選擇原因</option>'+[...new Set(['事假','病假','去健康中心',entry?.reason||''].filter(Boolean))].map(reason=>'<option value="'+esc(reason)+'" '+(entry?.reason===reason?'selected':'')+'>'+esc(reason)+'</option>').join('')+'</select>':'<input data-att-reason maxlength="300" value="'+esc(entry?.reason||'')+'" placeholder="填寫原因（選填）">'}</label>
  </div>`;
 }
 function bindAttendanceControl(root,sid,getDate,onUpdate){
@@ -2325,6 +2325,7 @@ function bindAttendanceControl(root,sid,getDate,onUpdate){
    const entry=attendanceEntry(sid,date,status);
    checkbox.checked=!!entry;
    checkbox.disabled=!date||(!entry&&(status==='缺席'?attended:!!absent));
+   if(field.tagName==='SELECT'&&entry?.reason&&![...field.options].some(o=>o.value===entry.reason)){field.add(new Option(entry.reason,entry.reason))}
    field.value=entry?.reason||'';
    label.hidden=!entry;
   }
