@@ -2,7 +2,7 @@
 import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const $=id=>document.getElementById(id),params=new URL(location.href).searchParams,room=params.get('room')||'';
 if(!/^[a-f0-9]{32}$/.test(room))throw Error('無效網址');
-const config={url:params.get('url'),key:params.get('key')};if(!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(config.url||'')||!config.key?.startsWith('sb_publishable_'))throw Error('無效連線設定');
+const config={url:params.get('url')||"https://ayvwsexnxvjjcrbtyoof.supabase.co",key:params.get('key')||"sb_publishable_Z2rS84mJC4BK-h4oLsNNjw_CdQz240L"};if(!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(config.url||'')||!config.key?.startsWith('sb_publishable_'))throw Error('無效連線設定');
 const store='fd-write-'+room;let st;try{st=JSON.parse(sessionStorage.getItem(store))}catch{}st||={client:crypto.randomUUID().replaceAll('-',''),strokes:[]};const save=()=>{try{sessionStorage.setItem(store,JSON.stringify(st))}catch{}};
 const sb=createClient(config.url,config.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}}),ch=sb.channel('fd-writing-'+room,{config:{broadcast:{self:false}}});
 const send=(type,extra={})=>ch.send({type:'broadcast',event:'student',payload:{type,client:st.client,...extra}});
