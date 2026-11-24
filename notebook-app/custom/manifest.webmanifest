@@ -9,7 +9,13 @@
   "theme_color": "#eef8ff",
   "icons": [
     {
-      "src": "../../contact-pwa-icon.svg",
+      "src": "../../contact-book-icon.png",
+      "sizes": "64x64",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "../../contact-pwa-icon.svg?v=20261124-original",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
