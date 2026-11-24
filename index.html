@@ -2634,7 +2634,7 @@ function renderLabDuty(atHome=false){
  const saved=labSheets(),sheets=plannedLabSheets(lessons,saved,seats,people);
  const assigned=new Set(seats.filter(Boolean)),unassigned=people.filter(s=>!assigned.has(s.id));
  const date=$('sessionDate').value;
- return `<section class="panel labDutyBoardPanel" id="labDutyPanel"><div class="panelHead labDutyBoardHeader"><div class="labBoardEmblem" aria-hidden="true">🔬</div><div class="labBoardHeading"><small>FUNDESK · 小小科學家實驗室</small><h2>${atHome?'實驗工作分配':esc(classDisplay(cl))+'｜實驗工作分配'}</h2><span>🧪 一起合作、輪流負責、愛護器材</span></div><div class="labBoardPet" aria-label="FunDesk 班寵裝飾"><img class="labBoardPetImage" src="${esc($('classMascotImage')?.getAttribute('src')||'./fundesk-app-icon.svg')}" alt="FunDesk 班寵"><span>🐾 班寵陪你做實驗</span></div></div>
+ return `<section class="panel labDutyBoardPanel" id="labDutyPanel"><div class="panelHead labDutyBoardHeader"><div class="labBoardEmblem" aria-hidden="true">🔬</div><div class="labBoardHeading"><small>FUNDESK · 小小科學家實驗室</small><h2>${atHome?'實驗工作分配':esc(classDisplay(cl))+'｜實驗工作分配'}</h2><span>🧪 一起合作、輪流負責、愛護器材</span></div></div>
  <p class="hint">依${template?'內建班級課表':'本班教學進度'}與實驗座位自動排表，同一天同項實驗合併為一張。</p>
  ${unassigned.length?`<p class="notice">尚未安排實驗座位：${unassigned.map(s=>esc(s.no)+'號').join('、')}。</p>`:''}
  ${!assigned.size&&sheets.length?'<p class="notice">請先匯入學生名單並確認實驗分組，表格才會顯示分工。</p>':''}
