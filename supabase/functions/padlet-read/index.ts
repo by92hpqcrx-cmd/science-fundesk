@@ -23,16 +23,16 @@ Deno.serve(async(req)=>{
  let body;try{body=JSON.parse(raw)}catch{return reply({message:"Invalid JSON"},400)}
  const id=String(body?.boardId||"");
  if(!/^[A-Za-z0-9]{16,22}$/.test(id)||!boards.includes(id))return reply({message:"看板未列入授權清單"},403);
- const r=await fetch("https://api.padlet.dev/v1/boards/"+id+"?include=posts,sections",{headers:{"X-Api-Key":secret,"Accept":"application/vnd.api+json"},redirect:"error",signal:AbortSignal.timeout(20000)});
+ const r=await fetch("https://api.padlet.dev/v1/boards/"+id+"?include=posts,sections,comments",{headers:{"X-Api-Key":secret,"Accept":"application/vnd.api+json"},redirect:"error",signal:AbortSignal.timeout(20000)});
  if(!r.ok)return reply({message:"Padlet 讀取失敗（HTTP "+r.status+"）"},r.status===429?429:502);
  const d=await r.json();
  if(d?.data?.id!==id||d.data.type!=="board"||!Array.isArray(d.included))return reply({message:"Padlet 資料格式異常"},502);
- const inc=d.included.filter((x:any)=>x.type==="section"||x.type==="post");
+ const inc=d.included.filter((x:any)=>x.type==="section"||x.type==="post"||x.type==="comment");
  if(inc.length>10000)return reply({message:"資料過多，請使用手動匯入"},413);
  // Return only the fields needed for scoring, never attachments, student responses, or API keys.
- const included=inc.map((x:any)=>x.type==="section"?{type:x.type,id:x.id,attributes:{title:x.attributes?.title}}:{type:x.type,id:x.id,attributes:{status:x.attributes?.status,content:{subject:x.attributes?.content?.subject},author:{fullName:x.attributes?.author?.fullName}},relationships:{section:{data:{id:x.relationships?.section?.data?.id}}}});
+ const included=inc.map((x:any)=>x.type==="section"?{type:x.type,id:x.id,attributes:{title:x.attributes?.title}}:x.type==="comment"?{type:x.type,id:x.id,attributes:{status:x.attributes?.status,content:typeof x.attributes?.content==="string"?x.attributes.content.slice(0,180):"",author:{fullName:x.attributes?.author?.fullName}},relationships:{post:{data:{id:x.relationships?.post?.data?.id}},author:{data:{id:x.relationships?.author?.data?.id}}}}:{type:x.type,id:x.id,attributes:{status:x.attributes?.status,content:{subject:x.attributes?.content?.subject},author:{fullName:x.attributes?.author?.fullName}},relationships:{section:{data:{id:x.relationships?.section?.data?.id}},author:{data:{id:x.relationships?.author?.data?.id}}}});
  const total=d.data.relationships?.posts?.data;
  if(Array.isArray(total)&&total.length!==included.filter((x:any)=>x.type==="post").length)return reply({message:"貼文資料不完整，請使用手動匯入並核對"},502);
- return reply({data:{id,type:"board",attributes:{title:d.data.attributes?.title}},included});
+ const comments=d.data.relationships?.comments?.data;if(Array.isArray(comments)&&comments.length!==included.filter((x:any)=>x.type==="comment").length)return reply({message:"留言資料不完整，請重新讀取"},502);return reply({data:{id,type:"board",attributes:{title:d.data.attributes?.title}},included,commentsComplete:Array.isArray(comments)});
  }catch{return reply({message:"Padlet 服務連線失敗，請稍後再試"},502)}
 });
