@@ -1980,13 +1980,13 @@ function openFunDeskMemory(event){
   const d=e.data,id=String(d.runId||'');const send=(ok,error='')=>child.postMessage({kind:'fundesk-memory-record-result',token,runId:id,ok,error,records:db.memoryRecords||{}},location.origin);
   if(owner!==String(cloudSession?.user?.id||'')||!cloudReady||cloudBlocked||!accessCan('petMemory'))return send(false,'請確認教師登入及同步');
   if(saved.has(id))return send(true);if(saving)return send(false,'正在儲存，請重試');
-  const n=Number(d.cards),t=Number(d.turns),sec=Number(d.seconds),category=String(d.category),st=students.find(x=>x.id===String(d.studentId)),guest=String(d.guest||'').trim().slice(0,30),no=st?Number(st.no):Number(d.no);
-  if(!id.startsWith(token+'-')||!['pets','constellations','planets'].includes(category)||![24,36,category==='planets'?40:48].includes(n)||!Number.isInteger(t)||t<n/2||t>10000||!Number.isInteger(sec)||sec<1||sec>86400||(!st&&!guest)||!Number.isInteger(no)||no<1||no>999)return send(false,'成績資料不完整：必須登記座號及姓名');
-  const key=category+'-'+n,identity=st?code+':'+st.id:'guest:'+no+':'+guest;
+  const n=Number(d.cards),t=Number(d.turns),sec=Number(d.seconds),category=String(d.category),st=students.find(x=>x.id===String(d.studentId)),guest=String(d.guest||'').trim().slice(0,30),no=st?Number(st.no):null;
+  if(!id.startsWith(token+'-')||!['pets','constellations','planets'].includes(category)||![24,36,category==='planets'?40:48].includes(n)||!Number.isInteger(t)||t<n/2||t>10000||!Number.isInteger(sec)||sec<1||sec>86400||(!st&&!guest)||(st&&(!Number.isInteger(no)||no<1||no>999)))return send(false,'成績資料不完整：班級學生需有座號及姓名，訪客需有姓名');
+  const key=category+'-'+n,identity=st?code+':'+st.id:'guest:'+guest;
   const entry={identity,no,name:st?st.name:guest,group:st?className:'訪客',turns:t,seconds:sec,cost:t*5+sec,date:new Date().toISOString()};
   saving=true;const previous=db.memoryRecords||{};
   try{await cloudQueue;if(cloudBlocked)throw Error('雲端未同步');const rows=await cloudGetAll();const shared=rows.find(r=>r.class_code==='shared');if(!shared)throw Error('共用資料尚未建立');if(Number(shared.revision)!==Number(cloudRevisions.shared||0))throw Error('另一裝置已更新，請重新登入後再比賽');
-   const list=[...(previous[key]||[]),entry].sort((a,b)=>a.cost-b.cost||a.turns-b.turns||a.seconds-b.seconds||a.date.localeCompare(b.date));const seen=new Set();const top=list.filter(x=>{if(seen.has(x.identity))return false;seen.add(x.identity);return true}).slice(0,3);db.memoryRecords={...previous,[key]:top};await cloudQueueSave();if(cloudBlocked)throw Error('雲端儲存未完成');saved.add(id);send(true)
+   const list=[...(previous[key]||[]).map(x=>x.group==='訪客'?{...x,no:null,identity:'guest:'+x.name}:x),entry].sort((a,b)=>a.cost-b.cost||a.turns-b.turns||a.seconds-b.seconds||a.date.localeCompare(b.date));const seen=new Set();const top=list.filter(x=>{if(seen.has(x.identity))return false;seen.add(x.identity);return true}).slice(0,3);db.memoryRecords={...previous,[key]:top};await cloudQueueSave();if(cloudBlocked)throw Error('雲端儲存未完成');saved.add(id);send(true)
   }catch(err){db.memoryRecords=previous;send(false,String(err.message||err))}finally{saving=false}
  };
  window.addEventListener('message',receive);const cleanup=setInterval(()=>{if(child.closed){clearInterval(cleanup);window.removeEventListener('message',receive)}},5000);
