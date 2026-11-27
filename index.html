@@ -1761,6 +1761,9 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
 #classManagementStatsHost{flex:1 1 100%!important}#classManagementStatsHost #stats{grid-template-columns:repeat(7,minmax(0,1fr))!important}#classManagementStatsHost .stat span{white-space:normal!important;font-size:clamp(11px,1.1vw,15px)!important}
 .experimentMatrix{width:100%;border-collapse:collapse;min-width:960px;table-layout:fixed}.experimentMatrix th,.experimentMatrix td{border:1px solid #c2d7cb;padding:5px;vertical-align:middle;text-align:center}.experimentMatrix th:first-child{width:19%;text-align:left;overflow-wrap:anywhere}.experimentMatrix thead th{background:#e0efe3}.experimentMatrix td label{display:flex;align-items:center;justify-content:center;gap:3px;font-size:12px;margin:3px 0}.experimentMatrix td input[type=date]{font-size:12px;padding:3px;min-width:0;width:100%;box-sizing:border-box}.experimentMatrix td label:has(input[type=date]){display:block}.experimentMatrix td:has([data-exp-field=done]:checked){background:#e6f4e5}.experimentMatrix td small{color:#755719}
 @media(max-width:730px){#classManagementStatsHost #stats{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+</style><style id="fundeskWorkbookProgress20261128">
+.workbookUnits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.workbookUnit{min-width:0;overflow-x:auto}.workbookUnit h3{background:#e6eff9;color:#345674;padding:8px;border-radius:8px;margin:4px 0}.workbookUnit:nth-child(2) h3{background:#e5f1e0;color:#3f6234}.workbookMatrix{width:100%;min-width:430px;border-collapse:collapse;table-layout:fixed}.workbookMatrix th,.workbookMatrix td{border:1px solid #c8d7df;text-align:center;padding:5px 2px;font-size:13px;overflow-wrap:anywhere}.workbookMatrix th:first-child{width:13%}.workbookMatrix thead th,.workbookTotal{background:#eef4f8;font-weight:800}.workbookMatrix td label{display:flex;align-items:center;justify-content:center;gap:3px;cursor:pointer;flex-wrap:wrap}.workbookMatrix input[type=checkbox]{width:17px;height:17px;accent-color:#34845a}.workbookMatrix .workbookDone{background:#e2f3e3}.workbookMatrix td label span{font-size:11px;color:#345a45}
+@media(max-width:1100px){.workbookUnits{grid-template-columns:1fr}}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
@@ -3140,6 +3143,35 @@ function bindExperimentMatrix(){
  };
 }
 
+
+function workbookProgressMarkup(print=false){
+ const codes=activeCodes(),units=[{label:'第三單元',start:36,end:49},{label:'第四單元',start:50,end:63}];
+ const count=(code,u)=>Array.from({length:u.end-u.start+1},(_,i)=>u.start+i).filter(p=>isoDate(db.classes[code]?.workbookPageProgress?.[p])).length;
+ return units.map(u=>'<section class="workbookUnit"><h3>'+u.label+'　P'+u.start+'～P'+u.end+'</h3><table class="workbookMatrix"><thead><tr><th>頁碼</th>'+codes.map(c=>'<th>'+esc(classDisplay(c))+'</th>').join('')+'</tr></thead><tbody>'+Array.from({length:u.end-u.start+1},(_,i)=>u.start+i).map(p=>'<tr><th>P'+p+'</th>'+codes.map(c=>{
+ const date=isoDate(db.classes[c]?.workbookPageProgress?.[p]),checked=!!date;
+ if(print)return '<td>'+(checked?'☑ '+esc(date.slice(5).replace('-','/')):'□')+'</td>';
+ return '<td class="'+(checked?'workbookDone':'')+'"><label><input type="checkbox" data-workbook-code="'+esc(c)+'" data-workbook-page="'+p+'" aria-label="'+esc(classDisplay(c))+' P'+p+' 完成" '+(checked?'checked':'')+'><span>'+ (checked?esc(date.slice(5).replace('-','/')):'—')+'</span></label></td>';
+ }).join('')+'</tr>').join('')+'<tr class="workbookTotal"><th>完成頁數</th>'+codes.map(c=>'<td>'+count(c,u)+' / 14</td>').join('')+'</tr></tbody></table></section>').join('');
+}
+function renderWorkbookProgress(){
+ return '<section class="panel" id="workbookProgressTracker"><div class="panelHead"><h2>📒 七班習作進度表</h2><button type="button" class="btn small" id="workbookProgressPrint">🖨 A4 列印</button></div><p class="hint">第三單元 P36～P49；第四單元 P50～P63。勾選表示該班已完成此頁授課／習作進度，自動記錄當日日期；取消勾選可更正。不變更個別學生繳交、訂正或成績。</p><div class="workbookUnits">'+workbookProgressMarkup()+'</div></section>';
+}
+function bindWorkbookProgress(){
+ const host=$('workbookProgressTracker');if(!host)return;
+ host.onchange=e=>{
+ const el=e.target,code=el.dataset.workbookCode,p=Number(el.dataset.workbookPage);
+ if(!code||!activeCodes().includes(code)||!Number.isInteger(p)||p<36||p>63)return;
+ if(!cloudReady||cloudBlocked){el.checked=!el.checked;return alert('請先確認雲端同步正常')}
+ const c=db.classes[code];c.workbookPageProgress||={};
+ if(el.checked)c.workbookPageProgress[p]=today();else delete c.workbookPageProgress[p];
+ save();const root=host.querySelector('.workbookUnits');root.innerHTML=workbookProgressMarkup();
+ };
+ $('workbookProgressPrint').onclick=()=>{
+ const w=window.open('','_blank');if(!w)return alert('請允許彈出視窗');
+ w.document.write('<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>七班習作進度表</title><style>@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}body{margin:0;font-family:Arial,"Microsoft JhengHei",sans-serif;color:#111}h1{text-align:center;font-size:18pt;margin:0 0 2mm}p{font-size:10pt;margin:0 0 3mm}h3{font-size:12pt;margin:0 0 2mm}.workbookUnits{display:grid;grid-template-columns:1fr 1fr;gap:4mm}.workbookUnit{min-width:0;break-inside:avoid}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9pt}th,td{border:1px solid #333;text-align:center;height:8.5mm;padding:0.8mm 0.3mm;overflow-wrap:anywhere}th:first-child{width:13%}thead th,.workbookTotal{font-weight:bold}thead th{background:#eee}</style><h1>五年級自然科｜七班習作進度表</h1><p>列印日期：'+esc(today())+'　□ 未完成　☑ 已完成（日期：月／日）</p><div class="workbookUnits">'+workbookProgressMarkup(true)+'</div></html>');w.document.close();w.focus();w.print();
+ };
+}
+
 function renderSchedule(){
  const all=scheduleLessons().slice().sort((a,b)=>a.date.localeCompare(b.date)||String(a.period).localeCompare(String(b.period),'zh-Hant'));
  const completed=all.filter(x=>x.done).length,rush=all.filter(x=>x.rush).length,behind=all.filter(x=>x.needsFollowup).length;
@@ -3154,6 +3186,7 @@ function renderSchedule(){
  <p class="hint">每位老師可為自己管理的班級新增、調整與完成課程；資料保存在該老師的雲端班級紀錄，與學生名單及題庫分開。不會自動匯入其他老師的課表。</p>
  ${renderScheduleDailyAndPending()}
  ${renderExperimentMatrix()}
+ ${renderWorkbookProgress()}
  <div class="scheduleMetrics"><div><b>${completed} / ${all.length}</b><small>已完成／總節數</small></div><div><b>${all.length?Math.round(100*completed/all.length):0}%</b><small>完成率</small></div><div><b>${behind} / ${rush}</b><small>需追進度／原訂趕課</small></div></div>
  <div class="schedulePlacePanel"><div class="schedulePlaceTop"><strong>📍 第${teachingWeekInfo(monday).week} 週｜本周上課地點：${esc(contactWeeklyPlace(cl,monday))}</strong><span>${db.classes[cl]?.weeklyLocationOverrides?.[monday]?'老師手動設定':'依教師帳號及單／雙週自動排定'}</span></div><div class="actions"><label for="schedulePlaceSelect">手動更改本週地點 <select id="schedulePlaceSelect"><option value="" ${!db.classes[cl]?.weeklyLocationOverrides?.[monday]?'selected':''}>依單／雙週自動安排</option><option value="自然教室" ${db.classes[cl]?.weeklyLocationOverrides?.[monday]==='自然教室'?'selected':''}>自然教室</option><option value="原班教室" ${db.classes[cl]?.weeklyLocationOverrides?.[monday]==='原班教室'?'selected':''}>原班教室</option></select></label><button type="button" class="btn small" id="schedulePlaceSave">儲存教室設定</button></div><p class="hint">${isOppositeClassroomAccount()?'uie508：單週原班教室、雙週自然教室':'目前教師：單週自然教室、雙週原班教室'}。此設定適用您管理的所有班級；既有已發布連絡簿需重新儲存該日期，公開頁才會更新。</p></div>
  <div class="scheduleToolbar"><button class="btn small outline" data-plan-shift="-7">← 上週</button><strong>${esc(monday)}～${esc(sunday)}</strong><button class="btn small outline" data-plan-shift="7">下週 →</button><button class="btn small soft" id="planToday">回本週</button><input id="scheduleJumpDate" type="date" value="${esc(monday)}" title="跳到指定週"></div>
@@ -4612,7 +4645,7 @@ function hookView(){if(view==='assessment'){bindAssessment();return}if(view==='a
 });
 if(view==='tasks'){const tf=$('newTask'),tu=tf.elements.unit,tt=tf.elements.type;const syncUnit=()=>{const opt=tu.querySelector('[value="總複習"]');opt.hidden=opt.disabled=tt.value!=='考試';if(opt.disabled&&tu.value==='總複習')tu.value=''};tt.onchange=syncUnit;syncUnit();$('newTask').onsubmit=e=>{e.preventDefault();let o=Object.fromEntries(new FormData(e.target));const t={id:uid(),type:o.type,unit:o.unit,date:o.date,title:o.title.trim(),note:o.note||''};cls().tasks.push(t);if(t.type==='習作'||t.type==='實驗'){for(const st of students()){const absent=attendanceEntry(st.id,t.date,'缺席');if(!absent)continue;const h=hwState(t.id,st.id);h.submit='未書寫';hwStore(t.id,st.id,h,false);const r=taskResult(t.id,st.id);r.note='當日缺席'+(absent.reason?'（'+absent.reason+'）':'');r.absenceAtCreation={date:t.date,reason:absent.reason||''}}}save();render()};document.querySelectorAll('[data-task]').forEach(b=>b.onclick=()=>taskDetails(b.dataset.task))}
 if(view==='schedule'){
- bindExperimentMatrix();
+ bindExperimentMatrix();bindWorkbookProgress();
  $('schedulePlaceSave').onclick=()=>{
   const value=$('schedulePlaceSelect')?.value||'';
   setWeeklyClassroomPlace(schedMonday(scheduleAnchor||$('sessionDate').value||today()),value);
