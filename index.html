@@ -1927,6 +1927,25 @@ function openFunDeskLine(event){
  const current=cl,owner=String(cloudSession.user.id),classes=activeCodes().filter(code=>Array.isArray(db.classes[code]?.students)).map(code=>({code,label:classDisplay(code),pet:db.classes[code].classPetType||code,students:db.classes[code].students.map(st=>({id:String(st.id),no:Number(st.no)||0,name:String(st.name||''),avatar:studentAvatarPath(st)?new URL(studentAvatarPath(st),location.href).href:''}))}));
  const listener=e=>{if(e.source!==child||e.origin!==location.origin||e.data?.kind!=='fundesk-line-ready'||e.data.token!==token||owner!==String(cloudSession?.user?.id||'')||!cloudReady||cloudBlocked||!accessCan('petMemory'))return;child.postMessage({kind:'fundesk-line-roster',token,current,classes},location.origin);window.removeEventListener('message',listener)};
  window.addEventListener('message',listener);setTimeout(()=>window.removeEventListener('message',listener),60000);
+ const busy=new Set(),confirmed=new Set();
+ const reward=async e=>{
+  if(e.source!==child||e.origin!==location.origin||e.data?.token!==token||e.data?.kind!=='fundesk-line-award')return;
+  const d=e.data,gameId=String(d.gameId||''),code=String(d.code||''),id=String(d.id||'');
+  const send=(ok,error='')=>child.postMessage({kind:'fundesk-line-award-result',token,gameId,ok,error},location.origin);
+  if(owner!==String(cloudSession?.user?.id||'')||!cloudReady||cloudBlocked||!accessCan('petMemory'))return send(false,'請確認教師登入及雲端連線');
+  if(!gameId.startsWith(token+'-')||!/^\d+$/.test(gameId.slice(token.length+1))||!classes.find(c=>c.code===code)?.students.some(p=>p.id===id))return send(false,'獎勵資料不符');
+  if(confirmed.has(gameId))return send(true);
+  if(busy.has(gameId))return;
+  const c=db.classes[code],st=c?.students?.find(x=>String(x.id)===id);if(!st)return send(false,'學生資料已變更');
+  if(Object.values(db.classes).some(c=>(c.points||[]).some(p=>p.lineGameId===gameId)))return send(false,'此局已有積點紀錄，請核對');
+  const date=$('sessionDate')?.value||today(),entry={sid:st.id,date,delta:2,reason:'班寵五連線獲勝',kind:'lineGame',lineGameId:gameId};
+  busy.add(gameId);c.points.push(entry);
+  try{await cloudQueueSave();if(cloudBlocked)throw Error('雲端同步尚未完成');confirmed.add(gameId);contactQueuePointsSync(code,date);render();send(true)}
+  catch(err){const i=c.points.indexOf(entry);if(i>=0)c.points.splice(i,1);send(false,String(err?.message||err))}
+  finally{busy.delete(gameId)}
+ };
+ window.addEventListener('message',reward);
+ const cleanup=setInterval(()=>{if(child.closed){clearInterval(cleanup);window.removeEventListener('message',reward)}},5000);
 }
 function openFunDeskMemory(event){
  const link=event.currentTarget.getAttribute('href')||'';
