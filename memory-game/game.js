@@ -44,12 +44,12 @@ if(token&&window.opener){
  });
  window.opener.postMessage({kind:'fundesk-memory-ready',token},location.origin);
 }
-function drawRanking(){const list=records[category+'-'+count()]||[];$('ranking').replaceChildren(...(list.length?list.map((p,i)=>{const li=document.createElement('li');li.textContent=(p.no?p.no+'號 ':'（未登記座號） ')+p.name+'（'+p.group+'）｜'+p.turns+' 次／'+p.seconds+' 秒｜加權 '+p.cost;return li}):[Object.assign(document.createElement('li'),{textContent:'尚無正式紀錄'})]));}
-function startSolo(){if(recordPending)return alert('請先完成上一局紀錄同步');const kind=$('soloKind').value;const st=roster?.students.find(p=>p.id===$('soloStudent').value);const guest=$('guestName').value.trim(),no=Number($('guestNo').value);if(kind==='student'&&(!st||!Number.isInteger(st.no)||st.no<1))return alert('請選擇班級學生');if(kind==='guest'&&(!guest||!Number.isInteger(no)||no<1||no>999))return alert('請輸入座號（1～999）及姓名');if(kind!=='practice'&&(!roster||!window.opener))return alert('正式登錄請從已登入的 FunDesk 開啟');soloPlayer=kind==='student'?{studentId:st.id,name:st.name,no:st.no}:kind==='guest'?{guest,name:guest,no}:null;begin();$('soloNotice').textContent=soloPlayer?'參賽者：'+soloPlayer.no+'號 '+soloPlayer.name:'自由練習（不登錄）';}
+function drawRanking(){const list=records[category+'-'+count()]||[];$('ranking').replaceChildren(...(list.length?list.map((p,i)=>{const li=document.createElement('li');li.textContent=(p.no?p.no+'號 ':p.group==='訪客'?'':'（未登記座號） ')+p.name+'（'+p.group+'）｜'+p.turns+' 次／'+p.seconds+' 秒｜加權 '+p.cost;return li}):[Object.assign(document.createElement('li'),{textContent:'尚無正式紀錄'})]));}
+function startSolo(){if(recordPending)return alert('請先完成上一局紀錄同步');const kind=$('soloKind').value;const st=roster?.students.find(p=>p.id===$('soloStudent').value);const guest=$('guestName').value.trim();if(kind==='student'&&(!st||!Number.isInteger(st.no)||st.no<1))return alert('請選擇班級學生');if(kind==='guest'&&!guest)return alert('請輸入參賽姓名');if(kind!=='practice'&&(!roster||!window.opener))return alert('正式登錄請從已登入的 FunDesk 開啟');soloPlayer=kind==='student'?{studentId:st.id,name:st.name,no:st.no}:kind==='guest'?{guest,name:guest}:null;begin();$('soloNotice').textContent=soloPlayer?'參賽者：'+(soloPlayer.no?soloPlayer.no+'號 ':'')+soloPlayer.name:'自由練習（不登錄）';}
 function submitRecord(){if(!recordPending)return;$('recordStatus').textContent='正在儲存正式紀錄…';$('retryRecord').hidden=true;window.opener?.postMessage({kind:'fundesk-memory-record',token,...recordPending},location.origin);setTimeout(()=>{if(recordPending){$('recordStatus').textContent='尚未收到確認，請重試';$('retryRecord').hidden=false}},12000)}
 window.addEventListener('message',e=>{if(e.source!==window.opener||e.origin!==location.origin||e.data?.token!==token||e.data.kind!=='fundesk-memory-record-result'||!recordPending||e.data.runId!==recordPending.runId)return;if(!e.data.ok){$('recordStatus').textContent='未登錄：'+e.data.error;$('retryRecord').hidden=false;return}records=e.data.records||{};recordPending=null;$('recordStatus').textContent='✅ 正式紀錄已登錄';$('retryRecord').hidden=true;drawRanking()});
-$('soloKind').onchange=()=>{$('soloStudent').hidden=$('soloKind').value!=='student';$('guestNo').hidden=$('guestName').hidden=$('soloKind').value!=='guest';soloPlayer=null;$('soloNotice').textContent='請確認身分後開始挑戰';begin()};
-$('soloStart').onclick=startSolo;for(const id of ['soloStudent','guestNo','guestName'])$(id).onchange=()=>{if(!recordPending){soloPlayer=null;$('soloNotice').textContent='請確認身分後開始挑戰';begin()}};$('retryRecord').onclick=submitRecord;
+$('soloKind').onchange=()=>{$('soloStudent').hidden=$('soloKind').value!=='student';$('guestName').hidden=$('soloKind').value!=='guest';soloPlayer=null;$('soloNotice').textContent='請確認身分後開始挑戰';begin()};
+$('soloStart').onclick=startSolo;for(const id of ['soloStudent','guestName'])$(id).onchange=()=>{if(!recordPending){soloPlayer=null;$('soloNotice').textContent='請確認身分後開始挑戰';begin()}};$('retryRecord').onclick=submitRecord;
 function showScores(){
  const board=$('scoreboard'),notice=$('turnNotice');board.replaceChildren();
  if(mode!=='multi'||!gameStarted){board.hidden=true;notice.hidden=true;return}
@@ -212,7 +212,7 @@ function begin(){
  layout();stats();drawRanking();
 }
 function flip(b,item,index){
- if(mode==='solo'&&$('soloKind').value!=='practice'&&!soloPlayer)return alert('請先登記座號及姓名，再按開始挑戰');if(locked||(mode==='multi'&&!gameStarted)||b.classList.contains('flipped')||b.classList.contains('matched')||opened.length>=2)return;
+ if(mode==='solo'&&$('soloKind').value!=='practice'&&!soloPlayer)return alert('請先登記參賽身分及姓名，再按開始挑戰');if(locked||(mode==='multi'&&!gameStarted)||b.classList.contains('flipped')||b.classList.contains('matched')||opened.length>=2)return;
  if(!startedAt)startedAt=performance.now();timer();b.classList.add('flipped');b.setAttribute('aria-pressed','true');
  b.setAttribute('aria-label','第'+(index+1)+'張，'+item.pet[1]);
  opened.push({b,item,index});beep(480,.11);
