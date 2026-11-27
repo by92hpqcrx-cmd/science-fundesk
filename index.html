@@ -2323,7 +2323,7 @@ function recordAttendance(sid,date,status,checked,reason='',returnTime){
  if(!date||!student(sid)||!attendanceStatuses.includes(status))return;
  const previous=attendanceEntry(sid,date,status),time=returnTime===undefined?previous?.returnTime||'':String(returnTime||'');
  cls().attendance=cls().attendance.filter(x=>!(x.sid===sid&&x.date===date&&x.status===status));
- if(checked)cls().attendance.push({sid,date,status,reason:String(reason).trim().slice(0,300),...(status==='課間離席'?{returnTime:/^(?:[01]\\d|2[0-3]):[0-5]\d$/.test(time)?time:''}:{})});
+ if(checked)cls().attendance.push({sid,date,status,reason:String(reason).trim().slice(0,300),...(status==='課間離席'?{returnTime:/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time)?time:''}:{})});
  save();
  if(status==='缺席'&&view==='classroom'&&date===($('sessionDate')?.value||today()))refreshMovingClassroomCards();
 }
