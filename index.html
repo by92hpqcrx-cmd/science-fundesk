@@ -1664,11 +1664,27 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
 @media(max-width:600px){.homeProfileStats{grid-template-columns:repeat(2,minmax(0,1fr))}.homeProfile .studentAvatarHeader img{width:76px!important;height:76px!important}.homeProfile .studentHeader{padding:12px}.homeProfile .studentAvatarHeader>div{flex-basis:180px}}
 </style><style>.fdAssessHub{background:linear-gradient(110deg,#edf8f4,#fff);border:1px solid #bcded1}.fdAssessHub .panelHead h2{font-size:clamp(20px,2.2vw,30px);color:#215f4e}.fdAssessHub .assessmentTabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:7px}.fdAssessHub .assessmentTabs button{min-width:0!important;white-space:normal}.fdAssessStats,.fdAssessTiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 16px}.fdAssessStats>div{background:#eef6f2;border-radius:13px;padding:15px;color:#2b5e50}.fdAssessStats small,.fdAssessStats strong{display:block}.fdAssessStats strong{font-size:29px;margin-top:5px}.fdAssessTiles{grid-template-columns:repeat(2,minmax(0,1fr))}.fdAssessTile{display:flex;align-items:center;gap:10px;text-align:left;padding:15px;background:#fff;border:2px solid #d5e5e0;border-radius:14px;cursor:pointer;color:#243f3b;font:inherit;min-width:0}.fdAssessTile:hover{background:#eef8f3;border-color:#5eaa91}.fdAssessTile>span{font-size:30px}.fdAssessTile div{flex:1;min-width:0}.fdAssessTile b,.fdAssessTile small{display:block}.fdAssessTile b{font-size:18px}.fdAssessTile small{color:#627a77;margin-top:5px}.fdAssessTile>strong{white-space:nowrap;font-size:13px;color:#346b59}@media(max-width:680px){.fdAssessStats{grid-template-columns:repeat(2,1fr)}.fdAssessTiles{grid-template-columns:1fr}}</style><style id="fundeskCompactWorkspace20261128">
 .homeWorkspace{margin-top:12px!important}
-.homeWorkspaceGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px}
-.homeWorkspaceButton{display:flex;align-items:center;justify-content:center;gap:7px;min-height:54px;padding:9px 7px;border:1px solid #b6c9bd;border-radius:10px;background:#f0f7f2;color:#234d3d;font:inherit;font-size:16px;font-weight:800;cursor:pointer}
-.homeWorkspaceButton span{font-size:23px;line-height:1}
-.homeWorkspaceButton:hover{background:#dceee4}
-.homeWorkspaceButton:focus-visible{outline:3px solid #6fa38c;outline-offset:2px}
+.homeWorkspaceGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px}
+.homeWorkspaceButton{--work-bg:#eaf3fa;--work-ink:#284b69;--work-border:#b7cfe2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:82px;padding:8px 4px;border:1px solid var(--work-border);border-radius:11px;background:var(--work-bg);color:var(--work-ink);font:inherit;font-size:clamp(13px,1.05vw,17px);font-weight:800;cursor:pointer;line-height:1.25}
+.homeWorkspaceButton strong{font-size:inherit;text-align:center;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}
+.homeWorkspaceButton span{font-size:28px;line-height:1.1}
+.homeWorkspaceButton:hover{filter:brightness(.96);box-shadow:0 3px 8px #0001}
+.homeWorkspaceButton:focus-visible{outline:3px solid var(--work-ink);outline-offset:2px}
+.homeWorkspaceButton[data-goto="students"]{--work-bg:#e5f2d8;--work-ink:#46672d;--work-border:#bfd4a6}
+.homeWorkspaceButton[data-goto="schedule"]{--work-bg:#fff0b9;--work-ink:#795b18;--work-border:#e5ce81}
+.homeWorkspaceButton[data-goto="labDuty"]{--work-bg:#e4f4ef;--work-ink:#246653;--work-border:#acd6c5}
+.homeWorkspaceButton[data-goto="tasks"]{--work-bg:#eee5fa;--work-ink:#65458c;--work-border:#cdb8e6}
+.homeWorkspaceButton[data-goto="contact"]{--work-bg:#fce5ef;--work-ink:#94395d;--work-border:#e8b5c9}
+.homeWorkspaceButton[data-goto="points"]{--work-bg:#e4e8fc;--work-ink:#4b5196;--work-border:#b9c1e8}
+.homeWorkspaceButton[data-goto="quiz"]{--work-bg:#dff2fc;--work-ink:#236586;--work-border:#add3e7}
+.homeWorkspaceButton[data-goto="classroom"]{--work-bg:#ffebe2;--work-ink:#945341;--work-border:#edc1b1}
+.homeWorkspaceButton[data-goto="tools"]{--work-bg:#dff0f7;--work-ink:#2d6077;--work-border:#afd1df}
+.homeWorkspaceButton[data-goto="tabletRules"]{--work-bg:#f0e6fc;--work-ink:#704993;--work-border:#d5bde9}
+.homeWorkspaceButton[data-goto="classes"]{--work-bg:#ffebd1;--work-ink:#845b25;--work-border:#e7c59a}
+.homeWorkspaceButton[data-goto="settings"]{--work-bg:#e8edf3;--work-ink:#465a6d;--work-border:#c2cedb}
+.homeWorkspaceButton[data-goto="assessment"]{--work-bg:#e2f0dc;--work-ink:#376a38;--work-border:#b6d4ac}
+.homeWorkspaceButton[data-goto="access"]{--work-bg:#f5e0df;--work-ink:#903f43;--work-border:#deb2b1}
+@media(min-width:731px) and (max-width:1150px){.homeWorkspaceGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .sidebar #nav button[data-view]{--nav-item-bg:#edf2f7!important;--nav-item-ink:#23405b!important;--nav-item-border:#b5c8da!important;background:#edf2f7!important;color:#23405b!important;border:1px solid #b5c8da!important;border-radius:6px!important;font-size:14px!important;font-weight:700!important;min-height:29px!important;height:auto!important;line-height:1.2!important;padding:5px 7px!important;white-space:normal!important;box-shadow:none!important;outline:none!important}
 .sidebar #nav button[data-view].active{background:#c8e0f0!important;border:1px solid #7ba4c4!important;box-shadow:inset 3px 0 #3975a4!important;color:#153e5f!important}
 .sidebar #nav button[data-view]:focus-visible{outline:2px solid white!important;outline-offset:1px!important}
@@ -1699,7 +1715,7 @@ body.roomFullscreen .movingRoomPanel .roomPlayArea>.roomFeedHistory{height:clamp
 .sidebar #nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:3px!important}
 .sidebar #nav button[data-view]{font-size:12px!important;min-height:33px!important;padding:3px!important;white-space:normal!important;overflow-wrap:anywhere!important}
 }
-@media(max-width:730px){.homeWorkspaceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.homeWorkspaceButton{font-size:14px;min-height:48px}}
+@media(max-width:730px){.homeWorkspaceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.homeWorkspaceButton{font-size:14px;min-height:65px}}
 </style></head><body class="cloud-locked">
 <div id="cloudGate" class="cloudGate"><div class="cloudGateCard"><span class="fundeskSticker" data-scene="friends" aria-hidden="true"></span><h1>🔐 自然科任 FunDesk</h1><p>教師專用雲端同步</p><div id="cloudGateBody"><p>正在載入登入設定……</p></div></div></div>
 <aside id="replyNotice" hidden aria-labelledby="replyNoticeTitle">
