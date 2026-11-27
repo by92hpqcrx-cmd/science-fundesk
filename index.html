@@ -1950,7 +1950,7 @@ function openFunDeskLine(event){
 function openFunDeskMemory(event){
  const link=event.currentTarget.getAttribute('href')||'';
  let url;try{url=new URL(link,location.href)}catch{return}
- if(url.origin!==location.origin||url.pathname!=='/science-fundesk/memory-game/index.html')return;
+ if(url.origin!==location.origin||url.pathname!==new URL('./memory-game/index.html',location.href).pathname)return;
  event.preventDefault();
  if(!cloudReady||!cloudSession){alert('請先登入 FunDesk，完成目前班級學生名單載入後再開啟遊戲。');return}
  const group=db.classes[cl];if(!group||!Array.isArray(group.students)){alert('目前班級還沒有學生名單');return}
@@ -1965,14 +1965,31 @@ function openFunDeskMemory(event){
   id:String(st.id),no:Number(st.no)||0,name:String(st.name||''),
   avatar:studentAvatarPath(st)?new URL(studentAvatarPath(st),location.href).href:''
  }));
+ const owner=String(cloudSession.user.id),code=cl,className=classDisplay(code);
  let sent=false;
  const listener=e=>{
   if(sent||e.origin!==location.origin||e.source!==child||e.data?.kind!=='fundesk-memory-ready'||e.data.token!==token)return;
   sent=true;window.removeEventListener('message',listener);
-  child.postMessage({kind:'fundesk-memory-roster',token,className:classDisplay(cl),students},location.origin);
+  child.postMessage({kind:'fundesk-memory-roster',token,className,students,records:db.memoryRecords||{}},location.origin);
  };
  window.addEventListener('message',listener);
  setTimeout(()=>window.removeEventListener('message',listener),60000);
+ let saving=false;const saved=new Set();
+ const receive=async e=>{
+  if(e.source!==child||e.origin!==location.origin||e.data?.token!==token||e.data?.kind!=='fundesk-memory-record')return;
+  const d=e.data,id=String(d.runId||'');const send=(ok,error='')=>child.postMessage({kind:'fundesk-memory-record-result',token,runId:id,ok,error,records:db.memoryRecords||{}},location.origin);
+  if(owner!==String(cloudSession?.user?.id||'')||!cloudReady||cloudBlocked||!accessCan('petMemory'))return send(false,'請確認教師登入及同步');
+  if(saved.has(id))return send(true);if(saving)return send(false,'正在儲存，請重試');
+  const n=Number(d.cards),t=Number(d.turns),sec=Number(d.seconds),category=String(d.category),st=students.find(x=>x.id===String(d.studentId)),guest=String(d.guest||'').trim().slice(0,30);
+  if(!id.startsWith(token+'-')||!['pets','constellations','planets'].includes(category)||![24,36,category==='planets'?40:48].includes(n)||!Number.isInteger(t)||t<n/2||t>10000||!Number.isInteger(sec)||sec<1||sec>86400||(!st&&!guest))return send(false,'成績資料不完整');
+  const key=category+'-'+n,identity=st?code+':'+st.id:'guest:'+guest;
+  const entry={identity,name:st?st.name:guest,group:st?className:'訪客',turns:t,seconds:sec,cost:t*5+sec,date:new Date().toISOString()};
+  saving=true;const previous=db.memoryRecords||{};
+  try{await cloudQueue;if(cloudBlocked)throw Error('雲端未同步');const rows=await cloudGetAll();const shared=rows.find(r=>r.class_code==='shared');if(!shared)throw Error('共用資料尚未建立');if(Number(shared.revision)!==Number(cloudRevisions.shared||0))throw Error('另一裝置已更新，請重新登入後再比賽');
+   const list=[...(previous[key]||[]),entry].sort((a,b)=>a.cost-b.cost||a.turns-b.turns||a.seconds-b.seconds||a.date.localeCompare(b.date));const seen=new Set();const top=list.filter(x=>{if(seen.has(x.identity))return false;seen.add(x.identity);return true}).slice(0,3);db.memoryRecords={...previous,[key]:top};await cloudQueueSave();if(cloudBlocked)throw Error('雲端儲存未完成');saved.add(id);send(true)
+  }catch(err){db.memoryRecords=previous;send(false,String(err.message||err))}finally{saving=false}
+ };
+ window.addEventListener('message',receive);const cleanup=setInterval(()=>{if(child.closed){clearInterval(cleanup);window.removeEventListener('message',receive)}},5000);
 }
 
 /* 猜猜我在哪兒：教師端掌握參賽身分與雲端計分權限。學生名單不放在 URL。 */
@@ -5116,7 +5133,7 @@ function cloudRenderQuickClasses(){
  const url=new URL(location.href);root.innerHTML=activeCodes().map(c=>{const u=new URL(url.href);u.searchParams.set('class',c);return `<a href="${esc(u.href)}" class="${cl===c?'selected':''}" title="${c} 班專屬網址">${esc(className(c))}</a>`}).join('');
  root.querySelectorAll('a').forEach(a=>{a.onclick=e=>{e.preventDefault();const code=new URL(a.href).searchParams.get('class');changeClass(code)}});
 }
-function cloudPayload(code){return code==='shared'?{labTemplate:db.labTemplate,classCodes:[...CLASSES],classMeta:db.classMeta,retiredClassCodes:[...retiredClassCodes],pointBehaviorOrder:db.pointBehaviorOrder||[],teacherFeedingPassword:String(db.teacherFeedingPassword||'13579')}:db.classes[code]}
+function cloudPayload(code){return code==='shared'?{labTemplate:db.labTemplate,classCodes:[...CLASSES],classMeta:db.classMeta,retiredClassCodes:[...retiredClassCodes],memoryRecords:db.memoryRecords||{},pointBehaviorOrder:db.pointBehaviorOrder||[],teacherFeedingPassword:String(db.teacherFeedingPassword||'13579')}:db.classes[code]}
 async function cloudGetAll(){return await cloudFetch('/rest/v1/fundesk_teacher_data?select=class_code,payload,revision&order=class_code.asc')}
 async function cloudLoad(){
  await accessLoad();
@@ -5132,6 +5149,7 @@ async function cloudLoad(){
  const rowCodes=rows.filter(r=>r.class_code!=='shared'&&!retiredClassCodes.includes(r.class_code)&&/^[A-Za-z0-9_-]{1,40}$/.test(r.class_code)).map(r=>r.class_code);
  CLASSES=[...new Set([...(stored?.length?stored:DEFAULT_CLASSES),...rowCodes])].filter(c=>!retiredClassCodes.includes(c));
  const fresh=makeState();
+ fresh.memoryRecords=shared?.memoryRecords||{};
  if(/^\d{5,12}$/.test(String(shared?.teacherFeedingPassword||'')))fresh.teacherFeedingPassword=String(shared.teacherFeedingPassword);
  if(Array.isArray(shared?.pointBehaviorOrder))fresh.pointBehaviorOrder=[...new Set(shared.pointBehaviorOrder.filter(n=>typeof n==='string'&&BEHAVIORS.some(r=>r[0]===n)))];
  if(shared?.classMeta&&typeof shared.classMeta==='object'){
@@ -5221,7 +5239,7 @@ async function cloudPollRemotePoints(){
   let changed=false,pending=false;
   for(const row of rows){
    const code=row.class_code,revision=Number(row.revision||0);
-   if(!CLASSES.includes(code)||revision===Number(cloudRevisions[code]||0))continue;
+   if(code==='shared'&&revision!==Number(cloudRevisions[code]||0)){if(JSON.stringify(cloudPayload(code))===cloudSnapshots[code]){const p=row.payload||{};const local=cloudPayload(code);const {memoryRecords:ignored,...other}=p;const {memoryRecords:ignored2,...localOther}=local;if(JSON.stringify(other)===JSON.stringify(localOther)){db.memoryRecords=p.memoryRecords||{};cloudSnapshots[code]=JSON.stringify(cloudPayload(code));cloudRevisions[code]=revision;}}continue}if(!CLASSES.includes(code)||revision===Number(cloudRevisions[code]||0))continue;
    const localSerialized=JSON.stringify(cloudPayload(code));
    if(localSerialized!==cloudSnapshots[code]){pending=true;continue}
    if(!Array.isArray(row.payload?.students))continue;
