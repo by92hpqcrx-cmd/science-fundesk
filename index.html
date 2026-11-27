@@ -1992,20 +1992,21 @@ function openFundeskGuessWhere(){
 function launchFundeskGuessWhere(chosen,code){
  const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);
  const token=[...bytes].map(x=>x.toString(16).padStart(2,'0')).join('');
- const url=new URL('./guess-where-pet.html',location.href);url.searchParams.set('fundeskToken',token);
+ const url=new URL('./guess-where-pet.html',location.href);url.searchParams.set('fundeskToken',token);url.searchParams.set('v','20261127-auto-next');
  const child=window.open(url.href,'_blank');
  if(!child){alert('瀏覽器阻擋了遊戲視窗，請允許開啟彈出視窗。');return;}
- const studentId=String(chosen.id),studentLabel=String(chosen.no)+'號 '+String(chosen.name||'');
+ let studentId=String(chosen.id),studentLabel=String(chosen.no)+'號 '+String(chosen.name||''),currentRound=1;const guessOwner=String(cloudSession?.user?.id||'');const guessRoster=()=> (db.classes[code]?.students||[]).filter(s=>s&&s.id!=null&&Number(s.no)>0).sort((a,b)=>Number(a.no)-Number(b.no));
  const awardIds=new Set(),pendingIds=new Set();
  const pets=ROOM_PETS.map(p=>({id:p.id,name:p.name,image:new URL('./class-pets/'+encodeURIComponent(p.id)+'.svg',location.href).href}));
  const send=(payload)=>{try{if(!child.closed)child.postMessage({...payload,token},location.origin)}catch{}};
  const listener=async e=>{
   if(e.origin!==location.origin||e.source!==child||e.data?.token!==token)return;
   const d=e.data;
-  if(d.kind==='fundesk-guess-ready'){send({kind:'fundesk-guess-config',studentLabel,pets});return;}
+  if(!cloudReady||cloudBlocked||guessOwner!==String(cloudSession?.user?.id||''))return;if(d.kind==='fundesk-guess-ready'){send({kind:'fundesk-guess-config',studentLabel,pets,roster:guessRoster().map(s=>({id:String(s.id),label:s.no+'號 '+String(s.name||'')}))});return;}
+  if(d.kind==='fundesk-guess-next'){if(pendingIds.size||Number(d.round)!==currentRound||!['random','specific'].includes(d.mode)){send({kind:'fundesk-guess-next-result',ok:false,error:'上一局尚未完成或同步中'});return}const roster=guessRoster();const next=d.mode==='specific'?roster.find(s=>String(s.id)===String(d.id)):roster.length?roster[crypto.getRandomValues(new Uint32Array(1))[0]%roster.length]:null;if(!next){send({kind:'fundesk-guess-next-result',ok:false,error:'找不到參賽學生'});return}chosen=next;studentId=String(next.id);studentLabel=next.no+'號 '+String(next.name||'');currentRound++;send({kind:'fundesk-guess-next-result',ok:true,studentLabel});return;}
   if(d.kind!=='fundesk-guess-award')return;
   const round=Number(d.round),petId=String(d.petId||'');
-  if(!Number.isInteger(round)||round<1||round>1000000||!pets.some(p=>p.id===petId))return;
+  if(!Number.isInteger(round)||round!==currentRound||round>1000000||!pets.some(p=>p.id===petId))return;
   const awardId=token+':'+round;
   const reply=(ok,error='')=>send({kind:'fundesk-guess-award-result',round,ok,error});
   if(awardIds.has(awardId)){reply(true);return;}
