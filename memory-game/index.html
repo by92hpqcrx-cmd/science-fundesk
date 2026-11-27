@@ -2,7 +2,7 @@
 <html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#e3f8ec">
 <title>🐾 記憶翻牌遊戲｜FunDesk</title>
 <link rel="icon" type="image/svg+xml" href="../fundesk-app-icon.svg">
-<link rel="stylesheet" href="./game.css?v=20261120-square-space-v2"><style>#soloSetup[hidden],#soloStudent[hidden],#guestNo[hidden],#guestName[hidden],#retryRecord[hidden]{display:none!important}#soloSetup select,#soloSetup input{font:inherit;padding:7px;border:1px solid #8ab8a1;border-radius:8px}#soloSetup details{max-width:100%}#ranking{margin:6px 0;padding-left:28px}</style></head>
+<link rel="stylesheet" href="./game.css?v=20261120-square-space-v2"><style>#soloSetup[hidden],#soloStudent[hidden],#guestName[hidden],#retryRecord[hidden]{display:none!important}#soloSetup select,#soloSetup input{font:inherit;padding:7px;border:1px solid #8ab8a1;border-radius:8px}#soloSetup details{max-width:100%}#ranking{margin:6px 0;padding-left:28px}</style></head>
 <body>
 <div class="shell" id="shell">
   <header class="topbar">
@@ -36,7 +36,7 @@
   </section>
   <section class="multiplayer" aria-label="計分模式及玩家設定">
     <div class="modeRow"><strong>🎯 遊戲模式</strong><label><input type="radio" name="mode" value="solo" checked> 個人記憶挑戰</label><label><input type="radio" name="mode" value="multi"> 🏆 多人競賽模式</label><span id="rosterState" role="status">從 FunDesk 開啟可選擇班級學生</span></div>
-    <div id="soloSetup" style="padding:8px 12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label>參賽身分 <select id="soloKind"><option value="practice">自由練習</option><option value="student">班級學生</option><option value="guest">訪客／手動輸入座號姓名</option></select></label><select id="soloStudent" hidden><option value="">選擇學生</option></select><input id="guestNo" hidden type="number" min="1" max="999" step="1" placeholder="座號" aria-label="參賽座號" style="width:95px"><input id="guestName" hidden maxlength="30" placeholder="輸入參賽姓名" aria-label="參賽姓名"><button id="soloStart" type="button" class="restart">開始挑戰</button><span id="soloNotice">自由練習（不登錄）</span><details><summary>🏆 跨班前三名</summary><small>同主題及難度共用榜單｜加權值＝配對嘗試次數 × 5＋秒數，越低越好</small><ol id="ranking"></ol></details></div><div id="playerSetup" class="playerSetup" hidden>
+    <div id="soloSetup" style="padding:8px 12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label>參賽身分 <select id="soloKind"><option value="practice">自由練習</option><option value="student">班級學生</option><option value="guest">訪客／手動輸入姓名</option></select></label><select id="soloStudent" hidden><option value="">選擇學生</option></select><input id="guestName" hidden maxlength="30" placeholder="輸入參賽姓名" aria-label="參賽姓名"><button id="soloStart" type="button" class="restart">開始挑戰</button><span id="soloNotice">自由練習（不登錄）</span><details><summary>🏆 跨班前三名</summary><small>同主題及難度共用榜單｜加權值＝配對嘗試次數 × 5＋秒數，越低越好</small><ol id="ranking"></ol></details></div><div id="playerSetup" class="playerSetup" hidden>
       <div class="playerIntro"><strong id="rosterClass">選擇競賽學生</strong><span>配對成功 +10 分並繼續翻牌；沒有配對成功則換下一位。</span></div>
       <label class="playerCountLabel" for="playerCount">參賽人數 <select id="playerCount" aria-label="參賽人數"><option value="2">2 人</option><option value="3">3 人</option><option value="4" selected>4 人</option><option value="5">5 人</option><option value="6">6 人</option></select></label>
       <div class="playerSelectors" id="playerSelectors"></div>
@@ -61,5 +61,5 @@
 </div>
 <script src="./cards-data.js?v=20261120-square-space-v2" defer></script>
 <script src="./aquila-replacement.js?v=20261120-square-space-v2" defer></script>
-<script src="./game.js?v=20261127-solo-seat" defer></script>
+<script src="./game.js?v=20261127-guest-name" defer></script>
 </body></html>
