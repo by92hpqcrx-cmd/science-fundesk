@@ -7,7 +7,7 @@ let pets=DEFAULT_FUNDESK_PETS.slice(),picked=null,hidden=-1,round=0,busy=false;
 const DOOR_ART=['./guess-door-blue-uploaded.svg?v=20261121-exact','./guess-door-green-uploaded.svg?v=20261121-exact','./guess-door-purple-uploaded.svg?v=20261121-exact'];
 const randomInt=n=>{const a=new Uint32Array(1);const cap=2**32-Math.pow(2,32)%n;do{crypto.getRandomValues(a)}while(a[0]>=cap);return a[0]%n};
 const params=new URLSearchParams(location.search),gameToken=params.get('fundeskToken')||'';
-let awardPending=false,studentLabel='',awardSequence=0,configured=false,choosing=false;const startButton=document.querySelector('#start'),picker=document.querySelector('#nextPicker');
+let awardPending=false,studentLabel='',awardSequence=0,configured=false,choosing=false,nextTimer=null,nextRequest=null;const startButton=document.querySelector('#start'),picker=document.querySelector('#nextPicker');
 function tellTeacher(data){if(!gameToken||!window.opener)return;window.opener.postMessage({...data,token:gameToken},location.origin)}
 function readyTeacher(){tellTeacher({kind:'fundesk-guess-ready'})}
 window.addEventListener('message',e=>{
@@ -16,7 +16,7 @@ window.addEventListener('message',e=>{
   if(typeof e.data.studentLabel==='string')studentLabel=e.data.studentLabel.slice(0,90);
   if(Array.isArray(e.data.pets))acceptPets(e.data.pets);
   document.querySelector('#status').textContent='參賽學生：'+studentLabel+'｜答對 +1 點';if(Array.isArray(e.data.roster)){const sel=document.querySelector('#nextStudent');sel.replaceChildren();e.data.roster.forEach(st=>sel.add(new Option(st.label,st.id)))}if(!configured){configured=true;startRound()}
- }else if(e.data.kind==='fundesk-guess-next-result'){choosing=false;if(!e.data.ok){msg.textContent=e.data.error||'無法選擇學生';startButton.hidden=false;return}studentLabel=e.data.studentLabel;status.textContent='參賽學生：'+studentLabel+'｜答對 +1 點';startRound();}else if(e.data.kind==='fundesk-guess-award-result'){
+ }else if(e.data.kind==='fundesk-guess-next-result'){if(!choosing||!nextRequest||e.data.requestId!==nextRequest.requestId)return;clearTimeout(nextTimer);choosing=false;nextRequest=null;if(!e.data.ok){msg.textContent=e.data.error||'無法選擇學生';startButton.hidden=false;startButton.disabled=false;return}studentLabel=e.data.studentLabel;status.textContent='參賽學生：'+studentLabel+'｜答對 +1 點';busy=true;hidden=-1;roulette.classList.remove('rolling');startRound();}else if(e.data.kind==='fundesk-guess-award-result'){
   if(Number(e.data.round)!==awardSequence)return;
   awardPending=false;startButton.disabled=false;
   const ok=e.data.ok===true;
@@ -62,6 +62,6 @@ function startRound(){
  };
  spin();
 }
-startButton.onclick=()=>{if(awardPending||choosing)return;if(gameToken){picker.showModal()}else startRound()};document.querySelector("#nextCancel").onclick=()=>picker.close();function next(mode){if(choosing||awardPending)return;choosing=true;picker.close();startButton.hidden=true;tellTeacher({kind:"fundesk-guess-next",mode,id:document.querySelector("#nextStudent").value,round});}document.querySelector("#nextRandom").onclick=()=>next("random");document.querySelector("#nextSpecific").onclick=()=>next("specific");if(!gameToken){startButton.hidden=false;startButton.textContent="🎡 開始遊戲";status.textContent="練習模式（不計點）";}
+startButton.onclick=()=>{if(awardPending||choosing)return;if(gameToken){if(nextRequest){choosing=true;startButton.hidden=true;let tries=0;const retry=()=>{if(!choosing||!nextRequest)return;if(tries++>=4){choosing=false;startButton.hidden=false;msg.textContent='老師端仍未回應，請確認主程式仍開啟';return}tellTeacher(nextRequest);nextTimer=setTimeout(retry,2000)};retry()}else picker.showModal()}else startRound()};document.querySelector("#nextCancel").onclick=()=>picker.close();function next(mode){if(choosing||awardPending)return;choosing=true;picker.close();startButton.hidden=true;msg.textContent='正在選擇下一局參賽學生…';nextRequest={kind:'fundesk-guess-next',mode,id:document.querySelector('#nextStudent').value,round,requestId:crypto.randomUUID()};let tries=0;const transmit=()=>{if(!choosing||!nextRequest)return;if(tries++>=4){choosing=false;startButton.hidden=false;startButton.disabled=false;msg.textContent='老師端未回應，請再次點選再玩一次重試原選擇';return}tellTeacher(nextRequest);nextTimer=setTimeout(transmit,2000)};transmit()}document.querySelector("#nextRandom").onclick=()=>next("random");document.querySelector("#nextSpecific").onclick=()=>next("specific");if(!gameToken){startButton.hidden=false;startButton.textContent="🎡 開始遊戲";status.textContent="練習模式（不計點）";}
 document.querySelector("#full").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
 </script></body></html>
