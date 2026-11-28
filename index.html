@@ -2992,15 +2992,65 @@ function bindRps(){
 
 
 const FD_SHARED_MATERIALS=[['03-01','太陽的位置和四季有關嗎',45],['03-02','太陽系有哪些成員',12],['03-03','四季的星空有什麼不一樣',64],['04-01','空氣與燃燒有什麼關係',33],['04-02','燃燒的條件與如何滅火',16],['04-03','為何會生鏽與如何防鏽',56]];
+
+const FD_PPT_BUCKET='fundesk-teaching-ppt',FD_PPT_CHUNK=5*1024*1024,FD_PPT_MAX=200*1024*1024;
+let fdPptBusy=false;
+function fdPptOwner(){const uid=String(cloudSession?.user?.id||'');if(!accessCan('schedule')||!cloudReady||cloudBlocked||!/^[0-9a-f-]{36}$/i.test(uid))throw Error('請先登入教師帳號並確認同步');return uid}
+function fdPptPath(id){if(!FD_SHARED_MATERIALS.some(r=>r[0]===id))throw Error('教材代碼錯誤');return fdPptOwner()+'/'+id}
+async function fdPptRequest(path,opts={},retry=true){
+ const owner=fdPptOwner(),{url,key}=cloudValidatedConfig();
+ const response=await fetch(url+'/storage/v1/'+path,{...opts,headers:{apikey:key,Authorization:'Bearer '+cloudSession.access_token,...opts.headers},cache:'no-store'});
+ if(response.status===401&&retry){await cloudRefresh();if(fdPptOwner()!==owner)throw Error('帳號已切換');return fdPptRequest(path,opts,false)}
+ if(fdPptOwner()!==owner)throw Error('帳號已切換');
+ if(!response.ok){const msg=await response.text();throw Error('HTTP '+response.status+'：'+msg.slice(0,250))}
+ return response;
+}
+function fdPptObject(path,privateRead=false){return 'object/'+(privateRead?'authenticated/':'')+FD_PPT_BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/')}
+async function fdPptManifest(id){
+ const root=fdPptPath(id),r=await fdPptRequest('object/list/'+FD_PPT_BUCKET,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prefix:root,limit:100,search:'manifest.json'})});
+ const entries=await r.json();if(!Array.isArray(entries)||!entries.some(x=>x.name==='manifest.json'))return null;
+ const m=await (await fdPptRequest(fdPptObject(root+'/manifest.json',true))).json();
+ if(m.id!==id||!/^[-0-9a-f]{36}$/i.test(m.version)||!Number.isInteger(m.size)||m.size<1||m.size>FD_PPT_MAX||m.count!==Math.ceil(m.size/FD_PPT_CHUNK)||typeof m.name!=='string'||!/\.(ppt|pptx)$/i.test(m.name))throw Error('教材索引不正確');
+ return m;
+}
+async function fdPptDeletePaths(paths){if(!paths.length)return;await fdPptRequest('object/'+FD_PPT_BUCKET,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({prefixes:paths})})}
+function fdPptParts(root,m){return Array.from({length:m.count},(_,i)=>root+'/'+m.version+'/part-'+String(i).padStart(3,'0'))}
+function fdPptStatus(id,msg){const el=document.querySelector('[data-ppt-storage-status="'+id+'"]');if(el)el.textContent=msg}
+async function fdPptUpload(id,file){
+ if(!file||fdPptBusy)return;if(!/\.(ppt|pptx)$/i.test(file.name)||file.size<1||file.size>FD_PPT_MAX)return alert('請選擇 PPT／PPTX，單份不超過 200 MiB');
+ if(!confirm('將此原始簡報上傳至私人教材庫？如已有教材，成功後將取代舊版。'))return;
+ fdPptBusy=true;let root='',paths=[],committed=false;
+ try{
+  root=fdPptPath(id);const old=await fdPptManifest(id),m={id,version:crypto.randomUUID(),name:file.name,size:file.size,count:Math.ceil(file.size/FD_PPT_CHUNK),date:new Date().toISOString()};paths=fdPptParts(root,m);
+  for(let i=0;i<paths.length;i++){if(fdPptPath(id)!==root)throw Error('帳號已切換');fdPptStatus(id,'上傳 '+(i+1)+' / '+paths.length);await fdPptRequest(fdPptObject(paths[i]),{method:'POST',headers:{'Content-Type':'application/octet-stream','x-upsert':'false'},body:file.slice(i*FD_PPT_CHUNK,(i+1)*FD_PPT_CHUNK)})}
+  if(fdPptPath(id)!==root)throw Error('帳號已切換');
+  await fdPptRequest(fdPptObject(root+'/manifest.json'),{method:'POST',headers:{'Content-Type':'application/json','x-upsert':'true'},body:JSON.stringify(m)});committed=true;
+  // Keep previous versions until an explicit cleanup; avoids invalidating an in-flight download.
+  fdPptStatus(id,'已上傳・'+(file.size/1048576).toFixed(1)+' MiB');alert('教材上傳完成'+(old?'。舊版本暫保留，避免中斷其他裝置下載。':''));
+ }catch(e){if(!committed&&root&&paths.length){try{if(fdPptPath(id)===root)await fdPptDeletePaths(paths)}catch{}}fdPptStatus(id,'上傳失敗');alert(String(e.message||e))}
+ finally{fdPptBusy=false;if(view==='seats')void fdPptRefresh()}
+}
+async function fdPptDownload(id){
+ if(fdPptBusy)return;fdPptBusy=true;
+ try{const root=fdPptPath(id),m=await fdPptManifest(id);if(!m)throw Error('尚未上傳教材');const parts=[];for(const [i,p] of fdPptParts(root,m).entries()){if(fdPptPath(id)!==root)throw Error('帳號已切換');fdPptStatus(id,'下載 '+(i+1)+' / '+m.count);const b=await (await fdPptRequest(fdPptObject(p,true))).blob();if(b.size!==Math.min(FD_PPT_CHUNK,m.size-i*FD_PPT_CHUNK))throw Error('檔案分段大小不符');parts.push(b)}const blob=new Blob(parts,{type:/\.pptx$/i.test(m.name)?'application/vnd.openxmlformats-officedocument.presentationml.presentation':'application/vnd.ms-powerpoint'});if(blob.size!==m.size)throw Error('檔案大小不符');const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=m.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);fdPptStatus(id,'下載完成，請用 PowerPoint 開啟')}
+ catch(e){alert(String(e.message||e));fdPptStatus(id,'下載失敗')}finally{fdPptBusy=false}
+}
+async function fdPptRefresh(){for(const [id] of FD_SHARED_MATERIALS){try{const m=await fdPptManifest(id);if(fdPptBusy)return;fdPptStatus(id,m?'已上傳・'+(m.size/1048576).toFixed(1)+' MiB':'尚未上傳');const b=document.querySelector('[data-ppt-download="'+id+'"]');if(b)b.disabled=!m}catch(e){fdPptStatus(id,'無法讀取教材庫：'+String(e.message||e).slice(0,120))}}}
+function bindPptStorage(){
+ document.querySelectorAll('[data-ppt-upload]').forEach(b=>b.onclick=()=>{if(fdPptBusy)return;const input=document.createElement('input');input.type='file';input.accept='.ppt,.pptx';input.onchange=()=>void fdPptUpload(b.dataset.pptUpload,input.files[0]);input.click()});
+ document.querySelectorAll('[data-ppt-download]').forEach(b=>b.onclick=()=>void fdPptDownload(b.dataset.pptDownload));if(!fdPptBusy)void fdPptRefresh();
+}
+
 function fdMaterialUrl(id){return safeLink(db.teachingMaterialLinks?.[id]||'')}
 function renderSharedMaterials(){
  if(!accessCan('schedule'))return '';
  const date=$('sessionDate')?.value||today(),rows=(cls().scheduleLessons||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.period).localeCompare(String(b.period),'zh-Hant',{numeric:true}));
  const daily=rows.filter(x=>x.date===date&&schedulePpt(x));
  const planned=daily.map(x=>'<div style="margin:4px 0"><b>'+esc(x.period)+'：</b>'+esc(schedulePpt(x))+'</div>').join('');
- return '<section class="panel homeTeachingMaterials" style="border-top:5px solid #d6a53b;background:#fff9e8;min-width:0;width:100%;box-sizing:border-box"><div class="panelHead"><h2>📚 共用教學教材庫</h2><span class="pill">課程主軸・各班共用</span></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px"><strong style="font-size:18px">目前班級：'+esc(classDisplay(cl))+'</strong><button class="btn small outline" data-goto="schedule">教學進度安排</button><span>'+esc(date)+'</span></div><div style="padding:10px;background:#fff;border:1px solid #ead9a7;border-radius:10px;margin-bottom:12px"><b>📽️ 當日預計投影片</b>'+(planned||'<div>當日尚無指定 PPT 課程</div>')+'</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px">'+['03','04'].map(unit=>'<div style="min-width:0;background:#fff;border:1px solid #e6d8b0;border-radius:12px;padding:12px"><h3 style="margin:0 0 8px;color:#70541c">'+(unit==='03'?'第三單元｜神祕的天空':'第四單元｜燃燒與生鏽')+'</h3>'+FD_SHARED_MATERIALS.filter(([id])=>id.startsWith(unit)).map(([id,title,count])=>{const url=fdMaterialUrl(id),match=x=>schedulePpt(x).includes(id+':'),last=rows.filter(x=>match(x)&&x.pptStamp).sort((a,b)=>String(a.pptStamp).localeCompare(String(b.pptStamp),'zh-Hant',{numeric:true})).pop(),next=rows.find(x=>match(x)&&!x.done&&x.date>=date);return '<article style="padding:10px 0;border-top:1px solid #eee4ca"><div style="font-size:17px;font-weight:bold">'+esc(id)+'　'+esc(title)+'</div><div class="hint">'+count+' 頁'+(url?'・教材連結已設定':'・尚未設定教材連結')+'</div><div style="font-size:13px;overflow-wrap:anywhere">本班最近紀錄：'+(last?esc(last.pptActual||'尚未填寫完成頁')+'<br>'+esc(last.pptStamp):'尚未記錄')+'</div>'+(next?'<div style="font-size:13px;overflow-wrap:anywhere">預計課程：'+esc(next.date)+' '+esc(next.period)+'｜'+esc(schedulePpt(next))+'</div>':'')+'<div class="actions" style="margin-top:6px">'+(url?'<a class="btn small" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">▶ 開啟原始教材</a>':'')+'<button type="button" class="btn small outline" data-material-edit="'+id+'">'+(url?'修改連結':'設定教材連結')+'</button></div></article>'}).join('')+'</div>').join('')+'</div><p class="hint">連結依教師帳號共用，不公開於 GitHub；請使用有存取權限的私人伺服器或雲端教材網址。原始 PPT 由 PowerPoint 開啟，實際完成頁碼在教學進度記錄。</p></section>';
+ return '<section class="panel homeTeachingMaterials" style="border-top:5px solid #d6a53b;background:#fff9e8;min-width:0;width:100%;box-sizing:border-box"><div class="panelHead"><h2>📚 共用教學教材庫</h2><span class="pill">課程主軸・各班共用</span></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px"><strong style="font-size:18px">目前班級：'+esc(classDisplay(cl))+'</strong><button class="btn small outline" data-goto="schedule">教學進度安排</button><span>'+esc(date)+'</span></div><div style="padding:10px;background:#fff;border:1px solid #ead9a7;border-radius:10px;margin-bottom:12px"><b>📽️ 當日預計投影片</b>'+(planned||'<div>當日尚無指定 PPT 課程</div>')+'</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px">'+['03','04'].map(unit=>'<div style="min-width:0;background:#fff;border:1px solid #e6d8b0;border-radius:12px;padding:12px"><h3 style="margin:0 0 8px;color:#70541c">'+(unit==='03'?'第三單元｜神祕的天空':'第四單元｜燃燒與生鏽')+'</h3>'+FD_SHARED_MATERIALS.filter(([id])=>id.startsWith(unit)).map(([id,title,count])=>{const url=fdMaterialUrl(id),match=x=>schedulePpt(x).includes(id+':'),last=rows.filter(x=>match(x)&&x.pptStamp).sort((a,b)=>String(a.pptStamp).localeCompare(String(b.pptStamp),'zh-Hant',{numeric:true})).pop(),next=rows.find(x=>match(x)&&!x.done&&x.date>=date);return '<article style="padding:10px 0;border-top:1px solid #eee4ca"><div style="font-size:17px;font-weight:bold">'+esc(id)+'　'+esc(title)+'</div><div class="hint">'+count+' 頁'+(url?'・教材連結已設定':'・尚未設定教材連結')+'</div><div style="font-size:13px;overflow-wrap:anywhere">本班最近紀錄：'+(last?esc(last.pptActual||'尚未填寫完成頁')+'<br>'+esc(last.pptStamp):'尚未記錄')+'</div>'+(next?'<div style="font-size:13px;overflow-wrap:anywhere">預計課程：'+esc(next.date)+' '+esc(next.period)+'｜'+esc(schedulePpt(next))+'</div>':'')+'<div class="actions" style="margin-top:6px">'+(url?'<a class="btn small" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">▶ 開啟原始教材</a>':'')+'<button type="button" class="btn small outline" data-material-edit="'+id+'">'+(url?'修改連結':'設定教材連結')+'</button><button type="button" class="btn small" data-ppt-upload="'+id+'">⬆ 上傳 PPT</button><button type="button" class="btn small outline" data-ppt-download="'+id+'" disabled>⬇ 下載原始 PPT</button></div><div class="hint" data-ppt-storage-status="'+id+'">檢查私人教材庫…</div></article>'}).join('')+'</div>').join('')+'</div><p class="hint">連結依教師帳號共用，不公開於 GitHub；請使用有存取權限的私人伺服器或雲端教材網址。原始 PPT 由 PowerPoint 開啟，實際完成頁碼在教學進度記錄。</p></section>';
 }
 function bindSharedMaterials(){
+ bindPptStorage();
  document.querySelectorAll('[data-material-edit]').forEach(b=>b.onclick=async()=>{
   if(!accessCan('schedule')||!cloudReady||cloudBlocked)return alert('請先確認教師登入及雲端同步正常');
   const id=b.dataset.materialEdit;if(!FD_SHARED_MATERIALS.some(r=>r[0]===id))return;
